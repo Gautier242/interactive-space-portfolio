@@ -1117,7 +1117,10 @@ function showDetail(item) {
   if (leftPanel) {
     leftPanel.style.flex = '0 0 30%';
     updateImageSizes(70);
-    onWindowResize();
+    // Wait for CSS transition to complete before resizing renderer
+    setTimeout(() => {
+      onWindowResize();
+    }, 350);
   }
   
   detailView.classList.add('active');
@@ -1136,7 +1139,10 @@ function hideDetail() {
   if (leftPanel) {
     leftPanel.style.flex = '0 0 45%';
     updateImageSizes(55);
-    onWindowResize();
+    // Wait for CSS transition to complete before resizing renderer
+    setTimeout(() => {
+      onWindowResize();
+    }, 350);
   }
   
   // Exit Moon surface view when closing detail
