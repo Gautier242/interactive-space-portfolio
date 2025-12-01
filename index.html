@@ -1113,9 +1113,12 @@ function showDetail(item) {
   detailLinks.innerHTML = linksHTML;
   
   // Shrink left panel to 30% when showing detail
-  leftPanel.style.flex = '0 0 30%';
-  updateImageSizes(70);
-  onWindowResize();
+  const leftPanel = document.getElementById('leftPanel');
+  if (leftPanel) {
+    leftPanel.style.flex = '0 0 30%';
+    updateImageSizes(70);
+    onWindowResize();
+  }
   
   detailView.classList.add('active');
 }
@@ -1129,9 +1132,12 @@ function hideDetail() {
   detailView.classList.remove('active');
   
   // Restore left panel to 45% when closing detail
-  leftPanel.style.flex = '0 0 45%';
-  updateImageSizes(55);
-  onWindowResize();
+  const leftPanel = document.getElementById('leftPanel');
+  if (leftPanel) {
+    leftPanel.style.flex = '0 0 45%';
+    updateImageSizes(55);
+    onWindowResize();
+  }
   
   // Exit Moon surface view when closing detail
   if (moonSurfaceActive) {
