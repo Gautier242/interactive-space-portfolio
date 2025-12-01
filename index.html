@@ -137,6 +137,7 @@ a:hover {
   position: relative;
   background: #000;
   overflow: hidden;
+  transition: flex 0.3s ease;
 }
 .resizer {
   width: 12px;
@@ -1111,6 +1112,11 @@ function showDetail(item) {
   }
   detailLinks.innerHTML = linksHTML;
   
+  // Shrink left panel to 30% when showing detail
+  leftPanel.style.flex = '0 0 30%';
+  updateImageSizes(70);
+  onWindowResize();
+  
   detailView.classList.add('active');
 }
 
@@ -1121,6 +1127,11 @@ function showAbout() {
 function hideDetail() {
   const detailView = document.getElementById('detailView');
   detailView.classList.remove('active');
+  
+  // Restore left panel to 45% when closing detail
+  leftPanel.style.flex = '0 0 45%';
+  updateImageSizes(55);
+  onWindowResize();
   
   // Exit Moon surface view when closing detail
   if (moonSurfaceActive) {
