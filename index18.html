@@ -1,0 +1,3015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solar System Research Map – George X</title>
+<style>
+:root {
+  --bg: #060d1a;
+  --panel: #0c162c;
+  --ink: #e7eefc;
+  --muted: #9fb1cc;
+  --accent: #9ec9ff;
+  --link: #a7d1ff;
+  --selected: #6ea3ff;
+}
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+body {
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  overflow: hidden;
+}
+a {
+  color: var(--link);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* Neural Network Background - Static MLP-style */
+.neural-bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0.25;
+  z-index: 1;
+  /* Set display to 'none' to disable neural network background */
+  display: block;
+}
+.neural-node {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: rgba(158, 201, 255, 0.9);
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(158, 201, 255, 0.7);
+}
+.neural-line {
+  position: absolute;
+  height: 2px;
+  background: rgba(158, 201, 255, 0.4);
+  transform-origin: left center;
+  opacity: 0.5;
+  /* position: absolute;
+  height: 2px;
+  background: repeating-linear-gradient(
+    to right,
+    rgba(158, 201, 255, 0.4) 0px,
+    rgba(158, 201, 255, 0.4) 4px,
+    transparent 4px,
+    transparent 8px
+  );
+  transform-origin: left center; */
+}
+
+.header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  background: linear-gradient(180deg, rgba(6,13,26,.95), rgba(6,13,26,.85));
+  backdrop-filter: blur(8px);
+  position: relative;
+  z-index: 5;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(110,163,255,0.02) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(110,163,255,0.02) 0%, transparent 50%);
+  z-index: -1;
+}
+.header img {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.header img:hover {
+  transform: scale(1.05);
+  border-color: var(--accent);
+}
+.header .name {
+  font-weight: 800;
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.3s;
+}
+.header .name:hover {
+  color: var(--accent);
+}
+.header .sub {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 2px;
+}
+.header .links {
+  margin-left: auto;
+  font-size: 13px;
+  display: flex;
+  gap: 16px;
+}
+.app {
+  display: flex;
+  height: calc(100vh - 77px);
+  position: relative;
+}
+.left {
+  flex: 0 0 33.33%;
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+.resizer {
+  width: 12px;
+  background: rgba(158, 201, 255, 0.15);
+  cursor: col-resize;
+  position: relative;
+  z-index: 50;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-left: 1px solid rgba(158, 201, 255, 0.2);
+  border-right: 1px solid rgba(158, 201, 255, 0.2);
+}
+.resizer:hover {
+  background: rgba(158, 201, 255, 0.35);
+  width: 14px;
+}
+.resizer::before {
+  content: '⋮⋮';
+  position: absolute;
+  color: rgba(158, 201, 255, 0.6);
+  font-size: 18px;
+  font-weight: bold;
+  letter-spacing: -1px;
+}
+.resizer:hover::before {
+  color: rgba(158, 201, 255, 1);
+  letter-spacing: 0px;
+}
+.right {
+  flex: 1;
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+#canvas3d {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.controls {
+  position: absolute;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 60, 100, 0.95);
+  border: 2px solid rgba(158, 201, 255, 0.4);
+  border-radius: 12px;
+  padding: 12px;
+  backdrop-filter: blur(12px);
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.controls button {
+  background: rgba(50,90,140,.8);
+  color: #eaf1ff;
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 8px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  min-width: 36px;
+  font-weight: 500;
+}
+.controls button:hover {
+  background: rgba(50,90,140,.8);
+  transform: translateY(-1px);
+}
+.controls button.active {
+  background: var(--selected);
+  border-color: rgba(255,255,255,.4);
+  box-shadow: 0 0 10px rgba(110,163,255,.5);
+  color: #ffffff;
+}
+.speed-dropdown {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  background: rgba(10, 20, 40, 0.95);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 8px;
+  padding: 8px;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  backdrop-filter: blur(12px);
+  z-index: 20;
+}
+.speed-dropdown.active {
+  display: flex;
+}
+.speed-dropdown button {
+  background: rgba(30,60,100,.6);
+  min-width: 60px;
+  text-align: center;
+}
+.speed-dropdown button:hover {
+  background: rgba(50,90,140,.8);
+}
+.legend {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  font-size: 12px;
+  color: var(--ink);
+  background: rgba(30, 60, 100, 0.95);
+  border: 2px solid rgba(158, 201, 255, 0.4);
+  padding: 14px 18px;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  line-height: 1.6;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.section-title {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+.pubs-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  scroll-behavior: smooth;
+  position: relative;
+  z-index: 2;
+}
+.pubs-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+.pubs-scroll::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.02);
+}
+.pubs-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,.15);
+  border-radius: 4px;
+}
+.institution-group {
+  margin-bottom: 24px;
+}
+.institution-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 12px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,.04);
+  border-radius: 8px;
+  border-left: 3px solid var(--accent);
+}
+.pub-card {
+  background: rgba(255,255,255,.04);
+  border: 2px solid rgba(255,255,255,.08);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: block;
+  overflow: auto;
+}
+.pub-card::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+.pub-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(110,163,255,.4);
+  box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+.pub-card.highlighted {
+  border-color: rgba(110,163,255,.6);
+  background: rgba(110,163,255,.08);
+}
+.pub-image {
+  width: 250px;
+  max-width: 45%;
+  height: auto;
+  min-height: 188px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1a3a6a, #0d1f3f);
+  border: 1px solid rgba(255,255,255,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  overflow: hidden;
+  float: left;
+  margin-right: 16px;
+  margin-bottom: 10px;
+}
+@media (max-width: 800px) {
+  .pub-image {
+    float: none;
+    max-width: 100%;
+    margin-right: 0;
+  }
+}
+.pub-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.pub-content {
+  overflow: hidden;
+}
+.pub-header {
+  margin-bottom: 8px;
+}
+.pub-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #cfe2ff;
+  line-height: 1.3;
+  margin-bottom: 4px;
+}
+.pub-title:hover {
+  color: var(--accent);
+}
+.pub-inst {
+  font-size: 11px;
+  color: var(--accent);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.pub-subinst {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  margin-top: 3px;
+  font-style: italic;
+}
+.pub-desc {
+  font-size: 12px;
+  color: #dbe7ff;
+  line-height: 1.4;
+  margin-bottom: 8px;
+  text-align: justify;
+}
+.pub-meta {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-top: 8px;
+}
+.pub-links {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,.08);
+  font-size: 11px;
+  clear: both;
+}
+.pub-links a {
+  margin-right: 12px;
+}
+
+/* Detail View */
+.detail-view {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--panel);
+  z-index: 100;
+  overflow-y: auto;
+  display: none;
+}
+.detail-view.active {
+  display: block;
+}
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  position: sticky;
+  top: 0;
+  background: var(--panel);
+  z-index: 10;
+}
+.detail-close {
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.2);
+  color: var(--ink);
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s;
+}
+.detail-close:hover {
+  background: rgba(255,255,255,.2);
+}
+.detail-content {
+  padding: 20px;
+  clear: both;
+}
+.detail-top {
+  display: block;
+  margin-bottom: 20px;
+}
+.detail-image {
+  width: 100%;
+  max-width: 500px;
+  height: auto;
+  min-height: 350px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a3a6a, #0d1f3f);
+  float: left;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+.detail-image.about-image {
+  max-width: 125px;
+  min-height: 125px;
+}
+.detail-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.detail-info {
+  min-width: 0;
+}
+.detail-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #cfe2ff;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+.detail-inst {
+  font-size: 12px;
+  color: var(--accent);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+.detail-subinst {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0.02em;
+  margin-top: -8px;
+  margin-bottom: 12px;
+  font-style: italic;
+}
+.detail-desc {
+  font-size: 15px;
+  color: #dbe7ff;
+  line-height: 1.6;
+  text-align: justify;
+}
+.detail-extended {
+  clear: both;
+  padding: 0 20px 20px;
+}
+.detail-meta {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+.detail-meta strong {
+  color: var(--accent);
+}
+.detail-subsection {
+  margin-top: 24px;
+}
+.detail-subsection h4 {
+  font-size: 16px;
+  color: var(--accent);
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+.detail-subsection ul {
+  list-style: none;
+  padding: 0;
+}
+.detail-subsection li {
+  margin-bottom: 8px;
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.6;
+}
+.detail-subsection li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: var(--accent);
+}
+.detail-links {
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+.detail-links a {
+  display: inline-block;
+  margin-right: 16px;
+  margin-bottom: 8px;
+  padding: 8px 16px;
+  background: rgba(110,163,255,.2);
+  border-radius: 6px;
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+.detail-links a:hover {
+  background: rgba(110,163,255,.3);
+  transform: translateY(-1px);
+}
+
+/* Responsive image sizing based on panel width */
+@media (max-width: 1200px) {
+  .pub-image {
+    width: 200px;
+    min-height: 150px;
+  }
+}
+@media (max-width: 900px) {
+  .pub-image {
+    width: 150px;
+    min-height: 113px;
+  }
+}
+/* Moon Surface View */
+.moon-surface {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #000000 100%);
+}
+.moon-surface.active {
+  display: block;
+}
+/* Hover Hints */
+.hover-hint {
+  position: fixed;
+  background: rgba(10, 20, 40, 0.95);
+  color: var(--accent);
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  pointer-events: none;
+  z-index: 1000;
+  border: 1px solid rgba(158, 201, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+  backdrop-filter: blur(8px);
+}
+.hover-hint.active {
+  opacity: 1;
+}
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="neural-bg" id="headerNeural"></div>
+  
+  <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231a3a6a'/%3E%3Cstop offset='100%25' style='stop-color:%230d1f3f'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' fill='url(%23g)'/%3E%3Ctext x='50' y='65' font-size='50' fill='%239ec9ff' text-anchor='middle' font-family='Arial'%3EGX%3C/text%3E%3C/svg%3E" alt="George X" onclick="showAbout()"/>
+  <div>
+    <div class="name" onclick="showAbout()">George X</div>
+    <div class="sub">AI for Space · MIT Media Lab (Responsive Environments) · NASA Jet Propulsion Laboratory</div>
+  </div>
+  <div class="links">
+    <a href="#about" onclick="showAbout(); return false;">About Me</a>
+    <a href="https://scholar.google.com/" target="_blank">Google Scholar</a>
+    <a href="https://www.researchgate.net/" target="_blank">ResearchGate</a>
+    <a href="https://github.com/yourusername" target="_blank">GitHub</a>
+  </div>
+</header>
+<div class="app">
+  <section class="left" id="leftPanel">
+    <canvas id="canvas3d"></canvas>
+    <canvas id="moonSurface" class="moon-surface"></canvas>
+    <div class="controls">
+      <button id="btnReset" title="Reset View">Reset</button>
+      <button id="btnPause" title="Pause/Play">⏸</button>
+      <div style="position: relative;">
+        <button id="btnSpeed" title="Animation Speed">1x</button>
+        <div class="speed-dropdown" id="speedDropdown">
+          <button data-speed="0.25">0.25x</button>
+          <button data-speed="0.5">0.5x</button>
+          <button data-speed="1">1x</button>
+          <button data-speed="2">2x</button>
+          <button data-speed="4">4x</button>
+        </div>
+      </div>
+      <button id="btnZoomIn" title="Zoom In">+</button>
+      <button id="btnZoomOut" title="Zoom Out">−</button>
+      <button id="btnRotate" title="Rotate Mode (Drag)" class="active">✋</button>
+      <button id="btnPan" title="Pan Mode (Shift+Drag)">✢</button>
+    </div>
+    
+    <div class="legend" id="legendText">
+      <span class="legend-title">🎮 How to Navigate</span>
+      <strong>Interactive 3D Solar System</strong> – Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
+    </div>
+  </section>
+  <div class="resizer" id="resizer"></div>
+  <aside class="right">
+    <div class="neural-bg" id="rightNeural"></div>
+    
+    <div class="section-title">Publications & Projects</div>
+    <div class="pubs-scroll" id="pubsList"></div>
+    
+    <!-- Detail View -->
+    <div class="detail-view" id="detailView">
+      <div class="detail-header">
+        <button class="detail-close" onclick="hideDetail()" title="Close">×</button>
+        <h2 id="detailHeaderTitle">Publication Details</h2>
+      </div>
+      <div class="detail-content">
+        <div class="detail-top">
+          <div class="detail-image" id="detailImageContainer">
+            <img id="detailImg" src="" alt=""/>
+          </div>
+          <div class="detail-info">
+            <h3 class="detail-title" id="detailTitle"></h3>
+            <div class="detail-inst" id="detailInst"></div>
+            <div class="detail-subinst" id="detailSubInst"></div>
+            <p class="detail-desc" id="detailDesc"></p>
+          </div>
+        </div>
+        <div class="detail-extended">
+          <div class="detail-meta">
+            <div id="detailAuthors"></div>
+            <div id="detailVenue"></div>
+          </div>
+          <div id="detailSubsections"></div>
+          <div class="detail-links" id="detailLinks"></div>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="hover-hint" id="hoverHint"></div>
+  </section>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// Static Neural Network Background (MLP-style)
+function createStaticNeuralNetwork(containerId, layers = [6, 8, 6, 4]) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  
+  const width = container.offsetWidth;
+  const height = container.offsetHeight;
+  const nodes = [];
+  
+  const layerSpacing = width / (layers.length + 1);
+  
+  layers.forEach((nodeCount, layerIndex) => {
+    const x = layerSpacing * (layerIndex + 1);
+    const nodeSpacing = height / (nodeCount + 1);
+    
+    for (let i = 0; i < nodeCount; i++) {
+      const y = nodeSpacing * (i + 1);
+      
+      const node = document.createElement('div');
+      node.className = 'neural-node';
+      node.style.left = x + 'px';
+      node.style.top = y + 'px';
+      container.appendChild(node);
+      
+      nodes.push({ x, y, layer: layerIndex });
+    }
+  });
+  
+  // Connect nodes between adjacent layers
+  for (let i = 0; i < nodes.length; i++) {
+    const node1 = nodes[i];
+    for (let j = i + 1; j < nodes.length; j++) {
+      const node2 = nodes[j];
+      
+      if (node2.layer === node1.layer + 1) {
+        const distance = Math.sqrt(
+          Math.pow(node2.x - node1.x, 2) +
+          Math.pow(node2.y - node1.y, 2)
+        );
+        
+        const line = document.createElement('div');
+        line.className = 'neural-line';
+        const angle = Math.atan2(node2.y - node1.y, node2.x - node1.x);
+        line.style.left = node1.x + 'px';
+        line.style.top = node1.y + 'px';
+        line.style.width = distance + 'px';
+        line.style.transform = `rotate(${angle}rad)`;
+        container.appendChild(line);
+      }
+    }
+  }
+}
+
+setTimeout(() => {
+  createStaticNeuralNetwork('headerNeural', [1, 2, 3, 4, 4, 3, 2, 1]);
+  createStaticNeuralNetwork('rightNeural', [4, 5, 8, 6, 4]);
+  // createStaticNeuralNetwork('detailNeural', [3, 5, 7, 5, 3]);
+}, 100);
+
+// PUBLICATION DATA - CUSTOMIZE HERE
+const PUBS = [
+  { 
+    id: "mit", 
+    title: "ML-Based Signal Clustering for Smart Fiber Data from the ISS", 
+    inst: "Massachusetts Institute of Technology", 
+    subInst: "Media Lab - Responsive Environments - Dr. Joseph Pardiso, 2025",
+    icon: "https://picsum.photos/seed/mit/400/300", 
+    body: "ISS",
+    desc: "Developed a machine learning and signal processing pipeline to automatically analyze and cluster over 100,000 of triggers from a new instrument sent to the International Space Station (ISS) and identify their probable causes. This instrument, based on custom-made piezoelectric fibers woven into the outer insulation layer, is designed to detect micrometeorite impacts on the structure, improving eventually real-time structural health monitoring in orbit."+
+    "<br><br><span style='color: #9ec9ff;'>Paper in progress</span>",
+    extendedDesc: "This work focused on developing a data cleansing, signal processing, and machine learning pipeline to analyze and automatically cluster the large dataset collected by a novel instrument deployed on the International Space Station (ISS).<br>The instrument, designed and developed during Dr. Juliana Cherston’s PhD thesis [1], consists of custom-made piezoelectric fibers woven into the spacecraft’s outer insulation layer. These fibers aim to detect micrometeorite impacts on the ISS exterior, eventually providing a pathway toward real-time structural health monitoring in orbit.<br><br>During its deployment, the system recorded more than 100,000 signal triggers, exceeding by far what could be analyzed manually. Based on first analysis, I developed a pipeline combining signal processing and unsupervised machine learning techniques to automatically cluster and classify these signals, identifying those most likely corresponding to genuine micrometeorite impacts.<br>For this likely-cause identification, ground-truth data for genuine micrometeorite impacts were established through controlled high-velocity impact testing using terrestrial facilities such as the Laser-Induced Particle Impact Test (LIPIT) at MIT and the Van de Graaff accelerator at LASP. These experiments generated calibrated piezoelectric response signals corresponding to known particle sizes, velocities, and impact angles. The resulting signatures on all fibers were used to define the expected response characteristics of true impacts, providing a physical basis for validating and interpreting the machine learning clustering results from ISS data."+
+    "<br><br><strong style='color: #9ec9ff;'>Additional literature</strong>: J. Cherston; The Well-Dressed Spacecraft: Textiles for Cosmic Dust Metrology, (September 2022). https://dspace.mit.edu/handle/1721.1/152029?show=full",
+    links: [{t: "Lab page", u: "https://www.media.mit.edu/groups/responsive-environments/overview/"}],
+    img: "images/mit-iss.jpg"
+  },
+  { 
+    id: "swot", 
+    title: "From Space to Sea: an application of machine learning to identify soliton in SWOT satellite data", 
+    inst: "NASA JET PROPULSION LABORATORY", 
+    icon: "https://picsum.photos/seed/swot/400/300", 
+    body: "Earth",
+    desc: "Built a computer vision pipeline to automatically detect internal ocean waves (solitons) in several hundreds of thousands satellite images from the Surface Water and Ocean Topography (SWOT) mission. The model processes high-resolution remote sensing imagery, applies image cleansing and enhancing before automatically identifying wave patterns on the ocean surface. This software provides oceanographers with a novel capability to quickly identify ocean features and thus perform this at global scales.",
+    extendedDesc: "This project applied deep learning and computer vision to SWOT’s satellite imagery to identify internal wave phenomena that were previously labor-intensive to find. I developed custom image analysis algorithms to spot patterns of soliton on the ocean surface to better understand their propagation across sequential swaths. Several signal preprocessing steps and a continual learning strategy were integrated so that the model improves as more SWOT data streams in. By developing parallelization capabilities in the preprocessing and detection pipelines, the resulting system can analyze hundreds of thousands of images representing SWOT’s sea surface height (SSH) data, detecting internal wave events that influence ocean mixing and energy repartition. This work provides: oceanographers with an automated, scalable method to detect internal waves across the globe, enabling insights into ocean energy transport. The pipeline’s output has been delivered as a practical software tool, accelerating feature detection with an AI-assisted approach."+
+    "<br><br><strong style='color: #9ec9ff;'>Acknowledgment</strong>: JPL Spotlight Technology award in May 2024."+
+    "<br><strong style='color: #9ec9ff;'>Publications and presentations</strong>: 1 abstract accepted at AGU24, 1 oral presentation at AGU24 and 1 paper currently in progress",
+    authors: "<strong>G. Bardi</strong>, T. Lu, M. Archer, J. Wang", 
+    // venue: "AGU 2024",
+    links: [{t: "Link to abstract for AGU 2024", u: "https://agu.confex.com/agu/agu24/meetingapp.cgi/Paper/1655008"}],
+    img: "images/sunerfs.jpg"
+  },
+  { 
+    id: "rover", 
+    title: "Digital twin and physics informed machine learning for rover motion simulation", 
+    inst: "NASA JET PROPULSION LABORATORY", 
+    icon: "https://picsum.photos/seed/rover/400/300", 
+    body: "VIPER",  
+    desc: "Created a physics-informed machine learning model for real time prediction of rover mobility on lunar terrain to enable integration of digital twins in virtual test bed based on Omniverse. The system fuses ODEs (Ordinary Differential Equations) with neural networks trained on high-fidelity finite element (FEM) simulations. On the performed tests, the approach proved to speed up predictions by replacing 90-minute FEM simulations with real time ML predictions while providing similar accuracy, enabling real time decision-making.",
+    extendedDesc: "With the goal to improve real time motion prediction on Moon regolith for a virtual test lab with rover digital twins, I developed a physics informed machine learning (PIML) architecture that merges Newton's second law with neural networks to emulate how a rover moves on loose lunar soil. Solving the issue of limited available dataset for training by identifying Chrono Engine developed by University of Wisconsin and tested in cooperation with NASA Ames, we generated a rich ground-truth dataset of rover behavior under various slope conditions using Omniverse and Fusion 360. The PIML model mixing mechanics laws and simple neural network was then trained on these simulations with different slopes, capturing complex terramechanics in its parameters. By injecting physical knowledge (through ordinary differential equations) into the network’s design, the model achieved high accuracy, reducing position error from meters to mere centimeters. The main advantage of this method being the inference time reducing from hours with full FEM simulation to real time (~0.2 seconds) with PIML. This physics-informed ML approach effectively creates a real time motion prediction on Moon surface, enabling digital twins testing and mission planners to quickly evaluate rover routes, anticipate slippage or sinkage, and make on-the-fly decisions. The work demonstrates an original solution for space robotics, combining simulation, machine learning, and understanding of mechanics equations of motion to tackle the challenge of real-time prediction in off-world environments.",
+    authors: "<strong>G. Bardi</strong>, T. Lu, E. Chow",
+    venue: "International Astronautical Congress 2024", 
+    links: [{t: "Link to full paper", u: "https://www.researchgate.net/publication/388579787_Digital_Twin_and_Physics_Informed_Machine_Learning_for_Rover_Motion_Simulation"}],
+    img: "images/rover.jpg"
+  },
+  { 
+    id: "lunarfm", 
+    title: "Lunar Foundation Model", 
+    inst: "FDL", 
+    icon: "https://picsum.photos/seed/lunar/400/300", 
+    body: "LRO",
+    desc: "Unifies GRAIL, LRO/LOLA, MiniRF, Clementine into a queryable foundation model for lunar science and operations.",
+    extendedDesc: "Building a comprehensive foundation model that integrates decades of lunar mission data including gravity fields, topography, radar, and multispectral imagery. The model enables scientists and mission planners to query lunar properties at any location, predict subsurface characteristics, and identify scientifically interesting landing sites through natural language interfaces.",
+    authors: "<strong>G. Bardi</strong>, FDL Lunar Team", 
+    venue: "LunarLab.ai – In progress",
+    links: [{t: "LunarLab", u: "https://lunarlab.ai/"}],
+    img: "images/lunarfm.jpg"
+  },
+  { 
+    id: "esa", 
+    title: "Moon Mineral Classification from VNIR", 
+    inst: "ESA", 
+    icon: "https://picsum.photos/seed/esa/400/300", 
+    body: "Moon",
+    desc: "1D convolutional classifier for spectrometer time‑series to support astronaut sampling; report internal/confidential.",
+    extendedDesc: "Developed real-time mineral classification system using visible and near-infrared spectroscopy for lunar sample collection. The convolutional neural network processes spectrometer readings to identify rock types and mineral compositions instantly, enabling astronauts to make informed sampling decisions during extravehicular activities without waiting for ground control analysis.",
+    authors: "<strong>G. Bardi</strong>", 
+    venue: "European Astronaut Centre (ESA), 2022", 
+    links: [],
+    img: "images/esa.jpg"
+  },
+  { 
+    id: "isu", 
+    title: "From Spacecraft to Habitat – Starship HLS", 
+    inst: "ISU", 
+    icon: "https://media.giphy.com/media/l0HlQXlQ3nHyLMvte/giphy.gif", 
+    body: "Starship",
+    desc: "Feasibility study to convert HLS into a long‑term lunar habitat, covering structure, life‑support, human‑factors, ops.",
+    extendedDesc: "Comprehensive systems engineering study examining how SpaceX's Human Landing System can be adapted into a permanent lunar surface habitat. Analysis covers structural modifications for extended stays, environmental control and life support system upgrades, radiation shielding, crew health and psychology considerations, and operational concepts for sustainable lunar presence.",
+    authors: "<strong>G. Bardi</strong>, S. Monat, A. Abdin, ISU Team", 
+    venue: "IAC 2021–2023",
+    links: [{t: "Project Page", u: "https://starship1.onuniverse.com/"}],
+    img: "images/starship.jpg"
+  },
+  
+  { 
+    id: "hwo", 
+    title: "Habitable Worlds Observatory – AI/ML", 
+    inst: "NASA JET PROPULSION LABORATORY", 
+    icon: "https://picsum.photos/seed/hwo/400/300", 
+    body: "HWO",  // Linked to HWO satellite
+    desc: "Contributing to NASA’s next flagship exoplanet mission, the Habitable Worlds Observatory, through participation in the AI and ML working group for mission operations, and data analysis. This work explores how intelligent algorithms can optimize many capabilities of the HWO including observation schedules, automate telescope operations, and enhance analysis of faint exoplanet signals, addressing the grand challenge of detecting biosignatures on distant Earth-like planets.",
+    extendedDesc: "Leading AI/ML initiatives for NASA's next flagship mission to search for signs of life beyond Earth.",
+    authors: "V. Da Poian, U. Rebbapragada, <strong>G. Bardi</strong>, et al.", 
+    venue: "AGU 2024 · HWO Science Working Group", 
+    links: [{t: "HWO Mission", u: "https://www.nasa.gov/"}],
+    img: "images/hwo.jpg"
+  },
+  { 
+    id: "megsai", 
+    title: "MEGS‑AI – EUV from AIA", 
+    inst: "FDL", 
+    icon: "https://picsum.photos/seed/megsai/400/300", 
+    body: "Mars",  // Linked to Mars
+    desc: "Estimate the EUV spectral irradiance from SDO/AIA images when direct spectrograph coverage is unavailable.",
+    extendedDesc: "Developed deep learning models that reconstruct extreme ultraviolet (EUV) spectral irradiance from Solar Dynamics Observatory images.",
+    authors: "<strong>G. Bardi</strong>, B. Isola, R. Jarolim, et al.", 
+    venue: "AGU 2024 · FDL 2024",
+    links: [{t: "FDL", u: "https://fdl.ai/"}],
+    img: "images/megsai.jpg"
+  },
+  { 
+    id: "sunerfs", 
+    title: "SuNeRFs – 4D Solar Corona", 
+    inst: "FDL", 
+    icon: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif", 
+    body: "Sun",  // Linked to Sun
+    desc: "NeRF‑style reconstruction of time‑varying coronal structure (density, temperature) from multi‑view imagery.",
+    extendedDesc: "Adapted Neural Radiance Field (NeRF) techniques to reconstruct the 3D structure and dynamics of the Sun's corona over time.",
+    authors: "B. Isola, <strong>G. Bardi</strong>, R. Jarolim, et al.", 
+    venue: "AGU 2024 · FDL 2024",
+    links: [{t: "FDL", u: "https://fdl.ai/"}],
+    img: "images/sunerfs.jpg"
+  }
+];
+
+const ABOUT_ME = {
+  id: "about",
+  title: "About George X",
+  inst: "MIT · NASA JPL · ISU",
+  desc: "Researcher at the intersection of AI and Space Technology, developing innovative solutions for space exploration and Earth observation.",
+  extendedDesc: "Currently pursuing PhD applications focusing on AI for Space at MIT and other leading institutions. My work spans from developing intelligent sensor systems for the International Space Station to creating foundation models for lunar exploration. I'm passionate about leveraging artificial intelligence to advance our understanding of the cosmos and improve life on Earth. My research combines deep learning, computer vision, physics-informed machine learning, and systems engineering to solve complex challenges in space science and exploration.",
+  authors: "<strong>PhD Candidate in AI for Space</strong>",
+  venue: "MIT Media Lab · NASA Jet Propulsion Laboratory · International Space University",
+  subsections: [
+    {
+      title: "Selected Talks & Outreach",
+      items: [
+        "AGU 2024 — Oral: MEGS‑AI; From Space to Sea",
+        "IAC 2024 — Interactive: Physics‑informed twins for lunar rovers",
+        "Invited — Southwest Research Institute (SWRI): SWOT ML",
+        "Invited — NASA Johnson Space Center — ROI Lab"
+      ]
+    },
+    {
+      title: "Awards",
+      items: [
+        "NASA JPL Spotlight Technology Award — computer vision for SWOT internal waves (2024)",
+        "ESA · CNES Fellowship — International Space University Space Studies Program (2021)",
+        "Airbus Innovation Awards — HMI & multi‑agent software (2014, 2015)"
+      ]
+    }
+  ],
+  links: [
+    {t: "CV/Resume", u: "#"},
+    {t: "Research Portfolio", u: "#"},
+    {t: "Contact", u: "mailto:georgex@example.com"}
+  ],
+  img: "images/headshot.jpg"
+};
+
+function groupPublications() {
+  const grouped = {};
+  PUBS.forEach(pub => {
+    if (!grouped[pub.inst]) {
+      grouped[pub.inst] = [];
+    }
+    grouped[pub.inst].push(pub);
+  });
+  return grouped;
+}
+
+function renderPublications() {
+  const pubsList = document.getElementById('pubsList');
+  const grouped = groupPublications();
+  
+  pubsList.innerHTML = '';
+  
+  Object.entries(grouped).forEach(([institution, pubs]) => {
+    const instDiv = document.createElement('div');
+    instDiv.className = 'institution-group';
+    
+    const instTitle = document.createElement('div');
+    instTitle.className = 'institution-title';
+    instTitle.textContent = institution;
+    instDiv.appendChild(instTitle);
+    
+    pubs.forEach(pub => {
+      const card = document.createElement('div');
+      card.className = 'pub-card';
+      card.dataset.id = pub.id;
+      card.dataset.body = pub.body;
+      
+      let linksHTML = '';
+      if (pub.links && pub.links.length > 0) {
+        linksHTML = '<div class="pub-links">' + 
+          pub.links.map(l => `<a href="${l.u}" target="_blank" onclick="event.stopPropagation()">${l.t}</a>`).join('') + '</div>';
+      }
+      
+      card.innerHTML = `
+        <div class="pub-image">
+          <img src="${pub.img}" alt="${pub.title}" onerror="this.src='${pub.icon}'"/>
+        </div>
+        <div class="pub-content">
+          <div class="pub-header">
+            <div class="pub-title">${pub.title}</div>
+            <div class="pub-inst">${pub.inst}</div>
+            ${pub.subInst ? `<div class="pub-subinst">${pub.subInst}</div>` : ''}
+          </div>
+          <div class="pub-desc">${pub.desc}</div>
+          <div class="pub-meta">
+            ${pub.authors ? `<div>${pub.authors}</div>` : ''}
+            ${pub.venue ? `<div style="margin-top:4px">${pub.venue}</div>` : ''}
+          </div>
+          ${linksHTML}
+        </div>
+      `;
+      
+      card.addEventListener('click', () => {
+        // Exit Moon surface view when clicking a publication
+        if (moonSurfaceActive) {
+          moonSurfaceActive = false;
+          document.getElementById('moonSurface').classList.remove('active');
+        }
+        
+        showDetail(pub);
+        
+        let zoomTarget = pub.body;
+        const bodyInfo = bodyData.find(b => b.name === pub.body);
+        if (!bodyInfo) {
+          const objectInScene = bodyData.find(b => b.body === pub.body);
+          if (objectInScene) {
+            zoomTarget = objectInScene.name;
+          }
+        }
+        
+        if (zoomTarget) {
+          zoomToBody(zoomTarget);
+        }
+      });
+      
+      card.addEventListener('mouseenter', () => {
+        card.classList.add('highlighted');
+        
+        let objectToHighlight = pub.body;
+        const objectInScene = bodyData.find(b => b.body === pub.body && b.name !== pub.body);
+        if (objectInScene) {
+          objectToHighlight = objectInScene.name;
+        }
+        
+        if (objectToHighlight) {
+          highlightBody(objectToHighlight);
+        }
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.classList.remove('highlighted');
+        
+        let objectToUnhighlight = pub.body;
+        const objectInScene = bodyData.find(b => b.body === pub.body && b.name !== pub.body);
+        if (objectInScene) {
+          objectToUnhighlight = objectInScene.name;
+        }
+        
+        if (objectToUnhighlight) {
+          unhighlightBody(objectToUnhighlight);
+        }
+      });
+      
+      instDiv.appendChild(card);
+    });
+    
+    pubsList.appendChild(instDiv);
+  });
+}
+
+function showDetail(item) {
+  const detailView = document.getElementById('detailView');
+  const detailImageContainer = document.getElementById('detailImageContainer');
+  const detailImg = document.getElementById('detailImg');
+  const detailTitle = document.getElementById('detailTitle');
+  const detailInst = document.getElementById('detailInst');
+  const detailSubInst = document.getElementById('detailSubInst');
+  const detailDesc = document.getElementById('detailDesc');
+  const detailAuthors = document.getElementById('detailAuthors');
+  const detailVenue = document.getElementById('detailVenue');
+  const detailSubsections = document.getElementById('detailSubsections');
+  const detailLinks = document.getElementById('detailLinks');
+  const detailHeaderTitle = document.getElementById('detailHeaderTitle');
+  
+  if (item.id === 'about') {
+    detailImageContainer.classList.add('about-image');
+  } else {
+    detailImageContainer.classList.remove('about-image');
+  }
+  
+  detailImg.src = item.img;
+  detailImg.onerror = function() {
+    this.src = item.icon;
+  };
+  
+  detailTitle.textContent = item.title;
+  detailInst.innerHTML = item.inst;
+  detailSubInst.innerHTML = item.subInst || '';
+  detailSubInst.style.display = item.subInst ? 'block' : 'none';
+  detailDesc.innerHTML = item.extendedDesc || item.desc;
+  detailAuthors.innerHTML = item.authors ? '<strong>Authors:</strong> ' + item.authors : '';
+  detailVenue.innerHTML = item.venue ? '<strong>Venue:</strong> ' + item.venue : '';
+  detailHeaderTitle.textContent = item.id === 'about' ? 'About Me' : 'Publication Details';
+  
+  // Handle subsections (for About Me)
+  detailSubsections.innerHTML = '';
+  if (item.subsections && item.subsections.length > 0) {
+    item.subsections.forEach(subsection => {
+      const subDiv = document.createElement('div');
+      subDiv.className = 'detail-subsection';
+      
+      const title = document.createElement('h4');
+      title.textContent = subsection.title;
+      subDiv.appendChild(title);
+      
+      const list = document.createElement('ul');
+      subsection.items.forEach(itemText => {
+        const li = document.createElement('li');
+        li.textContent = itemText;
+        list.appendChild(li);
+      });
+      subDiv.appendChild(list);
+      
+      detailSubsections.appendChild(subDiv);
+    });
+  }
+  
+  let linksHTML = '';
+  if (item.links && item.links.length > 0) {
+    linksHTML = item.links.map(l => `<a href="${l.u}" target="_blank">${l.t}</a>`).join('');
+  }
+  detailLinks.innerHTML = linksHTML;
+  
+  detailView.classList.add('active');
+}
+
+function showAbout() {
+  showDetail(ABOUT_ME);
+}
+
+function hideDetail() {
+  const detailView = document.getElementById('detailView');
+  detailView.classList.remove('active');
+  
+  // Exit Moon surface view when closing detail
+  if (moonSurfaceActive) {
+    moonSurfaceActive = false;
+    document.getElementById('moonSurface').classList.remove('active');
+  }
+  
+  document.querySelectorAll('.pub-card').forEach(card => {
+    card.classList.remove('highlighted');
+  });
+}
+
+function highlightPublication(bodyName) {
+  const cards = document.querySelectorAll('.pub-card');
+  
+  cards.forEach(card => {
+    if (card.dataset.body === bodyName) {
+      card.classList.add('highlighted');
+    } else {
+      card.classList.remove('highlighted');
+    }
+  });
+}
+
+function highlightBody(bodyName) {
+  const body = bodies[bodyName] || (bodyName === 'Sun' ? sun : null);
+  if (!body) return;
+  
+  const mesh = body.mesh || body;
+  if (mesh.material) {
+    if (mesh.material.emissive) {
+      mesh.material.emissive.setHex(0xffffff);
+      mesh.material.emissiveIntensity = 0.3;
+    }
+  } else if (mesh.children) {
+    mesh.children.forEach(child => {
+      if (child.material && child.material.emissive) {
+        child.material.emissive.setHex(0xffffff);
+        child.material.emissiveIntensity = 0.3;
+      }
+    });
+  }
+}
+
+function unhighlightBody(bodyName) {
+  const body = bodies[bodyName] || (bodyName === 'Sun' ? sun : null);
+  if (!body) return;
+  
+  const mesh = body.mesh || body;
+  const originalColor = bodyData.find(d => d.name === bodyName)?.color || 0x888888;
+  
+  if (mesh.material) {
+    if (mesh.material.emissive) {
+      mesh.material.emissive.setHex(originalColor);
+      mesh.material.emissiveIntensity = 0.05;
+    }
+  } else if (mesh.children) {
+    mesh.children.forEach(child => {
+      if (child.material && child.material.emissive) {
+        child.material.emissive.setHex(originalColor);
+        child.material.emissiveIntensity = 0.05;
+      }
+    });
+  }
+}
+
+function getCurrentViewTarget() {
+  // Calculate where the camera is currently looking
+  const direction = new THREE.Vector3();
+  camera.getWorldDirection(direction);
+  const distance = 100; // Look ahead distance
+  return camera.position.clone().add(direction.multiplyScalar(distance));
+}
+
+// Resizable panels
+const resizer = document.getElementById('resizer');
+const leftPanel = document.getElementById('leftPanel');
+let isResizing = false;
+
+resizer.addEventListener('mousedown', e => {
+  isResizing = true;
+  document.body.style.cursor = 'col-resize';
+});
+
+document.addEventListener('mousemove', e => {
+  if (!isResizing) return;
+  const newWidth = (e.clientX / window.innerWidth) * 100;
+  if (newWidth > 15 && newWidth < 75) {
+    leftPanel.style.flex = `0 0 ${newWidth}%`;
+    updateImageSizes(100 - newWidth);
+    onWindowResize();
+  }
+});
+
+document.addEventListener('mouseup', () => {
+  if (isResizing) {
+    isResizing = false;
+    document.body.style.cursor = '';
+  }
+});
+
+function updateImageSizes(rightPanelPercent) {
+  const baseWidth = 250;
+  const minWidth = 150;
+  const maxWidth = 350;
+  
+  let newWidth = baseWidth * (rightPanelPercent / 67);
+  newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
+  
+  document.querySelectorAll('.pub-image').forEach(img => {
+    img.style.width = newWidth + 'px';
+    img.style.minHeight = (newWidth * 0.75) + 'px';
+  });
+}
+
+// THREE.JS SETUP
+const canvas = document.getElementById('canvas3d');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+const camera = new THREE.PerspectiveCamera(50, leftPanel.clientWidth / leftPanel.clientHeight, 0.1, 15000);
+camera.position.set(250, 200, 250);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setSize(leftPanel.clientWidth, leftPanel.clientHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+const ambient = new THREE.AmbientLight(0x222244, 0.4);
+scene.add(ambient);
+
+const sunLight = new THREE.PointLight(0xfff8e7, 2.8, 2000);
+sunLight.position.set(0, 0, 0);
+scene.add(sunLight);
+
+// Enhanced starfield
+const starsGeo = new THREE.BufferGeometry();
+const starsVerts = [];
+const starsColors = [];
+const starsSizes = [];
+
+for (let i = 0; i < 25000; i++) {
+  const x = (Math.random() - 0.5) * 4000;
+  const y = (Math.random() - 0.5) * 4000;
+  const z = (Math.random() - 0.5) * 4000;
+  starsVerts.push(x, y, z);
+  
+  const color = new THREE.Color();
+  const colorType = Math.random();
+  if (colorType < 0.7) {
+    color.setHSL(0.6, 0.2, 0.8 + Math.random() * 0.2);
+  } else if (colorType < 0.85) {
+    color.setHSL(0.15, 0.3, 0.9);
+  } else {
+    color.setHSL(0.05, 0.5, 0.95);
+  }
+  starsColors.push(color.r, color.g, color.b);
+  
+  starsSizes.push(0.8 + Math.random() * 1.5);
+}
+
+starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starsVerts, 3));
+starsGeo.setAttribute('color', new THREE.Float32BufferAttribute(starsColors, 3));
+starsGeo.setAttribute('size', new THREE.Float32BufferAttribute(starsSizes, 1));
+
+const starsMat = new THREE.PointsMaterial({ 
+  size: 1.5,
+  vertexColors: true,
+  transparent: true,
+  opacity: 0.9,
+  sizeAttenuation: true
+});
+
+const starField = new THREE.Points(starsGeo, starsMat);
+scene.add(starField);
+
+// Moon Surface Scene
+let moonScene, moonCamera, moonRenderer;
+let moonSurfaceActive = false;
+let moonStarship, moonViper, moonLRO, moonEarth;
+
+function initMoonSurface() {
+  const moonCanvas = document.getElementById('moonSurface');
+  
+  moonScene = new THREE.Scene();
+  moonScene.background = new THREE.Color(0x0a0a0a);
+  
+  moonCamera = new THREE.PerspectiveCamera(60, leftPanel.clientWidth / leftPanel.clientHeight, 0.1, 5000);
+  moonCamera.position.set(8, 5, 15); // Better starting angle
+  moonCamera.lookAt(0, 0, 0);
+  
+  moonRenderer = new THREE.WebGLRenderer({ canvas: moonCanvas, antialias: true });
+  moonRenderer.setSize(leftPanel.clientWidth, leftPanel.clientHeight);
+  moonRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  
+  // Lighting
+  const ambientMoon = new THREE.AmbientLight(0x404040, 0.3);
+  moonScene.add(ambientMoon);
+  
+  const sunLightMoon = new THREE.DirectionalLight(0xffffff, 1.2);
+  sunLightMoon.position.set(100, 50, 50);
+  moonScene.add(sunLightMoon);
+  
+  // Moon terrain
+  const terrainGeo = new THREE.PlaneGeometry(500, 500, 100, 100);
+  const vertices = terrainGeo.attributes.position.array;
+  for (let i = 0; i < vertices.length; i += 3) {
+    vertices[i + 2] = Math.random() * 2 - 0.5;
+  }
+  terrainGeo.attributes.position.needsUpdate = true;
+  terrainGeo.computeVertexNormals();
+  
+  const terrainMat = new THREE.MeshStandardMaterial({ 
+    color: 0x888888,
+    roughness: 0.95,
+    metalness: 0.1
+  });
+  const terrain = new THREE.Mesh(terrainGeo, terrainMat);
+  terrain.rotation.x = -Math.PI / 2;
+  moonScene.add(terrain);
+  
+  // Add craters
+  for (let i = 0; i < 20; i++) {
+    const craterSize = 2 + Math.random() * 8;
+    const craterGeo = new THREE.CylinderGeometry(craterSize, craterSize * 0.8, 0.5, 16);
+    const crater = new THREE.Mesh(craterGeo, terrainMat);
+    crater.position.x = (Math.random() - 0.5) * 200;
+    crater.position.z = (Math.random() - 0.5) * 200;
+    crater.position.y = -0.3;
+    moonScene.add(crater);
+  }
+  
+  // Starship base
+  const starshipGroup = new THREE.Group();
+  const bodyGeo = new THREE.CylinderGeometry(1.5, 1.4, 9, 16);
+  const bodyMat = new THREE.MeshStandardMaterial({ 
+    color: 0xf0f0f0, 
+    metalness: 0.9, 
+    roughness: 0.2,
+    emissive: 0xf0f0f0,
+    emissiveIntensity: 0.05
+  });
+  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  body.position.y = 5.5;
+  starshipGroup.add(body);
+  
+  const noseGeo = new THREE.ConeGeometry(1.5, 3, 16);
+  const nose = new THREE.Mesh(noseGeo, bodyMat);
+  nose.position.y = 11.5;
+  starshipGroup.add(nose);
+  
+  const legGeo = new THREE.CylinderGeometry(0.2, 0.3, 5, 8);
+  const legMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
+  for (let i = 0; i < 4; i++) {
+    const leg = new THREE.Mesh(legGeo, legMat);
+    const angle = (i / 4) * Math.PI * 2;
+    leg.position.x = Math.cos(angle) * 2;
+    leg.position.z = Math.sin(angle) * 2;
+    leg.position.y = 2.5;
+    leg.rotation.z = Math.cos(angle) * 0.2;
+    leg.rotation.x = Math.sin(angle) * 0.2;
+    starshipGroup.add(leg);
+  }
+  
+  starshipGroup.position.set(-15, 0, -20);
+  starshipGroup.userData = { name: 'Starship', type: 'clickable' };
+  moonScene.add(starshipGroup);
+  moonStarship = starshipGroup;
+  
+  // VIPER rover
+  const viperGroup = new THREE.Group();
+  const roverBody = new THREE.BoxGeometry(2, 1, 2.5);
+  // const roverMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.7, roughness: 0.4 });
+  const roverMat = new THREE.MeshStandardMaterial({ 
+    color: 0xf0f0f0, 
+    metalness: 0.9, 
+    roughness: 0.2,
+    emissive: 0x333333,
+    emissiveIntensity: 100
+  });
+  const roverMesh = new THREE.Mesh(roverBody, roverMat);
+  roverMesh.position.y = 1;
+  viperGroup.add(roverMesh);
+  
+  const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.5, 12);
+  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.8 });
+  const wheelPositions = [[-1, 0.4, 1.5], [-1, 0.4, -1.5], [1, 0.4, 1.5], [1, 0.4, -1.5]];
+  wheelPositions.forEach(pos => {
+    const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+    wheel.rotation.z = Math.PI / 2;
+    wheel.position.set(...pos);
+    viperGroup.add(wheel);
+  });
+  
+  const panelGeo = new THREE.BoxGeometry(2.5, 0.1, 2);
+  const panelMat = new THREE.MeshStandardMaterial({ color: 0x0a1f40, metalness: 0.6, roughness: 0.3 });
+  const panel = new THREE.Mesh(panelGeo, panelMat);
+  panel.position.y = 2;
+  panel.rotation.x = -0.2;
+  viperGroup.add(panel);
+  
+  viperGroup.position.set(5, 0, 5);
+  viperGroup.userData = { name: 'VIPER', type: 'clickable' };
+  moonScene.add(viperGroup);
+  moonViper = viperGroup;
+  
+  // LRO satellite
+  const lroGroup = new THREE.Group();
+  const satBody = new THREE.BoxGeometry(1.5, 1.5, 2);
+  const satMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.3 });
+  const satMesh = new THREE.Mesh(satBody, satMat);
+  lroGroup.add(satMesh);
+  
+  const satPanelGeo = new THREE.BoxGeometry(4, 0.1, 1.5);
+  const satPanelMat = new THREE.MeshStandardMaterial({ color: 0x0a1f40, metalness: 0.7, roughness: 0.3 });
+  [-2, 2].forEach(x => {
+    const p = new THREE.Mesh(satPanelGeo, satPanelMat);
+    p.position.x = x;
+    lroGroup.add(p);
+  });
+  
+  lroGroup.position.set(-20, 30, -40);
+  lroGroup.userData = { name: 'LRO', type: 'clickable' };
+  moonScene.add(lroGroup);
+  moonLRO = lroGroup;
+  
+  // Earth in background
+  const earthGeo = new THREE.SphereGeometry(8, 32, 32);
+  const earthMat = new THREE.MeshBasicMaterial({ color: 0x4a90e2, emissive: 0x4a90e2, emissiveIntensity: 0.3 });
+  moonEarth = new THREE.Mesh(earthGeo, earthMat);
+  moonEarth.position.set(80, 40, -200);
+  moonEarth.userData = { name: 'Earth' };
+  moonScene.add(moonEarth);
+  
+  
+  // Add collectible moon rocks (only visible in rover POV)
+  const moonRocks = [];
+  const rockGeo = new THREE.DodecahedronGeometry(0.8, 0);
+  const rockMat = new THREE.MeshStandardMaterial({ 
+    color: 0x666666,  // DARK GREY
+    roughness: 0.95, 
+    metalness: 0.05,
+    emissive: 0x333333,
+    emissiveIntensity: 0.05
+  });
+
+  for (let i = 0; i < 15; i++) {
+    const rock = new THREE.Mesh(rockGeo, rockMat.clone());
+    rock.position.x = (Math.random() - 0.5) * 100;
+    rock.position.z = (Math.random() - 0.5) * 100;
+    rock.position.y = 0.3;
+    rock.rotation.x = Math.random() * Math.PI;
+    rock.rotation.y = Math.random() * Math.PI;
+    rock.rotation.z = Math.random() * Math.PI;
+    rock.userData = { collected: false, id: i };
+    rock.scale.set(1.5 + Math.random() * 0.5, 1.5 + Math.random() * 0.5, 1.5 + Math.random() * 0.5);
+    rock.visible = false;  // START HIDDEN
+    moonScene.add(rock);
+    moonRocks.push(rock);
+  }
+  
+  // Store rocks globally for collision detection
+  window.moonRocks = moonRocks;
+  window.rocksCollected = 0;
+  
+  // Stars
+  const moonStarsGeo = new THREE.BufferGeometry();
+  const moonStarsVerts = [];
+  for (let i = 0; i < 3000; i++) {
+    const x = (Math.random() - 0.5) * 2000;
+    const y = Math.random() * 1000;
+    const z = (Math.random() - 0.5) * 2000;
+    moonStarsVerts.push(x, y, z);
+  }
+  moonStarsGeo.setAttribute('position', new THREE.Float32BufferAttribute(moonStarsVerts, 3));
+  const moonStarsMat = new THREE.PointsMaterial({ size: 1.5, color: 0xffffff });
+  const moonStars = new THREE.Points(moonStarsGeo, moonStarsMat);
+  moonScene.add(moonStars);
+  
+  // Moon canvas click handler
+  moonCanvas.addEventListener('click', e => {
+    if (!moonSurfaceActive || isDragging) return;
+    
+    const rect = moonCanvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    raycaster.setFromCamera(mouse, moonCamera);
+    const moonClickables = [moonStarship, moonViper, moonLRO, moonEarth].filter(obj => obj);
+    const moonHits = raycaster.intersectObjects(moonClickables, true);
+    
+    if (moonHits.length > 0) {
+      let objName = moonHits[0].object.userData.name;
+      if (!objName && moonHits[0].object.parent) {
+        objName = moonHits[0].object.parent.userData.name;
+      }
+      if (!objName && moonHits[0].object.parent && moonHits[0].object.parent.parent) {
+        objName = moonHits[0].object.parent.parent.userData.name;
+      }
+      
+      // Check if VIPER was clicked - enter rover POV mode
+      if (objName === 'VIPER') {
+        roverPOVMode = !roverPOVMode;
+        viperManualControl = roverPOVMode;
+        
+        // Toggle rock visibility based on POV mode
+        if (window.moonRocks) {
+          window.moonRocks.forEach(rock => {
+            rock.visible = roverPOVMode;
+          });
+        }
+
+        if (roverPOVMode) {
+          // Position camera behind and above rover
+          const roverPos = moonViper.position.clone();
+          const roverForward = new THREE.Vector3(0, 0, -1).applyQuaternion(moonViper.quaternion);
+          const cameraPos = roverPos.clone().sub(roverForward.multiplyScalar(5)).add(new THREE.Vector3(0, 2, 0));
+          moonCamera.position.copy(cameraPos);
+          moonCamera.lookAt(roverPos.clone().add(new THREE.Vector3(0, 1, 0)));
+        }
+        return;
+      }
+      
+      // Check if Earth was clicked - exit Moon view
+      if (objName === 'Earth') {
+        moonSurfaceActive = false;
+        roverPOVMode = false;
+        viperManualControl = false;
+        document.getElementById('moonSurface').classList.remove('active');
+        
+        const earthPub = PUBS.find(p => p.body === 'Earth');
+        if (earthPub) {
+          showDetail(earthPub);
+          highlightPublication('Earth');
+          setTimeout(() => zoomToBody('Earth'), 100);
+        }
+        return;
+      }
+      
+      // For other objects, show publication details
+      if (objName) {
+        const pub = PUBS.find(p => p.body === objName);
+        if (pub) {
+          showDetail(pub);
+          highlightPublication(objName);
+        }
+      }
+    }
+  });
+  
+  
+  
+  
+  // Moon surface mouse controls
+  moonCanvas.addEventListener('mousedown', e => {
+    if (!moonSurfaceActive) return;
+    isDragging = false;
+    dragging = true;
+    prevX = e.clientX;
+    prevY = e.clientY;
+    if (!roverPOVMode) {
+      moonCanvas.style.cursor = 'grabbing';
+    }
+  });
+  
+  moonCanvas.addEventListener('wheel', e => {
+    if (!moonSurfaceActive) return;
+    e.preventDefault();
+    
+    const delta = e.deltaY > 0 ? 0.85 : 1.15; 
+    const direction = new THREE.Vector3();
+    moonCamera.getWorldDirection(direction);
+    
+    moonCamera.position.add(direction.multiplyScalar((delta - 1) * 10));
+    
+    // Clamp camera distance
+    const distance = moonCamera.position.length();
+    if (distance < 3) {
+      moonCamera.position.normalize().multiplyScalar(3);
+    }
+    if (distance > 150) {
+      moonCamera.position.normalize().multiplyScalar(150);
+    }
+  }, { passive: false });
+}  
+
+// Sun with corona
+const sunGeo = new THREE.SphereGeometry(18, 64, 64);
+const sunMat = new THREE.MeshBasicMaterial({ 
+  color: 0xfdb813,
+  emissive: 0xfdb813,
+  emissiveIntensity: 1
+});
+const sun = new THREE.Mesh(sunGeo, sunMat);
+sun.userData = { name: 'Sun' };
+scene.add(sun);
+
+for (let i = 0; i < 4; i++) {
+  const glowGeo = new THREE.SphereGeometry(22 + i * 4, 32, 32);
+  const glowMat = new THREE.MeshBasicMaterial({
+    color: 0xffaa00,
+    transparent: true,
+    opacity: 0.18 - i * 0.04,
+    side: THREE.BackSide
+  });
+  const glow = new THREE.Mesh(glowGeo, glowMat);
+  sun.add(glow);
+}
+
+// BODY DATA - CUSTOMIZE 3D OBJECTS HERE
+const bodyData = [
+  { name: 'Mercury', color: 0x8c7853, size: 3, orbit: 50, speed: 0.04, roughness: 0.9 },
+  { name: 'Venus', color: 0xe8cda2, size: 4.5, orbit: 70, speed: 0.015, roughness: 0.6 },
+  { name: 'Earth', color: 0x4a90e2, size: 7, orbit: 100, speed: 0.01, roughness: 0.7 },
+  { name: 'Moon', color: 0xaaaaaa, size: 2.5, orbit: 100, speed: 0.01, isMoon: true, parent: 'Earth', moonDist: 15, roughness: 0.9, onSurface: false },
+  { name: 'ISS', color: 0xcccccc, size: 4, orbit: 100, speed: 0.01, isMoon: true, parent: 'Earth', moonDist: 10, isStation: true, body: 'ISS' },
+  { name: 'HWO', color: 0xffd700, size: 3, orbit: 100, speed: 0.000001, isMoon: true, parent: 'Earth', moonDist: -10, isLagrange: true, body: 'HWO' },
+  { name: 'Starship', color: 0xeeeeee, size: 0.8, orbit: 100, speed: 0.01, isMoon: true, parent: 'Moon', moonDist: 0, isSpacecraft: true, onSurface: true, body: 'Starship' },
+  { name: 'VIPER', color: 0x999999, size: 0.5, orbit: 100, speed: 0.01, isMoon: true, parent: 'Moon', moonDist: 0, isRover: true, onSurface: true, body: 'VIPER' },
+  { name: 'LRO', color: 0xdddddd, size: 0.6, orbit: 100, speed: 0.01, isMoon: true, parent: 'Moon', moonDist: 5, isSatellite: true, body: 'LRO' },
+  { name: 'Mars', color: 0xcd5c5c, size: 4, orbit: 135, speed: 0.008, roughness: 0.85 },
+  { name: 'Jupiter', color: 0xc88b3a, size: 14, orbit: 210, speed: 0.002, roughness: 0.4 },
+  { name: 'Io', color: 0xffd700, size: 1.2, orbit: 210, speed: 0.002, isMoon: true, parent: 'Jupiter', moonDist: 20, roughness: 0.8 },
+  { name: 'Europa', color: 0xd4c4a0, size: 1.1, orbit: 210, speed: 0.002, isMoon: true, parent: 'Jupiter', moonDist: 24, roughness: 0.3 },
+  { name: 'Ganymede', color: 0xa89988, size: 1.5, orbit: 210, speed: 0.002, isMoon: true, parent: 'Jupiter', moonDist: 28, roughness: 0.7 },
+  { name: 'Callisto', color: 0x7a7265, size: 1.3, orbit: 210, speed: 0.002, isMoon: true, parent: 'Jupiter', moonDist: 32, roughness: 0.9 },
+  { name: 'Saturn', color: 0xfad5a5, size: 12, orbit: 270, speed: 0.0009, hasRing: true, roughness: 0.5 },
+  { name: 'Titan', color: 0xffa500, size: 1.4, orbit: 270, speed: 0.0009, isMoon: true, parent: 'Saturn', moonDist: 22, roughness: 0.4 },
+  { name: 'Enceladus', color: 0xf0f8ff, size: 0.7, orbit: 270, speed: 0.0009, isMoon: true, parent: 'Saturn', moonDist: 18, roughness: 0.1 },
+  { name: 'Rhea', color: 0xd3d3d3, size: 0.9, orbit: 270, speed: 0.0009, isMoon: true, parent: 'Saturn', moonDist: 20, roughness: 0.8 },
+  { name: 'Uranus', color: 0x4fd0e7, size: 7, orbit: 330, speed: 0.0004, roughness: 0.3 },
+  { name: 'Neptune', color: 0x4166f5, size: 6.8, orbit: 390, speed: 0.0001, roughness: 0.3 },
+  { name: 'Ceres', color: 0x888888, size: 1.2, orbit: 165, speed: 0.005, roughness: 0.95 },
+  { name: 'Vesta', color: 0xaa9988, size: 0.8, orbit: 170, speed: 0.0048, roughness: 0.9 },
+  { name: 'Pallas', color: 0x9999aa, size: 0.7, orbit: 168, speed: 0.0049, roughness: 0.95 }
+];
+
+const bodies = {};
+const orbits = [];
+const moonOrbits = [];
+const originalColors = new Map();
+
+bodyData.forEach(d => {
+  let mesh;
+  
+  if (d.isStation) {
+    const group = new THREE.Group();
+    
+    const trussGeo = new THREE.BoxGeometry(10, 0.3, 0.3);
+    const trussMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
+    const truss = new THREE.Mesh(trussGeo, trussMat);
+    group.add(truss);
+    
+    const moduleGeo = new THREE.CylinderGeometry(0.5, 0.5, 3, 16);
+    const moduleMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, metalness: 0.8, roughness: 0.3 });
+    
+    const zarya = new THREE.Mesh(moduleGeo, moduleMat);
+    zarya.rotation.z = Math.PI / 2;
+    zarya.position.x = -2;
+    group.add(zarya);
+    
+    const unity = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.5, 16), moduleMat);
+    unity.rotation.z = Math.PI / 2;
+    group.add(unity);
+    
+    const destiny = new THREE.Mesh(moduleGeo, moduleMat);
+    destiny.rotation.z = Math.PI / 2;
+    destiny.position.x = 2;
+    group.add(destiny);
+    
+    const zvezdaGeo = new THREE.CylinderGeometry(0.45, 0.45, 2.5, 16);
+    const zvezda = new THREE.Mesh(zvezdaGeo, moduleMat);
+    zvezda.rotation.z = Math.PI / 2;
+    zvezda.position.x = -4;
+    group.add(zvezda);
+    
+    const panelGeo = new THREE.BoxGeometry(4.5, 0.05, 1.8);
+    const panelMat = new THREE.MeshStandardMaterial({ 
+      color: 0x1a3a5a, 
+      metalness: 0.7, 
+      roughness: 0.2,
+      emissive: 0x0a1f3a,
+      emissiveIntensity: 0.3
+    });
+    
+    for (let i = 0; i < 2; i++) {
+      const panel = new THREE.Mesh(panelGeo, panelMat);
+      panel.position.set(-3.5, 0, 2.5 + i * 1);
+      panel.rotation.x = Math.PI / 2;
+      group.add(panel);
+    }
+    
+    for (let i = 0; i < 2; i++) {
+      const panel = new THREE.Mesh(panelGeo, panelMat);
+      panel.position.set(-3.5, 0, -2.5 - i * 1);
+      panel.rotation.x = Math.PI / 2;
+      group.add(panel);
+    }
+    
+    for (let i = 0; i < 2; i++) {
+      const panel = new THREE.Mesh(panelGeo, panelMat);
+      panel.position.set(3.5, 0, 2.5 + i * 1);
+      panel.rotation.x = Math.PI / 2;
+      group.add(panel);
+    }
+    
+    for (let i = 0; i < 2; i++) {
+      const panel = new THREE.Mesh(panelGeo, panelMat);
+      panel.position.set(3.5, 0, -2.5 - i * 1);
+      panel.rotation.x = Math.PI / 2;
+      group.add(panel);
+    }
+    
+    const radiatorGeo = new THREE.BoxGeometry(0.3, 0.05, 2);
+    const radiatorMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6, roughness: 0.4 });
+    
+    for (let i = 0; i < 6; i++) {
+      const radiator = new THREE.Mesh(radiatorGeo, radiatorMat);
+      radiator.position.set(-1 + i * 0.8, 0.7, 0);
+      group.add(radiator);
+    }
+    
+    const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.5, 12);
+    const arm = new THREE.Mesh(armGeo, trussMat);
+    arm.position.set(1, 0.6, 0.5);
+    arm.rotation.z = 0.5;
+    group.add(arm);
+    group.scale.set(0.5, 0.5, 0.5); 
+    group.userData = { name: d.name };
+    group.userData = { name: d.name };
+    mesh = group;
+    
+  } else if (d.isLagrange) {
+    // Habitable Worlds Observatory - telescope design
+    const group = new THREE.Group();
+    
+    // Primary mirror (hexagonal segments style)
+    const mirrorGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.15, 6);
+    const mirrorMat = new THREE.MeshStandardMaterial({ 
+      color: 0xffd700, 
+      metalness: 0.95, 
+      roughness: 0.05,
+      emissive: 0x887700,
+      emissiveIntensity: 0.2
+    });
+    const mirror = new THREE.Mesh(mirrorGeo, mirrorMat);
+    mirror.rotation.x = Math.PI / 2;
+    mirror.position.z = -0.5;
+    group.add(mirror);
+    
+    // Secondary mirror
+    const secMirrorGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.08, 6);
+    const secMirror = new THREE.Mesh(secMirrorGeo, mirrorMat);
+    secMirror.rotation.x = Math.PI / 2;
+    secMirror.position.z = 1.5;
+    group.add(secMirror);
+    
+    // Support struts
+    const strutGeo = new THREE.CylinderGeometry(0.03, 0.03, 2, 8);
+    const strutMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
+    
+    for (let i = 0; i < 4; i++) {
+      const strut = new THREE.Mesh(strutGeo, strutMat);
+      const angle = (i / 4) * Math.PI * 2;
+      strut.position.x = Math.cos(angle) * 0.6;
+      strut.position.y = Math.sin(angle) * 0.6;
+      strut.position.z = 0.5;
+      group.add(strut);
+    }
+    
+    // Telescope body/bus
+    const bodyGeo = new THREE.BoxGeometry(0.8, 0.8, 1.5);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.4 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.z = -1.5;
+    group.add(body);
+    
+    // Sun shield (multi-layer)
+    const shieldGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.05, 6);
+    const shieldMat = new THREE.MeshStandardMaterial({ 
+      color: 0x8888aa, 
+      metalness: 0.6, 
+      roughness: 0.3,
+      transparent: true,
+      opacity: 0.9
+    });
+    
+    for (let i = 0; i < 3; i++) {
+      const shield = new THREE.Mesh(shieldGeo, shieldMat);
+      shield.rotation.x = Math.PI / 2;
+      shield.position.z = -2.5 - i * 0.3;
+      group.add(shield);
+    }
+    
+    // Solar panels
+    const panelGeo = new THREE.BoxGeometry(2, 0.03, 0.8);
+    const panelMat = new THREE.MeshStandardMaterial({ 
+      color: 0x1a3a5a, 
+      metalness: 0.7, 
+      roughness: 0.2,
+      emissive: 0x0a1f3a,
+      emissiveIntensity: 0.3
+    });
+    
+    const panel1 = new THREE.Mesh(panelGeo, panelMat);
+    panel1.position.set(-1.2, 0, -1.5);
+    group.add(panel1);
+    
+    const panel2 = new THREE.Mesh(panelGeo, panelMat);
+    panel2.position.set(1.2, 0, -1.5);
+    group.add(panel2);
+    
+    // High-gain antenna
+    const antennaGeo = new THREE.ConeGeometry(0.4, 0.3, 16);
+    const antenna = new THREE.Mesh(antennaGeo, strutMat);
+    antenna.position.set(0, 0, -3.5);
+    antenna.rotation.x = Math.PI;
+    group.add(antenna);
+    
+    group.userData = { name: d.name };
+    mesh = group;
+    
+  } else if (d.isSpacecraft) {
+    const group = new THREE.Group();
+    const bodyGeo = new THREE.CylinderGeometry(0.25, 0.23, 1.5, 16);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, metalness: 0.9, roughness: 0.2 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 1.4;
+    group.add(body);
+    
+    const noseGeo = new THREE.ConeGeometry(0.25, 0.5, 16);
+    const nose = new THREE.Mesh(noseGeo, bodyMat);
+    nose.position.y = 2.4;
+    group.add(nose);
+    
+    const legGeo = new THREE.CylinderGeometry(0.03, 0.05, 0.9, 8);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
+    for (let i = 0; i < 4; i++) {
+      const leg = new THREE.Mesh(legGeo, legMat);
+      const angle = (i / 4) * Math.PI * 2;
+      leg.position.x = Math.cos(angle) * 0.3;
+      leg.position.z = Math.sin(angle) * 0.3;
+      leg.position.y = 0.45;
+      leg.rotation.z = Math.cos(angle) * 0.15;
+      leg.rotation.x = Math.sin(angle) * 0.15;
+      group.add(leg);
+    }
+    
+    const engineGeo = new THREE.CylinderGeometry(0.23, 0.25, 0.4, 16);
+    const engineMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.4 });
+    const engine = new THREE.Mesh(engineGeo, engineMat);
+    engine.position.y = 0.5;
+    group.add(engine);
+    group.scale.set(0.5, 0.5, 0.5);
+    group.userData = { name: d.name };
+    mesh = group;
+    
+  } else if (d.isRover) {
+    const group = new THREE.Group();
+    const bodyGeo = new THREE.BoxGeometry(0.5, 0.25, 0.6);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.7, roughness: 0.4 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = 0.2;
+    group.add(body);
+    
+    const wheelGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.12, 12);
+    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.8 });
+    const wheelPositions = [[-0.25, 0.1, 0.35], [-0.25, 0.1, -0.35], [0.25, 0.1, 0.35], [0.25, 0.1, -0.35]];
+    wheelPositions.forEach(pos => {
+      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
+      wheel.rotation.z = Math.PI / 2;
+      wheel.position.set(...pos);
+      group.add(wheel);
+    });
+    
+    const armGeo = new THREE.BoxGeometry(0.08, 0.5, 0.08);
+    const armMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.3 });
+    const arm = new THREE.Mesh(armGeo, armMat);
+    arm.position.set(0.3, 0.35, 0);
+    arm.rotation.z = -0.3;
+    group.add(arm);
+    
+    const panelGeo = new THREE.BoxGeometry(0.6, 0.02, 0.5);
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x0a1f40, metalness: 0.6, roughness: 0.3 });
+    const panel = new THREE.Mesh(panelGeo, panelMat);
+    panel.position.y = 0.4;
+    panel.rotation.x = -0.15;
+    group.add(panel);
+    
+    const antennaGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 8);
+    const antenna = new THREE.Mesh(antennaGeo, armMat);
+    antenna.position.set(-0.2, 0.5, -0.2);
+    group.add(antenna);
+    group.userData = { name: d.name };
+    mesh = group;
+    
+  } else if (d.isSatellite) {
+    const group = new THREE.Group();
+    const bodyGeo = new THREE.BoxGeometry(0.4, 0.4, 0.6);
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.3 });
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    group.add(body);
+    
+    const panelGeo = new THREE.BoxGeometry(1.2, 0.02, 0.5);
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x0a1f40, metalness: 0.7, roughness: 0.3 });
+    const panel1 = new THREE.Mesh(panelGeo, panelMat);
+    panel1.position.x = -0.6;
+    group.add(panel1);
+    const panel2 = new THREE.Mesh(panelGeo, panelMat);
+    panel2.position.x = 0.6;
+    group.add(panel2);
+    
+    const antennaGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
+    const antennaMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.2 });
+    const antenna = new THREE.Mesh(antennaGeo, antennaMat);
+    antenna.position.y = 0.45;
+    group.add(antenna);
+    
+    const dishGeo = new THREE.ConeGeometry(0.15, 0.1, 16);
+    const dish = new THREE.Mesh(dishGeo, antennaMat);
+    dish.position.y = 0.7;
+    dish.rotation.x = Math.PI;
+    group.add(dish);
+    group.userData = { name: d.name };
+    mesh = group;
+    
+  } else {
+    const geo = new THREE.SphereGeometry(d.size, 64, 64);
+    const mat = new THREE.MeshStandardMaterial({ 
+      color: d.color,
+      roughness: d.roughness || 0.7,
+      metalness: 0,
+      emissive: d.color,
+      emissiveIntensity: 0.05
+    });
+    mesh = new THREE.Mesh(geo, mat);
+  }
+  
+  mesh.userData = { name: d.name };
+  scene.add(mesh);
+  
+  bodies[d.name] = { 
+    mesh, 
+    orbit: d.orbit, 
+    speed: d.speed, 
+    angle: Math.random() * Math.PI * 2, 
+    isMoon: d.isMoon,
+    parent: d.parent,
+    moonDist: d.moonDist || 10,
+    onSurface: d.onSurface || false,
+    isSatellite: d.isSatellite || false,
+    isLagrange: d.isLagrange || false
+  };
+  
+  if (!d.isMoon) {
+    const points = [];
+    const segments = 256;
+    for (let i = 0; i <= segments; i++) {
+      const a = (i / segments) * Math.PI * 2;
+      points.push(new THREE.Vector3(Math.cos(a) * d.orbit, 0, Math.sin(a) * d.orbit));
+    }
+    
+    const orbitGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const orbitMat = new THREE.LineDashedMaterial({ 
+      color: 0xffffff, transparent: true, opacity: 0.35, dashSize: 3, gapSize: 2, linewidth: 1
+    });
+    const orbitLine = new THREE.Line(orbitGeo, orbitMat);
+    orbitLine.computeLineDistances();
+    orbitLine.renderOrder = 999;
+    scene.add(orbitLine);
+    orbits.push(orbitLine);
+    
+  } else if (d.parent && !d.onSurface && !d.isLagrange) {
+    const points = [];
+    const segments = 128;
+    for (let i = 0; i <= segments; i++) {
+      const a = (i / segments) * Math.PI * 2;
+      points.push(new THREE.Vector3(Math.cos(a) * d.moonDist, 0, Math.sin(a) * d.moonDist));
+    }
+    
+    const moonOrbitGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const moonOrbitMat = new THREE.LineDashedMaterial({ 
+      color: 0x888888, transparent: true, opacity: 0.25, dashSize: 2, gapSize: 1.5
+    });
+    const moonOrbitLine = new THREE.Line(moonOrbitGeo, moonOrbitMat);
+    moonOrbitLine.computeLineDistances();
+    moonOrbitLine.renderOrder = 999;
+    scene.add(moonOrbitLine);
+    moonOrbits.push({line: moonOrbitLine, parent: d.parent});
+  }
+  
+  if (d.hasRing) {
+    const ringGeo = new THREE.RingGeometry(d.size * 1.5, d.size * 2.5, 128);
+    const ringMat = new THREE.MeshBasicMaterial({ 
+      color: 0xc9b18a,
+      side: THREE.DoubleSide,
+      transparent: true,
+      opacity: 0.7
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    mesh.add(ring);
+  }
+});
+
+
+let isAnimating = true;
+let viperManualControl = false;
+let roverPOVMode = false;
+let roverCameraOffset = new THREE.Vector3(0, 2, 5);
+let selectedBody = null;
+let pausedPlanets = false;
+let rotateMode = true;
+let panMode = false;
+let animationSpeed = 1;
+let cameraFollowTarget = null;
+let moonViperAngle = 0;
+let moonLROAngle = 0;
+let starshipVerticalPos = 0;
+let starshipDirection = 1; // 1 for up, -1 for down
+
+function animate() {
+  requestAnimationFrame(animate);
+  
+  if (moonSurfaceActive) {
+    // Update legend for Moon view
+    const legendEl = document.getElementById('legendText');
+    if (roverPOVMode) {
+      legendEl.innerHTML = `<span class="legend-title">🎮 Rover Controls</span><strong>VIPER Rover POV</strong> – 🪨 Rocks Collected: ${window.rocksCollected || 0}/15 · Use Arrow Keys: ↑ Forward · ↓ Backward · ← Turn Left · → Turn Right · Spacebar: Speed Boost · Change simulation speed for rover speed`;
+    } else {
+      legendEl.innerHTML = '<span class="legend-title">🌙 Moon Surface</span><strong>Moon Surface View</strong> – Click VIPER rover to enter driving mode · Click Starship/LRO/Earth to view publications · Drag to rotate · Scroll to zoom';
+    }
+    
+    // Update rover POV camera if active
+    if (roverPOVMode && moonViper) {
+      const roverPos = moonViper.position.clone();
+      const roverForward = new THREE.Vector3(0, 0, -1).applyQuaternion(moonViper.quaternion);
+      const cameraPos = roverPos.clone().sub(roverForward.multiplyScalar(5)).add(new THREE.Vector3(0, 2, 0));
+      moonCamera.position.copy(cameraPos);
+      moonCamera.lookAt(roverPos.clone().add(roverForward.multiplyScalar(3)).add(new THREE.Vector3(0, 1, 0)));
+    }
+    
+    // Animate Moon surface objects
+    if (isAnimating && !pausedPlanets) {
+      
+      // VIPER rover - automatic control only if NOT in POV mode
+      if (!viperManualControl && !roverPOVMode) {
+        moonViperAngle += 0.001 * animationSpeed;
+        const roverRadius = 12;
+        moonViper.position.x = Math.cos(moonViperAngle) * roverRadius;
+        moonViper.position.z = Math.sin(moonViperAngle) * roverRadius;
+        moonViper.rotation.y = moonViperAngle + Math.PI / 2;
+      }
+      // Check for rock collection
+      if (window.moonRocks) {
+        window.moonRocks.forEach(rock => {
+          if (!rock.userData.collected) {
+            const distance = moonViper.position.distanceTo(rock.position);
+            if (distance < 2) {
+              rock.userData.collected = true;
+              window.rocksCollected++;
+              
+              // Collection animation - make rover flash green
+              moonViper.traverse(child => {
+                if (child.material) {
+                  if (child.material.emissive) {
+                    child.material.emissive.setHex(0x00ff00);
+                    child.material.emissiveIntensity = 2.0;
+                  }
+                  if (child.material.color) {
+                    child.material.color.setHex(0x00ff00);
+                  }
+                }
+              });
+
+              setTimeout(() => {
+                moonViper.traverse(child => {
+                  if (child.material) {
+                    if (child.material.emissive) {
+                      child.material.emissive.setHex(0x999999);
+                      child.material.emissiveIntensity = 0.05;
+                    }
+                    if (child.material.color) {
+                      child.material.color.setHex(0x999999);
+                    }
+                  }
+                });
+              }, 500);
+              
+              const startScale = rock.scale.clone();
+              const startY = rock.position.y;
+              let animProgress = 0;
+              
+              function animateCollection() {
+                animProgress += 0.04;
+                if (animProgress < 1) {
+                  // Float up and spin
+                  rock.position.y = startY + Math.sin(animProgress * Math.PI) * 3;
+                  const scale = 1.2 - animProgress * 1.2;
+                  rock.scale.set(
+                    startScale.x * scale,
+                    startScale.y * scale,
+                    startScale.z * scale
+                  );
+                  rock.rotation.y += 0.3;
+                  rock.rotation.x += 0.2;
+                  
+                  // Glow effect
+                  if (rock.material.emissive) {
+                    rock.material.emissive.setHex(0xffaa00);
+                    rock.material.emissiveIntensity = 0.5 * (1 - animProgress);
+                  }
+                  
+                  requestAnimationFrame(animateCollection);
+                } else {
+                  moonScene.remove(rock);
+                }
+              }
+              animateCollection();
+              
+              
+              // Update legend with collection count
+              const legendEl = document.getElementById('legendText');
+              if (roverPOVMode) {
+                legendEl.innerHTML = `<span class="legend-title">🎮 Rover Controls</span><strong>VIPER Rover POV</strong> – 🪨 Rocks Collected: ${window.rocksCollected}/15 · Use Arrow Keys: ↑ Forward · ↓ Backward · ← Turn Left · → Turn Right · Spacebar: Speed Boost`;
+              }
+            }
+          }
+        });
+      }
+      
+      // Starship slow takeoff and landing
+      starshipVerticalPos += 0.015 * animationSpeed * starshipDirection;
+      if (starshipVerticalPos > 15) {
+        starshipDirection = -1;
+      } else if (starshipVerticalPos < 0) {
+        starshipDirection = 1;
+        starshipVerticalPos = 0;
+      }
+      moonStarship.position.y = starshipVerticalPos;
+
+      // LRO flying overhead in circular orbit
+      moonLROAngle += 0.008 * animationSpeed;
+      const lroRadius = 35;
+      const lroHeight = 20;
+      moonLRO.position.x = Math.cos(moonLROAngle) * lroRadius;
+      moonLRO.position.y = lroHeight;
+      moonLRO.position.z = Math.sin(moonLROAngle) * lroRadius;
+      
+      const lookAhead = new THREE.Vector3(
+        Math.cos(moonLROAngle + 0.1) * lroRadius,
+        lroHeight,
+        Math.sin(moonLROAngle + 0.1) * lroRadius
+      );
+      moonLRO.lookAt(lookAhead);
+      
+      moonEarth.rotation.y += 0.001;
+    }
+    moonRenderer.render(moonScene, moonCamera);
+    return;
+  } else {
+    // Reset legend when not in Moon view
+    const legendEl = document.getElementById('legendText');
+    legendEl.innerHTML = '<span class="legend-title">🎮 How to Navigate</span><strong>Interactive 3D Solar System</strong> – Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels';
+  }
+  
+  // Original solar system animation
+  if (isAnimating && !pausedPlanets) {
+    Object.entries(bodies).forEach(([name, b]) => {
+      if (b.orbit > 0) {
+        b.angle += b.speed * animationSpeed;
+        
+        if (b.isMoon && b.parent) {
+          const parentBody = bodies[b.parent];
+          if (parentBody) {
+            if (b.isLagrange) {
+              const earthAngle = parentBody.angle;
+              const l2Distance = 50;
+              
+              b.mesh.position.x = parentBody.mesh.position.x + Math.cos(earthAngle) * l2Distance;
+              b.mesh.position.z = parentBody.mesh.position.z + Math.sin(earthAngle) * l2Distance;
+              b.mesh.position.y = 0;
+              
+              const orbitRadius = 5;
+              const orbitSpeed = b.angle * 0.5;
+              b.mesh.position.x += Math.cos(orbitSpeed) * orbitRadius;
+              b.mesh.position.z += Math.sin(orbitSpeed) * orbitRadius;
+              
+              b.mesh.rotation.y += 0.001;
+              
+            } else if (b.onSurface) {
+              const parentRadius = parentBody.mesh.geometry && parentBody.mesh.geometry.parameters 
+                ? parentBody.mesh.geometry.parameters.radius 
+                : 2.5;
+              
+              const surfaceAngle = name === 'VIPER' ? b.angle * 0.15 : b.angle * 0.2;
+              const heightOffset = name === 'VIPER' ? 0.13 : 0.4;
+              
+              const orbitPhase = parentBody.angle || 0;
+              const localAngle = surfaceAngle + orbitPhase;
+              
+              const x = Math.cos(localAngle) * Math.sin(Math.PI / 4);
+              const y = Math.sin(Math.PI / 4);
+              const z = Math.sin(localAngle) * Math.sin(Math.PI / 4);
+              
+              const surfacePoint = new THREE.Vector3(x, y, z).normalize().multiplyScalar(parentRadius);
+              
+              b.mesh.position.copy(parentBody.mesh.position).add(surfacePoint);
+              b.mesh.position.y += heightOffset;
+              
+              const normal = surfacePoint.clone().normalize();
+              b.mesh.up.copy(normal);
+              
+              const forward = new THREE.Vector3(-Math.sin(localAngle), 0, Math.cos(localAngle));
+              const target = b.mesh.position.clone().add(forward);
+              b.mesh.lookAt(target);
+              
+            } else if (b.isSatellite) {
+              const orbitSpeed = 12;
+              b.mesh.position.x = parentBody.mesh.position.x + Math.cos(b.angle * orbitSpeed) * b.moonDist;
+              b.mesh.position.y = parentBody.mesh.position.y + Math.sin(b.angle * orbitSpeed * 0.5) * (b.moonDist * 0.3);
+              b.mesh.position.z = parentBody.mesh.position.z + Math.sin(b.angle * orbitSpeed) * b.moonDist;
+            } else {
+              const moonSpeed = 8;
+              b.mesh.position.x = parentBody.mesh.position.x + Math.cos(b.angle * moonSpeed) * b.moonDist;
+              b.mesh.position.y = parentBody.mesh.position.y;
+              b.mesh.position.z = parentBody.mesh.position.z + Math.sin(b.angle * moonSpeed) * b.moonDist;
+            }
+          }
+        } else if (!b.isMoon) {
+          b.mesh.position.x = Math.cos(b.angle) * b.orbit;
+          b.mesh.position.z = Math.sin(b.angle) * b.orbit;
+        }
+      }
+      
+      if (b.mesh.rotation && !b.onSurface && !b.isLagrange) {
+        b.mesh.rotation.y += 0.002;
+      }
+    });
+    
+    moonOrbits.forEach(mo => {
+      const parent = bodies[mo.parent];
+      if (parent) {
+        mo.line.position.copy(parent.mesh.position);
+      }
+    });
+  }
+  
+  if (cameraFollowTarget && bodies[cameraFollowTarget]) {
+    const target = bodies[cameraFollowTarget].mesh.position;
+    const offset = new THREE.Vector3().subVectors(camera.position, target);
+    const distance = offset.length();
+    offset.normalize().multiplyScalar(distance);
+    camera.position.copy(target).add(offset);
+    camera.lookAt(target);
+  }
+  
+  renderer.render(scene, camera);
+}
+
+animate();
+
+// Initialize raycaster and mouse BEFORE event listeners
+let dragging = false, prevX = 0, prevY = 0;
+let isDragging = false;
+
+// Reset dragging state when mouse leaves canvas
+canvas.addEventListener('mouseleave', () => {
+  dragging = false;
+  isDragging = false;
+});
+
+// Get moonCanvas reference early
+const moonCanvas = document.getElementById('moonSurface');
+
+moonCanvas.addEventListener('mouseleave', () => {
+  dragging = false;
+  isDragging = false;
+  const hoverHint = document.getElementById('hoverHint');
+  if (hoverHint) hoverHint.classList.remove('active');
+});
+
+
+canvas.addEventListener('mousedown', e => {
+  isDragging = false;
+  dragging = true;
+  prevX = e.clientX;
+  prevY = e.clientY;
+  canvas.style.cursor = 'grabbing';
+});
+
+// Moon surface hover detection - GLOBAL
+// Store original colors for Moon objects
+const moonObjectColors = {
+  'Starship': 0xf0f0f0,
+  'VIPER': 0x999999,
+  'LRO': 0xdddddd,
+  'Earth': 0x4a90e2
+};
+
+// Moon surface hover detection
+moonCanvas.addEventListener('mousemove', e => {
+  if (!moonSurfaceActive) return;
+  // if (moonSurfaceActive) return;
+  
+  if (isDragging) return;  // Use isDragging instead of dragging
+  
+  const rect = moonCanvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  
+  raycaster.setFromCamera(mouse, moonCamera);
+  const moonHoverables = [moonStarship, moonViper, moonLRO, moonEarth].filter(obj => obj);
+  const moonHits = raycaster.intersectObjects(moonHoverables, true);
+  
+  const hoverHint = document.getElementById('hoverHint');
+  
+  // Always reset ALL objects first
+  [moonStarship, moonViper, moonLRO].forEach(obj => {
+    if (obj) {
+      obj.traverse(child => {
+        if (child.material && child.material.emissive) {
+          const objName = obj.userData.name;
+          const originalColor = moonObjectColors[objName] || 0x888888;
+          child.material.emissive.setHex(originalColor);
+          child.material.emissiveIntensity = 0.05;
+        }
+      });
+    }
+  });
+  
+  if (moonEarth && moonEarth.material) {
+    moonEarth.material.emissive.setHex(moonObjectColors['Earth']);
+    moonEarth.material.emissiveIntensity = 0.3;
+  }
+  
+  // Clear publication highlights
+  document.querySelectorAll('.pub-card').forEach(card => {
+    card.classList.remove('highlighted');
+  });
+  
+  // Now highlight hovered object - NO dragging check here!
+  if (moonHits.length > 0) {
+    let objName = moonHits[0].object.userData.name;
+    if (!objName && moonHits[0].object.parent) {
+      objName = moonHits[0].object.parent.userData.name;
+    }
+    if (!objName && moonHits[0].object.parent && moonHits[0].object.parent.parent) {
+      objName = moonHits[0].object.parent.parent.userData.name;
+    }
+    
+    if (objName) {
+      // Find the group object
+      let targetGroup = null;
+      if (objName === 'Starship') targetGroup = moonStarship;
+      else if (objName === 'VIPER') targetGroup = moonViper;
+      else if (objName === 'LRO') targetGroup = moonLRO;
+      else if (objName === 'Earth') targetGroup = moonEarth;
+      
+      // Highlight with bright white glow
+      if (targetGroup && targetGroup !== moonEarth) {
+        targetGroup.traverse(child => {
+          if (child.material && child.material.emissive) {
+            child.material.emissive.setHex(0xffffff);
+            child.material.emissiveIntensity = 1.5;
+          }
+        });
+      } else if (targetGroup === moonEarth) {
+        moonEarth.material.emissive.setHex(0xffffff);
+        moonEarth.material.emissiveIntensity = 2.0;
+      }
+      
+      moonCanvas.style.cursor = 'pointer';
+      highlightPublication(objName);
+      
+      // Show hints
+      if (hoverHint) {
+        let hintText = '';
+        if (objName === 'Starship') hintText = ' Click to view Starship publication';
+        else if (objName === 'VIPER') hintText = roverPOVMode ? ' Click to view VIPER publication' : ' Click to enter rover driving mode';
+        else if (objName === 'LRO') hintText = ' Click to view LRO publication';
+        else if (objName === 'Earth') hintText = ' Click to return to Earth view';
+        
+        if (hintText) {
+          hoverHint.textContent = hintText;
+          hoverHint.style.left = e.clientX + 15 + 'px';
+          hoverHint.style.top = e.clientY + 15 + 'px';
+          hoverHint.classList.add('active');
+        }
+      }
+    }
+  } else {
+    moonCanvas.style.cursor = 'default';
+    if (hoverHint) hoverHint.classList.remove('active');
+  }
+});
+ 
+
+moonCanvas.addEventListener('mousedown', e => {
+  if (!moonSurfaceActive) return;
+  isDragging = false;
+  dragging = true;
+  prevX = e.clientX;
+  prevY = e.clientY;
+  moonCanvas.style.cursor = 'grabbing';
+});
+
+moonCanvas.addEventListener('wheel', e => {
+  if (!moonSurfaceActive) return;
+  e.preventDefault();
+  
+  const delta = e.deltaY > 0 ? 0.85 : 1.15;
+  const direction = new THREE.Vector3();
+  moonCamera.getWorldDirection(direction);
+  
+  moonCamera.position.add(direction.multiplyScalar((delta - 1) * 10));
+  
+  // Clamp camera distance
+  const distance = moonCamera.position.length();
+  if (distance < 3) {
+    moonCamera.position.normalize().multiplyScalar(3);
+  }
+  if (distance > 150) {
+    moonCamera.position.normalize().multiplyScalar(150);
+  }
+}, { passive: false });
+
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  
+  const dx = e.clientX - prevX;
+  const dy = e.clientY - prevY;
+  
+  if (Math.abs(dx) > 2 || Math.abs(dy) > 2) {
+    isDragging = true;
+  }
+  
+  // Moon surface camera controls
+  if (moonSurfaceActive) {
+    const rotSpeed = 0.005;
+    
+    if (panMode || e.shiftKey) {
+      const panSpeed = 0.3;
+      const right = new THREE.Vector3();
+      const up = new THREE.Vector3();
+      
+      moonCamera.getWorldDirection(right);
+      right.cross(moonCamera.up).normalize();
+      up.copy(moonCamera.up).normalize();
+      
+      right.multiplyScalar(-dx * panSpeed);
+      up.multiplyScalar(dy * panSpeed);
+      
+      moonCamera.position.add(right);
+      moonCamera.position.add(up);
+    } else {
+      const phi = dx * rotSpeed;
+      const theta = dy * rotSpeed;
+      
+      const target = new THREE.Vector3(0, 0, 0);
+      const offset = new THREE.Vector3().subVectors(moonCamera.position, target);
+      const r = offset.length();
+      
+      let sphericalTheta = Math.acos(offset.y / r);
+      let sphericalPhi = Math.atan2(offset.z, offset.x);
+      
+      sphericalPhi -= phi;
+      sphericalTheta = Math.max(0.1, Math.min(Math.PI - 0.1, sphericalTheta - theta));
+      
+      moonCamera.position.x = target.x + r * Math.sin(sphericalTheta) * Math.cos(sphericalPhi);
+      moonCamera.position.y = target.y + r * Math.cos(sphericalTheta);
+      moonCamera.position.z = target.z + r * Math.sin(sphericalTheta) * Math.sin(sphericalPhi);
+      moonCamera.lookAt(target);
+    }
+    
+    prevX = e.clientX;
+    prevY = e.clientY;
+    return;
+  }
+  
+  // Original solar system controls
+  if (panMode || e.shiftKey) {
+    const panSpeed = 0.5;
+    const right = new THREE.Vector3();
+    const up = new THREE.Vector3();
+    
+    camera.getWorldDirection(right);
+    right.cross(camera.up).normalize();
+    up.copy(camera.up).normalize();
+    
+    right.multiplyScalar(-dx * panSpeed);
+    up.multiplyScalar(dy * panSpeed);
+    
+    camera.position.add(right);
+    camera.position.add(up);
+    
+    cameraFollowTarget = null;
+    
+  } else {
+    const rotSpeed = 0.005;
+    const phi = dx * rotSpeed;
+    const theta = dy * rotSpeed;
+    
+    const target = cameraFollowTarget && bodies[cameraFollowTarget] 
+      ? bodies[cameraFollowTarget].mesh.position 
+      : getCurrentViewTarget(); 
+    
+    const offset = new THREE.Vector3().subVectors(camera.position, target);
+    const r = offset.length();
+    
+    let sphericalTheta = Math.acos(offset.y / r);
+    let sphericalPhi = Math.atan2(offset.z, offset.x);
+    
+    sphericalPhi -= phi;
+    sphericalTheta = Math.max(0.1, Math.min(Math.PI - 0.1, sphericalTheta - theta));
+    
+    camera.position.x = target.x + r * Math.sin(sphericalTheta) * Math.cos(sphericalPhi);
+    camera.position.y = target.y + r * Math.cos(sphericalTheta);
+    camera.position.z = target.z + r * Math.sin(sphericalTheta) * Math.sin(sphericalPhi);
+    camera.lookAt(target);
+  }
+  
+  prevX = e.clientX;
+  prevY = e.clientY;
+});
+
+document.addEventListener('mouseup', () => {
+  dragging = false;
+  canvas.style.cursor = 'default';
+  moonCanvas.style.cursor = 'default';
+  setTimeout(() => { isDragging = false; }, 50);
+});
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  
+  const delta = e.deltaY > 0 ? 1.35 : 0.75;
+  const zoomMultiplier = Math.abs(e.deltaY) > 100 ? 1.5 : 1.0;  // Faster for larger movements
+  const finalDelta = (e.deltaY > 0 ? 1.35 : 0.75) * zoomMultiplier;
+  // const delta = e.deltaY > 0 ? 1.15 : 0.85; 
+//const delta = e.deltaY > 0 ? 1.08 : 0.92;
+  
+  const direction = new THREE.Vector3();
+  camera.getWorldDirection(direction);
+  const distance = camera.position.length();
+  const currentTarget = camera.position.clone().add(direction.multiplyScalar(distance * 0.3));
+  
+  const offset = new THREE.Vector3().subVectors(camera.position, currentTarget);
+  offset.multiplyScalar(finalDelta);
+  
+  const len = offset.length();
+  if (len < 10) offset.normalize().multiplyScalar(10);
+  if (len > 1200) offset.normalize().multiplyScalar(1200);
+  
+  camera.position.copy(currentTarget).add(offset);
+  camera.lookAt(currentTarget);
+  
+}, { passive: false });
+
+const raycaster = new THREE.Raycaster();
+raycaster.params.Points.threshold = 0.5;
+const mouse = new THREE.Vector2();
+
+canvas.addEventListener('click', e => {
+  if (isDragging) return;
+  
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  
+  // Handle Moon surface clicks
+  if (moonSurfaceActive) {
+    raycaster.setFromCamera(mouse, moonCamera);
+    const moonClickables = [moonStarship, moonViper, moonLRO, moonEarth].filter(obj => obj);
+    const moonHits = raycaster.intersectObjects(moonClickables, true);
+    
+    if (moonHits.length > 0) {
+      let objName = moonHits[0].object.userData.name;
+      if (!objName && moonHits[0].object.parent) {
+        objName = moonHits[0].object.parent.userData.name;
+      }
+      if (!objName && moonHits[0].object.parent && moonHits[0].object.parent.parent) {
+        objName = moonHits[0].object.parent.parent.userData.name;
+      }
+      
+      // Check if Earth was clicked - exit Moon view
+      if (moonEarth && (moonHits[0].object === moonEarth || moonHits[0].object.parent === moonEarth)) {
+        moonSurfaceActive = false;
+        document.getElementById('moonSurface').classList.remove('active');
+        
+        const earthPub = PUBS.find(p => p.body === 'Earth');
+        if (earthPub) {
+          showDetail(earthPub);
+          highlightPublication('Earth');
+          setTimeout(() => zoomToBody('Earth'), 100);
+        }
+        return;
+      }
+      
+      if (objName) {
+        const pub = PUBS.find(p => p.body === objName);
+        if (pub) {
+          showDetail(pub);
+          highlightPublication(objName);
+          // Stay in Moon view for Starship, VIPER, LRO
+        }
+      }
+    }
+    return;
+  }
+  
+  // Original solar system click handling continues...
+  
+  // Original solar system click handling
+  raycaster.setFromCamera(mouse, camera);
+  const clickables = Object.values(bodies).map(b => b.mesh).concat([sun]);
+  const hits = raycaster.intersectObjects(clickables, true);
+  
+  if (hits.length > 0) {
+    let bodyName = hits[0].object.userData.name;
+    if (!bodyName && hits[0].object.parent && hits[0].object.parent.userData) {
+      bodyName = hits[0].object.parent.userData.name;
+    }
+    if (!bodyName && hits[0].object.parent && hits[0].object.parent.parent && hits[0].object.parent.parent.userData) {
+      bodyName = hits[0].object.parent.parent.userData.name;
+    }
+    
+    if (bodyName) {
+      selectedBody = bodyName;
+      
+      const bodyInfo = bodyData.find(b => b.name === bodyName);
+      const targetBody = bodyInfo && bodyInfo.body ? bodyInfo.body : bodyName;
+      
+      zoomToBody(bodyName);
+      
+      const pub = PUBS.find(p => p.body === targetBody);
+      if (pub) {
+        setTimeout(() => showDetail(pub), 300);
+        highlightPublication(targetBody);
+      } else {
+        hideDetail();
+      }
+    }
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (dragging) return;
+  if (moonSurfaceActive) return; 
+  
+  const rect = canvas.getBoundingClientRect();
+  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  
+  raycaster.setFromCamera(mouse, camera);
+  const clickables = Object.values(bodies).map(b => b.mesh).concat([sun]);
+  const hits = raycaster.intersectObjects(clickables, true);
+  
+  Object.keys(bodies).forEach(name => unhighlightBody(name));
+  unhighlightBody('Sun');
+  
+  const hoverHint = document.getElementById('hoverHint');
+  
+  if (hits.length > 0) {
+    let bodyName = hits[0].object.userData.name;
+    if (!bodyName && hits[0].object.parent && hits[0].object.parent.userData) {
+      bodyName = hits[0].object.parent.userData.name;
+    }
+    if (!bodyName && hits[0].object.parent && hits[0].object.parent.parent && hits[0].object.parent.parent.userData) {
+      bodyName = hits[0].object.parent.parent.userData.name;
+    }
+    
+    if (bodyName) {
+      highlightBody(bodyName);
+      
+      const bodyInfo = bodyData.find(b => b.name === bodyName);
+      const targetBody = bodyInfo && bodyInfo.body ? bodyInfo.body : bodyName;
+      
+      highlightPublication(targetBody);
+      canvas.style.cursor = 'pointer';
+      
+      // Show hint for Moon
+      if (bodyName === 'Moon') {
+        hoverHint.textContent = 'Click to explore Moon surface view';
+        hoverHint.style.left = e.clientX + 15 + 'px';
+        hoverHint.style.top = e.clientY + 15 + 'px';
+        hoverHint.classList.add('active');
+      } else {
+        hoverHint.classList.remove('active');
+      }
+    }
+  } else {
+    canvas.style.cursor = 'default';
+    hoverHint.classList.remove('active');
+    document.querySelectorAll('.pub-card').forEach(card => {
+      card.classList.remove('highlighted');
+    });
+  }
+});
+
+
+function zoomToBody(name) {
+  // Check if clicking Moon - activate surface view
+  if (name === 'Moon' ) {
+     if (!moonSurfaceActive) {
+      moonSurfaceActive = true;
+      
+      // Reset all highlights in main solar system
+      Object.keys(bodies).forEach(name => unhighlightBody(name));
+      unhighlightBody('Sun');
+      document.querySelectorAll('.pub-card').forEach(card => {
+        card.classList.remove('highlighted');
+      });
+ 
+      // Hide any active hints
+      const hoverHint = document.getElementById('hoverHint');
+      if (hoverHint) hoverHint.classList.remove('active');
+
+      
+      document.getElementById('moonSurface').classList.add('active');
+      if (!moonScene) initMoonSurface();
+      // Force animations to play in Moon view
+      if (pausedPlanets) {
+        pausedPlanets = false;
+        document.getElementById('btnPause').textContent = '⏸';
+      }
+    }
+    return;
+  }
+  
+  const body = bodies[name] || (name === 'Sun' ? { mesh: sun } : null);
+  if (!body) return;
+  
+  const targetPos = body.mesh.position.clone();
+  
+  let bodySize = 6;
+  if (name === 'Sun') bodySize = 18;
+  else if (name === 'Jupiter') bodySize = 14;
+  else if (name === 'Saturn') bodySize = 12;
+  else if (name === 'ISS') bodySize = 4;
+  else if (name === 'HWO') bodySize = 3;
+  else if (name === 'Earth') bodySize = 7;
+  else if (name === 'Starship') bodySize = 1.5;
+  else if (name === 'VIPER') bodySize = 1;
+  else if (name === 'LRO') bodySize = 1.2;
+  
+  let distance = Math.max(30, bodySize * 6);
+  if (name === 'ISS' || name === 'HWO' || name === 'Starship' || name === 'VIPER' || name === 'LRO') {
+    distance = bodySize * 8;
+  }
+  
+  const direction = new THREE.Vector3().subVectors(camera.position, targetPos).normalize();
+  const newCamPos = targetPos.clone().add(direction.multiplyScalar(distance));
+  
+  const startPos = camera.position.clone();
+  let progress = 0;
+  
+  cameraFollowTarget = name;
+  
+  function animateCamera() {
+    progress += 0.03;
+    if (progress <= 1) {
+      camera.position.lerpVectors(startPos, newCamPos, progress);
+      camera.lookAt(targetPos);
+      requestAnimationFrame(animateCamera);
+    }
+  }
+  animateCamera();
+}
+
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (moonSurfaceActive) {
+    moonSurfaceActive = false;
+    roverPOVMode = false;
+    viperManualControl = false;
+
+    // RESET ROCK VISIBILITY
+    if (window.moonRocks) {
+      window.moonRocks.forEach(rock => {
+        rock.visible = false;
+      });
+    }
+    document.getElementById('moonSurface').classList.remove('active');
+    
+    // Reset rocks
+    if (window.moonRocks) {
+      window.moonRocks.forEach(rock => {
+        if (rock.userData.collected) {
+          rock.userData.collected = false;
+          rock.scale.set(1, 1, 1);
+          if (!moonScene.children.includes(rock)) {
+            moonScene.add(rock);
+          }
+        }
+      });
+      window.rocksCollected = 0;
+    }
+  }
+  
+  camera.position.set(250, 200, 250);
+  camera.lookAt(0, 0, 0);
+  selectedBody = null;
+  pausedPlanets = false;
+  cameraFollowTarget = null;
+  hideDetail();
+  
+  document.querySelectorAll('.pub-card').forEach(card => {
+    card.classList.remove('highlighted');
+  });
+  
+  document.getElementById('btnPause').textContent = '⏸';
+});
+
+document.getElementById('btnPause').addEventListener('click', e => {
+  pausedPlanets = !pausedPlanets;
+  e.target.textContent = pausedPlanets ? '▶' : '⏸';
+});
+
+const speedBtn = document.getElementById('btnSpeed');
+const speedDropdown = document.getElementById('speedDropdown');
+
+speedBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  speedDropdown.classList.toggle('active');
+});
+
+document.querySelectorAll('#speedDropdown button').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const speed = parseFloat(e.target.dataset.speed);
+    animationSpeed = speed;
+    speedBtn.textContent = speed + 'x';
+    speedDropdown.classList.remove('active');
+  });
+});
+
+document.addEventListener('click', () => {
+  speedDropdown.classList.remove('active');
+});
+
+document.getElementById('btnZoomIn').addEventListener('click', () => {
+  if (moonSurfaceActive) {
+    // For Moon view: move camera closer to center (0,0,0)
+    const direction = new THREE.Vector3(0, 0, 0).sub(moonCamera.position).normalize();
+    moonCamera.position.add(direction.multiplyScalar(3)); // Move TOWARD center = zoom IN
+    
+    const distance = moonCamera.position.length();
+    if (distance < 3) {
+      moonCamera.position.normalize().multiplyScalar(3);
+    }
+  } else {
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    const distance = camera.position.length();
+    const currentTarget = camera.position.clone().add(direction.multiplyScalar(distance * 0.3));
+    
+    const offset = new THREE.Vector3().subVectors(camera.position, currentTarget);
+    offset.multiplyScalar(0.85);
+    
+    const len = offset.length();
+    if (len < 10) offset.normalize().multiplyScalar(10);
+    
+    camera.position.copy(currentTarget).add(offset);
+    camera.lookAt(currentTarget);
+  }
+});
+
+document.getElementById('btnZoomOut').addEventListener('click', () => {
+  if (moonSurfaceActive) {
+    // For Moon view: move camera away from center (0,0,0)
+    const direction = moonCamera.position.clone().normalize();
+    moonCamera.position.add(direction.multiplyScalar(3)); // Move AWAY from center = zoom OUT
+    
+    const distance = moonCamera.position.length();
+    if (distance > 150) {
+      moonCamera.position.normalize().multiplyScalar(150);
+    }
+  } else {
+    const direction = new THREE.Vector3();
+    camera.getWorldDirection(direction);
+    const distance = camera.position.length();
+    const currentTarget = camera.position.clone().add(direction.multiplyScalar(distance * 0.3));
+    
+    const offset = new THREE.Vector3().subVectors(camera.position, currentTarget);
+    offset.multiplyScalar(1.15);
+    
+    const len = offset.length();
+    if (len > 1200) offset.normalize().multiplyScalar(1200);
+    
+    camera.position.copy(currentTarget).add(offset);
+    camera.lookAt(currentTarget);
+  }
+});
+
+document.getElementById('btnRotate').addEventListener('click', e => {
+  rotateMode = true;
+  panMode = false;
+  e.target.classList.add('active');
+  document.getElementById('btnPan').classList.remove('active');
+});
+
+document.getElementById('btnPan').addEventListener('click', e => {
+  panMode = true;
+  rotateMode = false;
+  e.target.classList.add('active');
+  document.getElementById('btnRotate').classList.remove('active');
+});
+
+function onWindowResize() {
+  const width = leftPanel.clientWidth;
+  const height = leftPanel.clientHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+  
+  if (moonRenderer) {
+    moonCamera.aspect = width / height;
+    moonCamera.updateProjectionMatrix();
+    moonRenderer.setSize(width, height);
+  }
+}
+
+window.addEventListener('resize', onWindowResize);
+
+
+
+// Keyboard controls for VIPER rover in Moon view
+document.addEventListener('keydown', e => {
+  if (!moonSurfaceActive || !moonViper) return;
+  
+  // Space bar for speed boost
+  const speedBoost = e.key === ' ' ? 2.0 : 1.0;
+  const moveSpeed = 0.3 * animationSpeed * speedBoost;
+  const rotSpeed = 0.08;
+  
+  switch(e.key) {
+    case ' ':
+      e.preventDefault(); // Prevent page scroll
+      break;
+      
+    case 'ArrowUp':
+      e.preventDefault();
+      viperManualControl = true;
+      // Move forward in current direction
+      const forward = new THREE.Vector3(0, 0, -1);
+      forward.applyQuaternion(moonViper.quaternion);
+      moonViper.position.add(forward.multiplyScalar(moveSpeed));
+      moonViper.position.y = 0; // Keep on ground
+      break;
+      
+    case 'ArrowDown':
+      e.preventDefault();
+      viperManualControl = true;
+      // Move backward
+      const backward = new THREE.Vector3(0, 0, 1);
+      backward.applyQuaternion(moonViper.quaternion);
+      moonViper.position.add(backward.multiplyScalar(moveSpeed));
+      moonViper.position.y = 0;
+      break;
+      
+    case 'ArrowLeft':
+      e.preventDefault();
+      viperManualControl = true;
+      // Rotate left
+      moonViper.rotation.y += rotSpeed;
+      break;
+      
+    case 'ArrowRight':
+      e.preventDefault();
+      viperManualControl = true;
+      // Rotate right
+      moonViper.rotation.y -= rotSpeed;
+      break;
+  }
+});
+
+// Reset to automatic control when leaving Moon view or after delay
+document.addEventListener('keyup', e => {
+  if (e.key.startsWith('Arrow') && !roverPOVMode) {
+    // Allow automatic control to resume after a delay only if not in POV mode
+    setTimeout(() => {
+      viperManualControl = false;
+    }, 5000);
+  }
+});
+
+
+renderPublications();
+setTimeout(() => initMoonSurface(), 500);
+</script>
+</body>
+</html>
