@@ -1267,6 +1267,14 @@ document.addEventListener('mouseup', () => {
   if (isResizing) {
     isResizing = false;
     document.body.style.cursor = '';
+    
+    // Force canvas update by triggering multiple resize calls to eliminate black bar
+    requestAnimationFrame(() => {
+      onWindowResize();
+      setTimeout(() => onWindowResize(), 10);
+      setTimeout(() => onWindowResize(), 50);
+      setTimeout(() => onWindowResize(), 100);
+    });
   }
 });
 
