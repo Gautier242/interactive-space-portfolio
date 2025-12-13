@@ -649,10 +649,10 @@ a:hover {
 
 /* Mobile Header - Compact with headshot only */
 .mobile-device .header {
-  flex-direction: column;
-  align-items: flex-start;
+  flex-direction: row;
+  align-items: center;
   padding: 12px 16px;
-  gap: 8px;
+  gap: 12px;
 }
 
 .mobile-device .header img {
@@ -673,8 +673,8 @@ a:hover {
 }
 
 .mobile-device .header .links {
-  margin-left: 0;
-  margin-top: 4px;
+  margin-left: auto;
+  margin-top: 0;
   flex-wrap: wrap;
   gap: 12px;
   font-size: 12px;
@@ -840,12 +840,16 @@ a:hover {
   background: rgba(50,90,140,.8);
 }
 
-/* Hide zoom/rotate/pan buttons on mobile */
-.mobile-device #btnZoomIn,
-.mobile-device #btnZoomOut,
+/* Hide rotate/pan buttons on mobile */
 .mobile-device #btnRotate,
 .mobile-device #btnPan {
   display: none;
+}
+
+/* Zoom buttons visible on mobile when expanded */
+.mobile-device #btnZoomIn,
+.mobile-device #btnZoomOut {
+  display: inline-block;
 }
 
 /* Speed button visible on mobile when expanded */
@@ -864,7 +868,8 @@ a:hover {
   position: relative;
 }
 
-.mobile-device .right::before {
+/* "Tap to expand project list" button - appears on animation panel when expanded */
+.mobile-device .left.expanded::after {
   content: 'Tap to expand project list';
   position: absolute;
   top: 8px;
@@ -878,11 +883,6 @@ a:hover {
   color: var(--accent);
   z-index: 6;
   pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-
-.mobile-device .left.expanded ~ .right::before {
   opacity: 0.8;
 }
 
@@ -936,12 +936,17 @@ a:hover {
 }
 
 .mobile-device .pub-image {
-  width: 100%;
-  max-width: 100%;
-  min-height: 120px;
-  float: none;
-  margin-right: 0;
-  margin-bottom: 12px;
+  width: 80px;
+  max-width: 80px;
+  min-height: 60px;
+  height: 60px;
+  float: left;
+  margin-right: 12px;
+  margin-bottom: 8px;
+}
+
+.mobile-device .pub-content {
+  overflow: hidden;
 }
 
 .mobile-device .pub-title {
@@ -979,19 +984,19 @@ a:hover {
 
 .mobile-device .detail-image {
   float: left;
-  max-width: 200px;
-  min-height: 200px;
-  width: 200px;
-  height: 200px;
+  max-width: 150px;
+  min-height: 150px;
+  width: 150px;
+  height: 150px;
   margin-right: 16px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .mobile-device .detail-image.about-image {
-  max-width: 200px;
-  min-height: 200px;
-  width: 200px;
-  height: 200px;
+  max-width: 150px;
+  min-height: 150px;
+  width: 150px;
+  height: 150px;
 }
 
 .mobile-device .detail-image img {
@@ -1002,6 +1007,10 @@ a:hover {
 
 .mobile-device .detail-info {
   overflow: hidden;
+}
+
+.mobile-device .detail-desc {
+  text-align: left;
 }
 
 .mobile-device .detail-content {
@@ -1151,6 +1160,14 @@ if (isMobileDevice) {
             rightPanel.classList.add('shrunk');
             rightPanel.classList.remove('expanded');
           }
+          // Force canvas resize after expansion
+          setTimeout(() => {
+            if (typeof onWindowResize === 'function') {
+              onWindowResize();
+              setTimeout(() => onWindowResize(), 50);
+              setTimeout(() => onWindowResize(), 100);
+            }
+          }, 300);
         }
       });
       
@@ -1171,6 +1188,14 @@ if (isMobileDevice) {
             rightPanel.classList.add('shrunk');
             rightPanel.classList.remove('expanded');
           }
+          // Force canvas resize after expansion
+          setTimeout(() => {
+            if (typeof onWindowResize === 'function') {
+              onWindowResize();
+              setTimeout(() => onWindowResize(), 50);
+              setTimeout(() => onWindowResize(), 100);
+            }
+          }, 300);
         }
       });
     }
@@ -1193,6 +1218,14 @@ if (isMobileDevice) {
           if (leftPanel) {
             leftPanel.classList.remove('expanded');
           }
+          // Force canvas resize after panel change
+          setTimeout(() => {
+            if (typeof onWindowResize === 'function') {
+              onWindowResize();
+              setTimeout(() => onWindowResize(), 50);
+              setTimeout(() => onWindowResize(), 100);
+            }
+          }, 300);
         }
       };
       
@@ -1222,6 +1255,15 @@ if (isMobileDevice) {
     
     // Mobile zoom handlers will be initialized after camera is created
     // (see code after camera initialization)
+    
+    // Force initial canvas resize for mobile to fix distortion
+    setTimeout(() => {
+      if (typeof onWindowResize === 'function') {
+        onWindowResize();
+        setTimeout(() => onWindowResize(), 100);
+        setTimeout(() => onWindowResize(), 300);
+      }
+    }, 100);
   });
 }
 
@@ -1887,6 +1929,15 @@ if (isMobileDevice && canvas) {
         touch2.clientY - touch1.clientY
       );
       initialCameraDistance = camera.position.length();
+    } else {
+      // Reset when not two fingers
+      initialDistance = 0;
+    }
+  }, { passive: false });
+  
+  canvas.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+      initialDistance = 0;
     }
   }, { passive: false });
   
@@ -1900,9 +1951,18 @@ if (isMobileDevice && canvas) {
         touch2.clientY - touch1.clientY
       );
       
+      if (initialDistance === 0) {
+        initialDistance = currentDistance;
+        initialCameraDistance = camera.position.length();
+        return;
+      }
+      
       // Fingers together (smaller distance) = zoom out, fingers apart (larger distance) = zoom in
-      const scale = currentDistance / initialDistance;
-      const newDistance = initialCameraDistance / scale;
+      // Calculate scale: if currentDistance > initialDistance, we want to zoom in (reduce camera distance)
+      const scale = initialDistance / currentDistance; // Invert: larger currentDistance = smaller scale = closer camera
+      // Apply a damping factor to reduce sensitivity (0.2 = less sensitive)
+      const dampedScale = 1 + (scale - 1) * 0.2;
+      const newDistance = initialCameraDistance * dampedScale;
       
       // Clamp zoom
       const minDistance = 50;
