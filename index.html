@@ -137,27 +137,6 @@ a:hover {
   display: flex;
   gap: 16px;
 }
-.version-indicator {
-  position: fixed;
-  top: 12px;
-  right: 12px;
-  background: rgba(30, 60, 100, 0.9);
-  border: 1px solid rgba(158, 201, 255, 0.4);
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 10px;
-  color: var(--accent);
-  z-index: 10000;
-  font-weight: 600;
-  backdrop-filter: blur(8px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
-}
-.mobile-device .version-indicator {
-  top: 8px;
-  right: 8px;
-  font-size: 9px;
-  padding: 3px 8px;
-}
 .app {
   display: flex;
   height: calc(100vh - 77px);
@@ -708,12 +687,12 @@ a:hover {
   min-height: calc(100vh - 120px);
 }
 
-/* Mobile Animation Section - Default: smaller size (like old list) */
+/* Mobile Animation Section - Default: half size */
 .mobile-device .left {
   flex: 0 0 auto;
   width: 100%;
-  height: 30vh;
-  min-height: 250px;
+  height: 15vh;
+  min-height: 150px;
   order: 2;
   transition: height 0.3s ease;
   position: relative;
@@ -878,10 +857,33 @@ a:hover {
 .mobile-device .right {
   flex: 0 0 auto;
   order: 3;
-  max-height: 70vh;
-  min-height: 400px;
+  max-height: 85vh;
+  min-height: 500px;
   transition: max-height 0.3s ease;
   cursor: pointer;
+  position: relative;
+}
+
+.mobile-device .right::before {
+  content: 'Tap to expand project list';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 60, 100, 0.9);
+  border: 1px solid rgba(158, 201, 255, 0.4);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--accent);
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.mobile-device .left.expanded ~ .right::before {
+  opacity: 0.8;
 }
 
 /* Mobile Publications Section - Shrunk when animation expanded */
@@ -915,7 +917,7 @@ a:hover {
 
 .mobile-device .pubs-scroll {
   padding: 12px;
-  max-height: calc(70vh - 50px);
+  max-height: calc(85vh - 50px);
   overflow-y: auto;
 }
 
@@ -936,7 +938,7 @@ a:hover {
 .mobile-device .pub-image {
   width: 100%;
   max-width: 100%;
-  min-height: 200px;
+  min-height: 120px;
   float: none;
   margin-right: 0;
   margin-bottom: 12px;
@@ -977,19 +979,19 @@ a:hover {
 
 .mobile-device .detail-image {
   float: left;
-  max-width: 62.5px;
-  min-height: 62.5px;
-  width: 62.5px;
-  height: 62.5px;
-  margin-right: 12px;
-  margin-bottom: 12px;
+  max-width: 200px;
+  min-height: 200px;
+  width: 200px;
+  height: 200px;
+  margin-right: 16px;
+  margin-bottom: 16px;
 }
 
 .mobile-device .detail-image.about-image {
-  max-width: 62.5px;
-  min-height: 62.5px;
-  width: 62.5px;
-  height: 62.5px;
+  max-width: 200px;
+  min-height: 200px;
+  width: 200px;
+  height: 200px;
 }
 
 .mobile-device .detail-image img {
@@ -1027,8 +1029,6 @@ a:hover {
 </style>
 </head>
 <body>
-<!-- Version Indicator -->
-<div class="version-indicator">v2.0 Mobile</div>
 <!-- Simple Analytics counter -->
 <script data-goatcounter="https://g242-space-portfolio.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
@@ -1822,7 +1822,12 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
 const camera = new THREE.PerspectiveCamera(50, leftPanel.clientWidth / leftPanel.clientHeight, 0.1, 15000);
-camera.position.set(250, 200, 250);
+// Mobile: Start zoomed in 2x closer
+if (isMobileDevice) {
+  camera.position.set(125, 100, 125); // Half the distance = 2x zoom
+} else {
+  camera.position.set(250, 200, 250);
+}
 camera.lookAt(0, 0, 0);
 
 // Mobile: Double-tap and pinch-to-zoom handlers (after camera initialization)
@@ -1895,8 +1900,9 @@ if (isMobileDevice && canvas) {
         touch2.clientY - touch1.clientY
       );
       
-      const scale = initialDistance / currentDistance;
-      const newDistance = initialCameraDistance * scale;
+      // Fingers together (smaller distance) = zoom out, fingers apart (larger distance) = zoom in
+      const scale = currentDistance / initialDistance;
+      const newDistance = initialCameraDistance / scale;
       
       // Clamp zoom
       const minDistance = 50;
