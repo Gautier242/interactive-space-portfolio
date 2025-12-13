@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solar System Research Map – Gautier Bardi de Fourtou</title>
+<script>
+// Mobile detection - add class to body before styles load
+(function() {
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   (window.innerWidth <= 768 && window.innerHeight <= 1024);
+  if (isMobile) {
+    document.documentElement.classList.add('mobile-device');
+  }
+})();
+</script>
 <style>
 :root {
   --bg: #060d1a;
@@ -628,10 +638,230 @@ a:hover {
 .hover-hint.active {
   opacity: 1;
 }
+
+/* ============================================
+   MOBILE RESPONSIVE STYLES
+   ============================================ */
+.mobile-device body {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Mobile Header - Compact with headshot only */
+.mobile-device .header {
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 12px 16px;
+  gap: 8px;
+}
+
+.mobile-device .header img {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+.mobile-device .header .name {
+  font-size: 16px;
+  margin-top: 0;
+}
+
+.mobile-device .header .sub {
+  font-size: 11px;
+  margin-top: 2px;
+  line-height: 1.3;
+}
+
+.mobile-device .header .links {
+  margin-left: 0;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+}
+
+/* Mobile App Layout - Vertical Stack */
+.mobile-device .app {
+  flex-direction: column;
+  height: auto;
+  min-height: calc(100vh - 120px);
+}
+
+/* Mobile Animation Section - Middle Banner */
+.mobile-device .left {
+  flex: 0 0 auto;
+  width: 100%;
+  height: 50vh;
+  min-height: 400px;
+  order: 2;
+}
+
+.mobile-device .resizer {
+  display: none;
+}
+
+/* Mobile Controls - Finger-friendly buttons */
+.mobile-device .controls {
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 10px;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 90%;
+}
+
+.mobile-device .controls button {
+  min-width: 50px;
+  min-height: 44px;
+  padding: 10px 14px;
+  font-size: 16px;
+  font-weight: 600;
+  touch-action: manipulation;
+}
+
+/* Hide legend on mobile */
+.mobile-device .legend {
+  display: none;
+}
+
+/* Hide speed dropdown and other complex controls on mobile */
+.mobile-device .speed-dropdown {
+  display: none !important;
+}
+
+.mobile-device #btnSpeed,
+.mobile-device #btnZoomIn,
+.mobile-device #btnZoomOut,
+.mobile-device #btnRotate,
+.mobile-device #btnPan {
+  display: none;
+}
+
+/* Mobile Publications Section - Bottom Banner */
+.mobile-device .right {
+  flex: 0 0 auto;
+  order: 3;
+  max-height: 50vh;
+  min-height: 300px;
+  transition: max-height 0.3s ease;
+}
+
+.mobile-device .right.expanded {
+  max-height: 85vh;
+}
+
+.mobile-device .section-title {
+  padding: 12px 16px;
+  font-size: 12px;
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+}
+
+.mobile-device .section-title::after {
+  content: '▼';
+  position: absolute;
+  right: 16px;
+  transition: transform 0.3s;
+}
+
+.mobile-device .right.expanded .section-title::after {
+  transform: rotate(180deg);
+}
+
+.mobile-device .pubs-scroll {
+  padding: 12px;
+  max-height: calc(50vh - 50px);
+  overflow-y: auto;
+}
+
+.mobile-device .right.expanded .pubs-scroll {
+  max-height: calc(85vh - 50px);
+}
+
+/* Mobile Publication Cards */
+.mobile-device .pub-card {
+  padding: 12px;
+  margin-bottom: 12px;
+}
+
+.mobile-device .pub-image {
+  width: 100%;
+  max-width: 100%;
+  min-height: 200px;
+  float: none;
+  margin-right: 0;
+  margin-bottom: 12px;
+}
+
+.mobile-device .pub-title {
+  font-size: 14px;
+}
+
+.mobile-device .pub-desc {
+  font-size: 11px;
+}
+
+/* Disable hover effects on mobile */
+.mobile-device .pub-card:hover {
+  transform: none;
+}
+
+.mobile-device .pub-card.highlighted {
+  border-color: rgba(110,163,255,.6);
+  background: rgba(110,163,255,.08);
+}
+
+/* Disable hover hints on mobile */
+.mobile-device .hover-hint {
+  display: none;
+}
+
+/* Mobile Detail View */
+.mobile-device .detail-view {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 200;
+}
+
+.mobile-device .detail-image {
+  float: none;
+  max-width: 100%;
+  margin-right: 0;
+  margin-bottom: 16px;
+}
+
+.mobile-device .detail-content {
+  padding: 16px;
+}
+
+.mobile-device .detail-title {
+  font-size: 18px;
+}
+
+.mobile-device .detail-desc {
+  font-size: 13px;
+}
+
+/* Disable thin interactions on mobile */
+.mobile-device canvas {
+  touch-action: pan-x pan-y pinch-zoom;
+}
+
+/* Prevent text selection during drag on mobile */
+.mobile-device * {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
 </style>
 </head>
 <body>
-<!-- GoatCounter Analytics - Privacy-friendly, no cookies, GDPR compliant -->
+<!-- Simple Analytics counter -->
 <script data-goatcounter="https://g242-space-portfolio.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 <header class="header">
@@ -720,6 +950,23 @@ a:hover {
 </div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
+// Mobile device detection
+const isMobileDevice = document.documentElement.classList.contains('mobile-device');
+
+// Mobile: Expand/collapse publications section
+if (isMobileDevice) {
+  document.addEventListener('DOMContentLoaded', () => {
+    const sectionTitle = document.querySelector('.section-title');
+    const rightPanel = document.querySelector('.right');
+    
+    if (sectionTitle && rightPanel) {
+      sectionTitle.addEventListener('click', () => {
+        rightPanel.classList.toggle('expanded');
+      });
+    }
+  });
+}
+
 // Static Neural Network Background (MLP-style)
 function createStaticNeuralNetwork(containerId, layers = [6, 8, 6, 4]) {
   const container = document.getElementById(containerId);
@@ -1019,33 +1266,36 @@ function renderPublications() {
         }
       });
       
-      card.addEventListener('mouseenter', () => {
-        card.classList.add('highlighted');
+      // Disable hover effects on mobile
+      if (!isMobileDevice) {
+        card.addEventListener('mouseenter', () => {
+          card.classList.add('highlighted');
+          
+          let objectToHighlight = pub.body;
+          const objectInScene = bodyData.find(b => b.body === pub.body && b.name !== pub.body);
+          if (objectInScene) {
+            objectToHighlight = objectInScene.name;
+          }
+          
+          if (objectToHighlight) {
+            highlightBody(objectToHighlight);
+          }
+        });
         
-        let objectToHighlight = pub.body;
-        const objectInScene = bodyData.find(b => b.body === pub.body && b.name !== pub.body);
-        if (objectInScene) {
-          objectToHighlight = objectInScene.name;
-        }
-        
-        if (objectToHighlight) {
-          highlightBody(objectToHighlight);
-        }
-      });
-      
-      card.addEventListener('mouseleave', () => {
-        card.classList.remove('highlighted');
-        
-        let objectToUnhighlight = pub.body;
-        const objectInScene = bodyData.find(b => b.body === pub.body && b.name !== pub.body);
-        if (objectInScene) {
-          objectToUnhighlight = objectInScene.name;
-        }
-        
-        if (objectToUnhighlight) {
-          unhighlightBody(objectToUnhighlight);
-        }
-      });
+        card.addEventListener('mouseleave', () => {
+          card.classList.remove('highlighted');
+          
+          let objectToUnhighlight = pub.body;
+          const objectInScene = bodyData.find(b => b.body === pub.body && b.name !== pub.body);
+          if (objectInScene) {
+            objectToUnhighlight = objectInScene.name;
+          }
+          
+          if (objectToUnhighlight) {
+            unhighlightBody(objectToUnhighlight);
+          }
+        });
+      }
       
       instDiv.appendChild(card);
     });
@@ -1257,40 +1507,42 @@ function getCurrentViewTarget() {
   return camera.position.clone().add(direction.multiplyScalar(distance));
 }
 
-// Resizable panels
+// Resizable panels - disabled on mobile
 const resizer = document.getElementById('resizer');
 const leftPanel = document.getElementById('leftPanel');
 let isResizing = false;
 
-resizer.addEventListener('mousedown', e => {
-  isResizing = true;
-  document.body.style.cursor = 'col-resize';
-});
+if (!isMobileDevice && resizer) {
+  resizer.addEventListener('mousedown', e => {
+    isResizing = true;
+    document.body.style.cursor = 'col-resize';
+  });
 
-document.addEventListener('mousemove', e => {
-  if (!isResizing) return;
-  const newWidth = (e.clientX / window.innerWidth) * 100;
-  if (newWidth > 15 && newWidth < 75) {
-    leftPanel.style.flex = `0 0 ${newWidth}%`;
-    updateImageSizes(100 - newWidth);
-    onWindowResize();
-  }
-});
-
-document.addEventListener('mouseup', () => {
-  if (isResizing) {
-    isResizing = false;
-    document.body.style.cursor = '';
-    
-    // Force canvas update by triggering multiple resize calls to eliminate black bar
-    requestAnimationFrame(() => {
+  document.addEventListener('mousemove', e => {
+    if (!isResizing) return;
+    const newWidth = (e.clientX / window.innerWidth) * 100;
+    if (newWidth > 15 && newWidth < 75) {
+      leftPanel.style.flex = `0 0 ${newWidth}%`;
+      updateImageSizes(100 - newWidth);
       onWindowResize();
-      setTimeout(() => onWindowResize(), 10);
-      setTimeout(() => onWindowResize(), 50);
-      setTimeout(() => onWindowResize(), 100);
-    });
-  }
-});
+    }
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      document.body.style.cursor = '';
+      
+      // Force canvas update by triggering multiple resize calls to eliminate black bar
+      requestAnimationFrame(() => {
+        onWindowResize();
+        setTimeout(() => onWindowResize(), 10);
+        setTimeout(() => onWindowResize(), 50);
+        setTimeout(() => onWindowResize(), 100);
+      });
+    }
+  });
+}
 
 function updateImageSizes(rightPanelPercent) {
   const baseWidth = 250;
@@ -2664,8 +2916,11 @@ canvas.addEventListener('click', e => {
   if (isDragging) return;
   
   const rect = canvas.getBoundingClientRect();
-  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  // Support both mouse and touch events
+  const clientX = e.clientX || (e.touches && e.touches[0] ? e.touches[0].clientX : 0);
+  const clientY = e.clientY || (e.touches && e.touches[0] ? e.touches[0].clientY : 0);
+  mouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+  mouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
   
   // Handle Moon surface clicks
   if (moonSurfaceActive) {
@@ -2743,59 +2998,62 @@ canvas.addEventListener('click', e => {
   }
 });
 
-canvas.addEventListener('mousemove', e => {
-  if (dragging) return;
-  if (moonSurfaceActive) return; 
-  
-  const rect = canvas.getBoundingClientRect();
-  mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-  mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-  
-  raycaster.setFromCamera(mouse, camera);
-  const clickables = Object.values(bodies).map(b => b.mesh).concat([sun]);
-  const hits = raycaster.intersectObjects(clickables, true);
-  
-  Object.keys(bodies).forEach(name => unhighlightBody(name));
-  unhighlightBody('Sun');
-  
-  const hoverHint = document.getElementById('hoverHint');
-  
-  if (hits.length > 0) {
-    let bodyName = hits[0].object.userData.name;
-    if (!bodyName && hits[0].object.parent && hits[0].object.parent.userData) {
-      bodyName = hits[0].object.parent.userData.name;
-    }
-    if (!bodyName && hits[0].object.parent && hits[0].object.parent.parent && hits[0].object.parent.parent.userData) {
-      bodyName = hits[0].object.parent.parent.userData.name;
-    }
+// Disable hover detection on mobile (too thin for touch)
+if (!isMobileDevice) {
+  canvas.addEventListener('mousemove', e => {
+    if (dragging) return;
+    if (moonSurfaceActive) return; 
     
-    if (bodyName) {
-      highlightBody(bodyName);
-      
-      const bodyInfo = bodyData.find(b => b.name === bodyName);
-      const targetBody = bodyInfo && bodyInfo.body ? bodyInfo.body : bodyName;
-      
-      highlightPublication(targetBody);
-      canvas.style.cursor = 'pointer';
-      
-      // Show hint for Moon
-      if (bodyName === 'Moon') {
-        hoverHint.textContent = 'Click to explore Moon surface view';
-        hoverHint.style.left = e.clientX + 15 + 'px';
-        hoverHint.style.top = e.clientY + 15 + 'px';
-        hoverHint.classList.add('active');
-      } else {
-        hoverHint.classList.remove('active');
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    
+    raycaster.setFromCamera(mouse, camera);
+    const clickables = Object.values(bodies).map(b => b.mesh).concat([sun]);
+    const hits = raycaster.intersectObjects(clickables, true);
+    
+    Object.keys(bodies).forEach(name => unhighlightBody(name));
+    unhighlightBody('Sun');
+    
+    const hoverHint = document.getElementById('hoverHint');
+    
+    if (hits.length > 0) {
+      let bodyName = hits[0].object.userData.name;
+      if (!bodyName && hits[0].object.parent && hits[0].object.parent.userData) {
+        bodyName = hits[0].object.parent.userData.name;
       }
+      if (!bodyName && hits[0].object.parent && hits[0].object.parent.parent && hits[0].object.parent.parent.userData) {
+        bodyName = hits[0].object.parent.parent.userData.name;
+      }
+      
+      if (bodyName) {
+        highlightBody(bodyName);
+        
+        const bodyInfo = bodyData.find(b => b.name === bodyName);
+        const targetBody = bodyInfo && bodyInfo.body ? bodyInfo.body : bodyName;
+        
+        highlightPublication(targetBody);
+        canvas.style.cursor = 'pointer';
+        
+        // Show hint for Moon
+        if (bodyName === 'Moon') {
+          hoverHint.textContent = 'Click to explore Moon surface view';
+          hoverHint.style.left = e.clientX + 15 + 'px';
+          hoverHint.style.top = e.clientY + 15 + 'px';
+          hoverHint.classList.add('active');
+        } else {
+          hoverHint.classList.remove('active');
+        }
+      }
+    } else {
+      canvas.style.cursor = 'default';
+      hoverHint.classList.remove('active');
+      document.querySelectorAll('.pub-card').forEach(card => {
+        card.classList.remove('highlighted');
+      });
     }
-  } else {
-    canvas.style.cursor = 'default';
-    hoverHint.classList.remove('active');
-    document.querySelectorAll('.pub-card').forEach(card => {
-      card.classList.remove('highlighted');
-    });
-  }
-});
+  });
+}
 
 
 function zoomToBody(name) {
