@@ -673,8 +673,10 @@ a:hover {
     </div>
     
     <div class="legend" id="legendText">
-      <span class="legend-title">🎮 How to Navigate</span>
-      <strong>Interactive 3D Solar System</strong> – Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
+      <div style="text-align:center; line-height:1.4;">
+        <span class="legend-title"><strong>Tips to navigate in the Interactive 3D Solar System</strong></span><br>
+        Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
+      </div>
     </div>
   </section>
   <div class="resizer" id="resizer"></div>
@@ -2255,8 +2257,7 @@ function animate() {
     // legendEl.innerHTML = '<span class="legend-title">🎮 How to Navigate</span><strong>Interactive 3D Solar System</strong> – Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels';
     legendEl.innerHTML = `
   <div style="text-align:center; line-height:1.4;">
-    <span class="legend-title"> <strong> Tips to navigate in the Interactive 3D Solar System</strong></span><br>
-   
+    <span class="legend-title"><strong>Tips to navigate in the Interactive 3D Solar System</strong></span><br>
     Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
   </div>
 `;
