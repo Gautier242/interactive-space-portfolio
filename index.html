@@ -631,6 +631,9 @@ a:hover {
 </style>
 </head>
 <body>
+<!-- GoatCounter Analytics - Privacy-friendly, no cookies, GDPR compliant -->
+<script data-goatcounter="https://gautier-portfolio.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 <header class="header">
   <div class="neural-bg" id="headerNeural"></div>
   
@@ -1062,6 +1065,15 @@ function showDetail(item) {
   const detailSubsections = document.getElementById('detailSubsections');
   const detailLinks = document.getElementById('detailLinks');
   const detailHeaderTitle = document.getElementById('detailHeaderTitle');
+  
+  // Track publication views
+  if (window.goatcounter) {
+    window.goatcounter.count({
+      path: '/publication/' + item.id,
+      title: 'Publication: ' + item.title,
+      event: true
+    });
+  }
   
   // Pause animation and center on related object
   if (item.body && item.id !== 'about') {
