@@ -687,20 +687,50 @@ a:hover {
   min-height: calc(100vh - 120px);
 }
 
-/* Mobile Animation Section - Middle Banner */
+/* Mobile Animation Section - Default: smaller size (like old list) */
 .mobile-device .left {
   flex: 0 0 auto;
   width: 100%;
+  height: 30vh;
+  min-height: 250px;
+  order: 2;
+  transition: height 0.3s ease;
+  position: relative;
+}
+
+.mobile-device .left::before {
+  content: 'Tap to expand animation';
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(30, 60, 100, 0.9);
+  border: 1px solid rgba(158, 201, 255, 0.4);
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 11px;
+  color: var(--accent);
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+
+.mobile-device .left.expanded::before {
+  display: none;
+}
+
+/* Mobile Animation Section - Expanded: 50% of screen */
+.mobile-device .left.expanded {
   height: 50vh;
   min-height: 400px;
-  order: 2;
 }
 
 .mobile-device .resizer {
   display: none;
 }
 
-/* Mobile Controls - Finger-friendly buttons */
+/* Mobile Controls - Finger-friendly buttons - Only show when expanded */
 .mobile-device .controls {
   bottom: 12px;
   left: 50%;
@@ -710,6 +740,14 @@ a:hover {
   flex-wrap: wrap;
   justify-content: center;
   max-width: 90%;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-device .left.expanded .controls {
+  opacity: 1;
+  pointer-events: all;
 }
 
 .mobile-device .controls button {
@@ -721,17 +759,88 @@ a:hover {
   touch-action: manipulation;
 }
 
-/* Hide legend on mobile */
+/* Mobile Instructions Button - Only show when expanded */
+.mobile-device .instructions-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(30, 60, 100, 0.95);
+  border: 2px solid rgba(158, 201, 255, 0.4);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  z-index: 15;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+  touch-action: manipulation;
+  backdrop-filter: blur(12px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.mobile-device .left.expanded .instructions-toggle {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Mobile Legend - Toggleable */
 .mobile-device .legend {
+  position: absolute;
+  top: 50px;
+  left: 16px;
+  right: 16px;
+  font-size: 11px;
+  color: var(--ink);
+  background: rgba(30, 60, 100, 0.95);
+  border: 2px solid rgba(158, 201, 255, 0.4);
+  padding: 12px 16px;
+  border-radius: 12px;
+  backdrop-filter: blur(12px);
+  line-height: 1.5;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
   display: none;
+  z-index: 14;
 }
 
-/* Hide speed dropdown and other complex controls on mobile */
+.mobile-device .legend.visible {
+  display: block;
+}
+
+/* Speed button - Show on mobile when expanded */
 .mobile-device .speed-dropdown {
-  display: none !important;
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  background: rgba(10, 20, 40, 0.95);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 8px;
+  padding: 8px;
+  display: none;
+  flex-direction: column;
+  gap: 6px;
+  backdrop-filter: blur(12px);
+  z-index: 20;
 }
 
-.mobile-device #btnSpeed,
+.mobile-device .speed-dropdown.active {
+  display: flex;
+}
+
+.mobile-device .speed-dropdown button {
+  background: rgba(30,60,100,.6);
+  min-width: 60px;
+  text-align: center;
+}
+
+.mobile-device .speed-dropdown button:hover {
+  background: rgba(50,90,140,.8);
+}
+
+/* Hide zoom/rotate/pan buttons on mobile */
 .mobile-device #btnZoomIn,
 .mobile-device #btnZoomOut,
 .mobile-device #btnRotate,
@@ -739,13 +848,25 @@ a:hover {
   display: none;
 }
 
-/* Mobile Publications Section - Bottom Banner */
+/* Speed button visible on mobile when expanded */
+.mobile-device #btnSpeed {
+  display: inline-block;
+}
+
+/* Mobile Publications Section - Default: larger size (like old animation) */
 .mobile-device .right {
   flex: 0 0 auto;
   order: 3;
+  max-height: 70vh;
+  min-height: 400px;
+  transition: max-height 0.3s ease;
+  cursor: pointer;
+}
+
+/* Mobile Publications Section - Shrunk when animation expanded */
+.mobile-device .right.shrunk {
   max-height: 50vh;
   min-height: 300px;
-  transition: max-height 0.3s ease;
 }
 
 .mobile-device .right.expanded {
@@ -773,8 +894,12 @@ a:hover {
 
 .mobile-device .pubs-scroll {
   padding: 12px;
-  max-height: calc(50vh - 50px);
+  max-height: calc(70vh - 50px);
   overflow-y: auto;
+}
+
+.mobile-device .right.shrunk .pubs-scroll {
+  max-height: calc(50vh - 50px);
 }
 
 .mobile-device .right.expanded .pubs-scroll {
@@ -883,6 +1008,7 @@ a:hover {
   <section class="left" id="leftPanel">
     <canvas id="canvas3d"></canvas>
     <canvas id="moonSurface" class="moon-surface"></canvas>
+    <button class="instructions-toggle" id="instructionsToggle">View Instructions</button>
     <div class="controls">
       <button id="btnReset" title="Reset View">Reset</button>
       <button id="btnPause" title="Pause/Play">⏸</button>
@@ -953,17 +1079,106 @@ a:hover {
 // Mobile device detection
 const isMobileDevice = document.documentElement.classList.contains('mobile-device');
 
-// Mobile: Expand/collapse publications section
+// Mobile: Panel interactions and controls
 if (isMobileDevice) {
   document.addEventListener('DOMContentLoaded', () => {
-    const sectionTitle = document.querySelector('.section-title');
+    const leftPanel = document.getElementById('leftPanel');
     const rightPanel = document.querySelector('.right');
+    const sectionTitle = document.querySelector('.section-title');
+    const instructionsToggle = document.getElementById('instructionsToggle');
+    const legend = document.getElementById('legendText');
+    const canvas = document.getElementById('canvas3d');
     
-    if (sectionTitle && rightPanel) {
-      sectionTitle.addEventListener('click', () => {
-        rightPanel.classList.toggle('expanded');
+    // Panel click handlers - expand/shrink
+    if (leftPanel) {
+      // Add a clickable header area
+      const expandHeader = document.createElement('div');
+      expandHeader.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; height: 50px; z-index: 7; cursor: pointer;';
+      expandHeader.className = 'mobile-panel-header';
+      leftPanel.appendChild(expandHeader);
+      
+      expandHeader.addEventListener('click', (e) => {
+        if (leftPanel.classList.contains('expanded')) {
+          // Already expanded, do nothing
+          return;
+        } else {
+          // Expand animation panel
+          leftPanel.classList.add('expanded');
+          if (rightPanel) {
+            rightPanel.classList.add('shrunk');
+            rightPanel.classList.remove('expanded');
+          }
+        }
+      });
+      
+      // Also allow clicking on panel background (not canvas) to expand
+      leftPanel.addEventListener('click', (e) => {
+        // Only if not clicking on canvas, controls, or instructions
+        if (e.target.tagName === 'CANVAS' || 
+            e.target.closest('.controls') || 
+            e.target.closest('.instructions-toggle') ||
+            e.target.closest('.legend') ||
+            e.target.closest('.mobile-panel-header')) {
+          return;
+        }
+        
+        if (!leftPanel.classList.contains('expanded')) {
+          leftPanel.classList.add('expanded');
+          if (rightPanel) {
+            rightPanel.classList.add('shrunk');
+            rightPanel.classList.remove('expanded');
+          }
+        }
       });
     }
+    
+    if (rightPanel && sectionTitle) {
+      // Click on publications section to expand it
+      const handleRightPanelClick = (e) => {
+        // Don't trigger if clicking on a publication card or detail view
+        if (e.target.closest('.pub-card') || e.target.closest('.detail-view')) {
+          return;
+        }
+        
+        if (rightPanel.classList.contains('expanded')) {
+          // Already expanded, do nothing
+          return;
+        } else {
+          // Expand publications panel
+          rightPanel.classList.add('expanded');
+          rightPanel.classList.remove('shrunk');
+          if (leftPanel) {
+            leftPanel.classList.remove('expanded');
+          }
+        }
+      };
+      
+      sectionTitle.addEventListener('click', handleRightPanelClick);
+      // Also allow clicking on the scroll area
+      const pubsScroll = rightPanel.querySelector('.pubs-scroll');
+      if (pubsScroll) {
+        pubsScroll.addEventListener('click', (e) => {
+          // Only if clicking on empty space, not on cards
+          if (e.target === pubsScroll || e.target.classList.contains('institution-group')) {
+            handleRightPanelClick(e);
+          }
+        });
+      }
+    }
+    
+    // Instructions toggle
+    if (instructionsToggle && legend) {
+      instructionsToggle.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevent triggering panel expansion
+        legend.classList.toggle('visible');
+        instructionsToggle.textContent = legend.classList.contains('visible') 
+          ? 'Hide Instructions' 
+          : 'View Instructions';
+      });
+    }
+    
+    // Mobile zoom handlers will be initialized after camera is created
+    // (see code after camera initialization)
   });
 }
 
@@ -1566,6 +1781,92 @@ scene.background = new THREE.Color(0x000000);
 const camera = new THREE.PerspectiveCamera(50, leftPanel.clientWidth / leftPanel.clientHeight, 0.1, 15000);
 camera.position.set(250, 200, 250);
 camera.lookAt(0, 0, 0);
+
+// Mobile: Double-tap and pinch-to-zoom handlers (after camera initialization)
+if (isMobileDevice && canvas) {
+  // Double-tap to zoom
+  let lastTap = 0;
+  let tapTimeout;
+  
+  canvas.addEventListener('touchend', (e) => {
+    const currentTime = new Date().getTime();
+    const tapLength = currentTime - lastTap;
+    
+    if (tapLength < 300 && tapLength > 0) {
+      // Double tap detected
+      e.preventDefault();
+      clearTimeout(tapTimeout);
+      
+      // Zoom in/out (toggle)
+      const currentDistance = camera.position.length();
+      const zoomDirection = currentDistance > 500 ? -1 : 1;
+      const zoomAmount = zoomDirection * 100;
+      
+      const target = getCurrentViewTarget();
+      const direction = new THREE.Vector3().subVectors(camera.position, target).normalize();
+      camera.position.add(direction.multiplyScalar(zoomAmount));
+      
+      // Clamp zoom
+      const minDistance = 50;
+      const maxDistance = 2000;
+      const distance = camera.position.length();
+      if (distance < minDistance) {
+        camera.position.normalize().multiplyScalar(minDistance);
+      } else if (distance > maxDistance) {
+        camera.position.normalize().multiplyScalar(maxDistance);
+      }
+      
+      lastTap = 0;
+    } else {
+      lastTap = currentTime;
+      tapTimeout = setTimeout(() => {
+        lastTap = 0;
+      }, 300);
+    }
+  });
+  
+  // Pinch-to-zoom
+  let initialDistance = 0;
+  let initialCameraDistance = 0;
+  
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      initialDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      initialCameraDistance = camera.position.length();
+    }
+  }, { passive: false });
+  
+  canvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2) {
+      e.preventDefault();
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      const scale = initialDistance / currentDistance;
+      const newDistance = initialCameraDistance * scale;
+      
+      // Clamp zoom
+      const minDistance = 50;
+      const maxDistance = 2000;
+      const clampedDistance = Math.max(minDistance, Math.min(maxDistance, newDistance));
+      
+      const target = getCurrentViewTarget();
+      const direction = new THREE.Vector3().subVectors(camera.position, target).normalize();
+      camera.position.copy(target).add(direction.multiplyScalar(clampedDistance));
+      camera.lookAt(target);
+    }
+  }, { passive: false });
+}
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(leftPanel.clientWidth, leftPanel.clientHeight);
