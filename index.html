@@ -735,19 +735,37 @@ a:hover {
   bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
-  padding: 10px;
-  gap: 10px;
-  flex-wrap: wrap;
+  padding: 8px;
+  gap: 6px;
+  flex-wrap: nowrap;
   justify-content: center;
-  max-width: 90%;
+  max-width: 95%;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  white-space: nowrap;
+  overflow-x: auto;
 }
 
 .mobile-device .left.expanded .controls {
   opacity: 1;
   pointer-events: all;
+}
+
+/* Smaller controls for non-expanded view */
+.mobile-device .left:not(.expanded) .controls {
+  opacity: 0.6;
+  pointer-events: all;
+  padding: 6px;
+  gap: 4px;
+  max-width: 100%;
+}
+
+.mobile-device .left:not(.expanded) .controls button {
+  min-width: 40px;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 14px;
 }
 
 .mobile-device .controls button {
@@ -943,6 +961,8 @@ a:hover {
   float: left;
   margin-right: 12px;
   margin-bottom: 8px;
+  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .mobile-device .pub-content {
@@ -974,29 +994,32 @@ a:hover {
 
 /* Mobile Detail View */
 .mobile-device .detail-view {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 200;
+  max-height: 100%;
+  overflow-y: auto;
 }
 
 .mobile-device .detail-image {
   float: left;
-  max-width: 150px;
-  min-height: 150px;
-  width: 150px;
-  height: 150px;
+  max-width: 300px;
+  min-height: 300px;
+  width: 300px;
+  height: 300px;
   margin-right: 16px;
   margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
 .mobile-device .detail-image.about-image {
-  max-width: 150px;
-  min-height: 150px;
-  width: 150px;
-  height: 150px;
+  max-width: 300px;
+  min-height: 300px;
+  width: 300px;
+  height: 300px;
 }
 
 .mobile-device .detail-image img {
@@ -1864,9 +1887,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
 const camera = new THREE.PerspectiveCamera(50, leftPanel.clientWidth / leftPanel.clientHeight, 0.1, 15000);
-// Mobile: Start zoomed in 2x closer
+// Mobile: Start with better perspective (more angled view like after interaction)
 if (isMobileDevice) {
-  camera.position.set(125, 100, 125); // Half the distance = 2x zoom
+  camera.position.set(150, 120, 180); // Better perspective angle
 } else {
   camera.position.set(250, 200, 250);
 }
@@ -1941,8 +1964,114 @@ if (isMobileDevice && canvas) {
     }
   }, { passive: false });
   
+  // Touch interactions for expanded view only
+  let touchStartX = 0, touchStartY = 0;
+  let lastTouchX = 0, lastTouchY = 0;
+  let isRotating = false;
+  let isPanning = false;
+  
   canvas.addEventListener('touchmove', (e) => {
-    if (e.touches.length === 2) {
+    const leftPanel = document.getElementById('leftPanel');
+    const isExpanded = leftPanel && leftPanel.classList.contains('expanded');
+    
+    if (e.touches.length === 2 && isExpanded) {
+      // Two fingers: Pan/translate
+      e.preventDefault();
+      isPanning = true;
+      isRotating = false;
+      
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const midX = (touch1.clientX + touch2.clientX) / 2;
+      const midY = (touch1.clientY + touch2.clientY) / 2;
+      
+      if (lastTouchX === 0) {
+        lastTouchX = midX;
+        lastTouchY = midY;
+        return;
+      }
+      
+      const dx = (midX - lastTouchX) * 0.5;
+      const dy = (midY - lastTouchY) * 0.5;
+      
+      const right = new THREE.Vector3();
+      const up = new THREE.Vector3();
+      camera.getWorldDirection(right);
+      right.cross(camera.up).normalize();
+      up.copy(camera.up).normalize();
+      
+      right.multiplyScalar(-dx);
+      up.multiplyScalar(dy);
+      
+      camera.position.add(right);
+      camera.position.add(up);
+      cameraFollowTarget = null;
+      
+      lastTouchX = midX;
+      lastTouchY = midY;
+      
+      // Also handle pinch zoom
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      if (initialDistance === 0) {
+        initialDistance = currentDistance;
+        initialCameraDistance = camera.position.length();
+        return;
+      }
+      
+      const ratio = currentDistance / initialDistance;
+      const zoomFactor = 1 + (ratio - 1) * 0.05; // Very low sensitivity
+      const newDistance = initialCameraDistance / zoomFactor;
+      
+      const minDistance = 50;
+      const maxDistance = 2000;
+      const clampedDistance = Math.max(minDistance, Math.min(maxDistance, newDistance));
+      
+      const target = getCurrentViewTarget();
+      const direction = new THREE.Vector3().subVectors(camera.position, target).normalize();
+      camera.position.copy(target).add(direction.multiplyScalar(clampedDistance));
+      camera.lookAt(target);
+      
+      initialCameraDistance = clampedDistance;
+    } else if (e.touches.length === 1 && isExpanded) {
+      // Single finger: Rotate
+      e.preventDefault();
+      isRotating = true;
+      isPanning = false;
+      
+      const touch = e.touches[0];
+      if (lastTouchX === 0) {
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+        return;
+      }
+      
+      const dx = (touch.clientX - lastTouchX) * 0.005;
+      const dy = (touch.clientY - lastTouchY) * 0.005;
+      
+      const target = getCurrentViewTarget();
+      const offset = new THREE.Vector3().subVectors(camera.position, target);
+      const r = offset.length();
+      
+      let sphericalTheta = Math.acos(offset.y / r);
+      let sphericalPhi = Math.atan2(offset.z, offset.x);
+      
+      sphericalPhi -= dx;
+      sphericalTheta = Math.max(0.1, Math.min(Math.PI - 0.1, sphericalTheta - dy));
+      
+      camera.position.x = target.x + r * Math.sin(sphericalTheta) * Math.cos(sphericalPhi);
+      camera.position.y = target.y + r * Math.cos(sphericalTheta);
+      camera.position.z = target.z + r * Math.sin(sphericalTheta) * Math.sin(sphericalPhi);
+      camera.lookAt(target);
+      cameraFollowTarget = null;
+      
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+    } else if (e.touches.length === 2 && !isExpanded) {
+      // Two fingers on small view: only zoom
       e.preventDefault();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -1957,14 +2086,10 @@ if (isMobileDevice && canvas) {
         return;
       }
       
-      // Fingers together (smaller distance) = zoom out, fingers apart (larger distance) = zoom in
-      // Calculate scale: if currentDistance > initialDistance, we want to zoom in (reduce camera distance)
-      const scale = initialDistance / currentDistance; // Invert: larger currentDistance = smaller scale = closer camera
-      // Apply a damping factor to reduce sensitivity (0.2 = less sensitive)
-      const dampedScale = 1 + (scale - 1) * 0.2;
-      const newDistance = initialCameraDistance * dampedScale;
+      const ratio = currentDistance / initialDistance;
+      const zoomFactor = 1 + (ratio - 1) * 0.05;
+      const newDistance = initialCameraDistance / zoomFactor;
       
-      // Clamp zoom
       const minDistance = 50;
       const maxDistance = 2000;
       const clampedDistance = Math.max(minDistance, Math.min(maxDistance, newDistance));
@@ -1973,6 +2098,18 @@ if (isMobileDevice && canvas) {
       const direction = new THREE.Vector3().subVectors(camera.position, target).normalize();
       camera.position.copy(target).add(direction.multiplyScalar(clampedDistance));
       camera.lookAt(target);
+      
+      initialCameraDistance = clampedDistance;
+    }
+  }, { passive: false });
+  
+  canvas.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+      initialDistance = 0;
+      lastTouchX = 0;
+      lastTouchY = 0;
+      isRotating = false;
+      isPanning = false;
     }
   }, { passive: false });
 }
@@ -3605,58 +3742,89 @@ document.addEventListener('click', () => {
   speedDropdown.classList.remove('active');
 });
 
-document.getElementById('btnZoomIn').addEventListener('click', () => {
+// Mobile: Press-and-hold zoom functionality
+let zoomInterval = null;
+let isZooming = false;
+
+function performZoom(direction) {
   if (moonSurfaceActive) {
-    // For Moon view: move camera closer to center (0,0,0)
-    const direction = new THREE.Vector3(0, 0, 0).sub(moonCamera.position).normalize();
-    moonCamera.position.add(direction.multiplyScalar(3)); // Move TOWARD center = zoom IN
-    
+    const dir = new THREE.Vector3(0, 0, 0).sub(moonCamera.position).normalize();
+    moonCamera.position.add(dir.multiplyScalar(direction * 3));
     const distance = moonCamera.position.length();
     if (distance < 3) {
       moonCamera.position.normalize().multiplyScalar(3);
-    }
-  } else {
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
-    const distance = camera.position.length();
-    const currentTarget = camera.position.clone().add(direction.multiplyScalar(distance * 0.3));
-    
-    const offset = new THREE.Vector3().subVectors(camera.position, currentTarget);
-    offset.multiplyScalar(0.85);
-    
-    const len = offset.length();
-    if (len < 10) offset.normalize().multiplyScalar(10);
-    
-    camera.position.copy(currentTarget).add(offset);
-    camera.lookAt(currentTarget);
-  }
-});
-
-document.getElementById('btnZoomOut').addEventListener('click', () => {
-  if (moonSurfaceActive) {
-    // For Moon view: move camera away from center (0,0,0)
-    const direction = moonCamera.position.clone().normalize();
-    moonCamera.position.add(direction.multiplyScalar(3)); // Move AWAY from center = zoom OUT
-    
-    const distance = moonCamera.position.length();
-    if (distance > 150) {
+    } else if (distance > 150) {
       moonCamera.position.normalize().multiplyScalar(150);
     }
   } else {
-    const direction = new THREE.Vector3();
-    camera.getWorldDirection(direction);
+    const dir = new THREE.Vector3();
+    camera.getWorldDirection(dir);
     const distance = camera.position.length();
-    const currentTarget = camera.position.clone().add(direction.multiplyScalar(distance * 0.3));
-    
+    const currentTarget = camera.position.clone().add(dir.multiplyScalar(distance * 0.3));
     const offset = new THREE.Vector3().subVectors(camera.position, currentTarget);
-    offset.multiplyScalar(1.15);
-    
+    offset.multiplyScalar(direction > 0 ? 0.85 : 1.15);
     const len = offset.length();
+    if (len < 10) offset.normalize().multiplyScalar(10);
     if (len > 1200) offset.normalize().multiplyScalar(1200);
-    
     camera.position.copy(currentTarget).add(offset);
     camera.lookAt(currentTarget);
   }
+}
+
+function startZoom(direction) {
+  if (isZooming) return;
+  isZooming = true;
+  performZoom(direction); // Immediate zoom on press
+  zoomInterval = setInterval(() => performZoom(direction), 50); // Continuous zoom
+}
+
+function stopZoom() {
+  if (zoomInterval) {
+    clearInterval(zoomInterval);
+    zoomInterval = null;
+  }
+  isZooming = false;
+}
+
+const btnZoomIn = document.getElementById('btnZoomIn');
+const btnZoomOut = document.getElementById('btnZoomOut');
+
+// Mobile: Press-and-hold support
+if (isMobileDevice) {
+  btnZoomIn.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startZoom(1);
+  });
+  btnZoomIn.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    stopZoom();
+  });
+  btnZoomIn.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    stopZoom();
+  });
+  
+  btnZoomOut.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    startZoom(-1);
+  });
+  btnZoomOut.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    stopZoom();
+  });
+  btnZoomOut.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    stopZoom();
+  });
+}
+
+// Desktop: Single click
+btnZoomIn.addEventListener('click', () => {
+  if (!isMobileDevice) performZoom(1);
+});
+
+document.getElementById('btnZoomOut').addEventListener('click', () => {
+  if (!isMobileDevice) performZoom(-1);
 });
 
 document.getElementById('btnRotate').addEventListener('click', e => {
