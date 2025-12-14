@@ -206,6 +206,7 @@ a:hover {
   gap: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
 }
+
 .controls button {
   background: rgba(50,90,140,.8);
   color: #eaf1ff;
@@ -217,7 +218,10 @@ a:hover {
   transition: all 0.2s;
   min-width: 36px;
   font-weight: 500;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
 }
+
 .controls button:hover {
   background: rgba(50,90,140,.8);
   transform: translateY(-1px);
@@ -851,7 +855,7 @@ a:hover {
 
 /* Speed button visible on mobile when expanded */
 .mobile-device #btnSpeed {
-  display: inline-block;
+  display: none;
 }
 
 /* Mobile Publications Section - Always takes remaining space */
@@ -998,15 +1002,15 @@ a:hover {
 }
 
 .mobile-device .detail-image {
-  float: left;
-  /* Increased size: was 55%, now 75% (approx 1/4 bigger relative to screen) */
-  max-width: 75%; 
-  width: auto;
+  float: none;
+  /* Image takes full width, title starts below */
+  max-width: 100%; 
+  width: 100%;
   height: auto !important; /* Fixes the frame height issue */
   min-height: 0 !important;
   
-  margin-right: 16px;
-  margin-bottom: 12px;
+  margin-right: 0;
+  margin-bottom: 16px;
   flex-shrink: 0;
   border-radius: 12px;
   overflow: hidden;
