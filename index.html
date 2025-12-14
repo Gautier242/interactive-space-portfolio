@@ -1126,7 +1126,7 @@ a:hover {
   </div>
   <div class="links">
     <a href="#about" onclick="showAbout(); return false;">About Me</a>
-    <a href="https://scholar.google.com/citations?user=Dm0hKWoAAAAJ&hl=fr" target="_blank">Google Scholar</a>
+    <a href="https://scholar.google.co.uk/citations?user=Dm0hKWoAAAAJ&hl=en" target="_blank">Google Scholar</a>
     <a href="https://www.researchgate.net/profile/Gautier-Bardi-De-Fourtou" target="_blank">ResearchGate</a>
     <a href="https://github.com/Gautier242?tab=overview&from=2025-12-01&to=2025-12-09" target="_blank">GitHub</a>
   </div>
@@ -1135,7 +1135,7 @@ a:hover {
   <section class="left" id="leftPanel">
     <canvas id="canvas3d"></canvas>
     <canvas id="moonSurface" class="moon-surface"></canvas>
-    <button class="instructions-toggle" id="instructionsToggle">Interaction tips</button>
+    <button class="instructions-toggle" id="instructionsToggle">View interaction tips</button>
     <div class="controls">
       <button id="btnReset" title="Reset View">Reset</button>
       <button id="btnPause" title="Pause/Play">⏸</button>
@@ -1247,8 +1247,8 @@ if (isMobileDevice) {
         e.stopPropagation();
         legend.classList.toggle('visible');
         instructionsToggle.textContent = legend.classList.contains('visible') 
-          ? 'Hide Instructions' 
-          : 'View Instructions';
+          ? 'Hide interaction tips' 
+          : 'View interaction tips';
       });
     }
     
@@ -1456,7 +1456,7 @@ const ABOUT_ME = {
   inst: "MIT · NASA JPL · ISU",
   desc: "Researcher at the intersection of AI and Space Technology, developing innovative solutions for space exploration and Earth observation.",
   extendedDesc: "Currently pursuing PhD applications focusing on AI for space applications. My work spans from developing intelligent sensor systems for the International Space Station to creating foundation models for lunar exploration. I'm passionate about leveraging artificial intelligence to advance our understanding of the cosmos and improve life on Earth. My research combines deep learning, computer vision, physics-informed machine learning, and systems engineering to solve complex challenges in space science and exploration.",
-  authors: "<strong>PhD Candidate in AI for Space</strong>",
+  // authors: "<strong>PhD Candidate in AI for Space</strong>",
   venue: "MIT Media Lab · NASA Jet Propulsion Laboratory · International Space University",
   subsections: [
     {
