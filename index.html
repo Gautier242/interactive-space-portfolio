@@ -751,6 +751,7 @@ a:hover {
   font-size: 16px;
   font-weight: 600;
   touch-action: manipulation;
+  
 }
 
 /* Mobile Instructions Button - Only show when expanded */
@@ -818,7 +819,8 @@ a:hover {
   flex-direction: column;
   gap: 6px;
   backdrop-filter: blur(12px);
-  z-index: 20;
+  z-index: 1000 !important;
+  min-width: 70px;
 }
 
 .mobile-device .speed-dropdown.active {
@@ -997,12 +999,10 @@ a:hover {
 
 .mobile-device .detail-image {
   float: left;
-  /* Increased from 40% to 55% (roughly 1/3 larger) */
-  max-width: 55%; 
+  /* Increased size: was 55%, now 75% (approx 1/4 bigger relative to screen) */
+  max-width: 75%; 
   width: auto;
-  
-  /* Important: Override any JS-calculated heights to fit the image tightly */
-  height: auto !important; 
+  height: auto !important; /* Fixes the frame height issue */
   min-height: 0 !important;
   
   margin-right: 16px;
@@ -1011,8 +1011,6 @@ a:hover {
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.2);
-  
-  /* Change display to block to prevent flexbox from stretching the height */
   display: block; 
   background: linear-gradient(135deg, #1a3a6a, #0d1f3f);
 }
@@ -1071,6 +1069,8 @@ a:hover {
   line-height: 1.6;
   font-size: 15px;
   margin-top: 12px;
+  text-align: justify;
+  text-justify: inter-word;
   /* Always start below the picture from far left to far right */
 }
 
@@ -1133,6 +1133,7 @@ a:hover {
     <div class="controls">
       <button id="btnReset" title="Reset View">Reset</button>
       <button id="btnPause" title="Pause/Play">⏸</button>
+      
       <div style="position: relative;">
         <button id="btnSpeed" title="Animation Speed">1x</button>
         <div class="speed-dropdown" id="speedDropdown">
@@ -1143,10 +1144,20 @@ a:hover {
           <button data-speed="4">4x</button>
         </div>
       </div>
-      <button id="btnZoomIn" title="Zoom In">+</button>
-      <button id="btnZoomOut" title="Zoom Out">−</button>
-      <button id="btnRotate" title="Rotate Mode (Drag)" class="active">✋</button>
-      <button id="btnPan" title="Pan Mode (Shift+Drag)">✢</button>
+
+      <div id="standardControls" style="display: flex; gap: 8px;">
+        <button id="btnZoomIn" title="Zoom In">+</button>
+        <button id="btnZoomOut" title="Zoom Out">−</button>
+        <button id="btnRotate" title="Rotate Mode (Drag)" class="active">✋</button>
+        <button id="btnPan" title="Pan Mode (Shift+Drag)">✢</button>
+      </div>
+
+      <div id="roverControls" style="display: none; gap: 8px;">
+        <button id="btnRoverForward" title="Forward">↑</button>
+        <button id="btnRoverBackward" title="Backward">↓</button>
+        <button id="btnRoverLeft" title="Left">←</button>
+        <button id="btnRoverRight" title="Right">→</button>
+      </div>
     </div>
     
     <div class="legend" id="legendText">
@@ -2427,6 +2438,53 @@ function initMoonSurface() {
   const moonStars = new THREE.Points(moonStarsGeo, moonStarsMat);
   moonScene.add(moonStars);
   
+  // Mobile Moon Rotation Logic
+  moonCanvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      isDragging = false;
+      dragging = true;
+      prevX = e.touches[0].clientX;
+      prevY = e.touches[0].clientY;
+    }
+  }, { passive: false });
+
+  moonCanvas.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 1 && dragging) {
+       e.preventDefault(); // Prevent scrolling while rotating moon
+       const x = e.touches[0].clientX;
+       const y = e.touches[0].clientY;
+       const dx = x - prevX;
+       const dy = y - prevY;
+
+       // Use same rotation logic as desktop
+       const rotSpeed = 0.005;
+       const phi = dx * rotSpeed;
+       const theta = dy * rotSpeed;
+       
+       const target = new THREE.Vector3(0, 0, 0);
+       const offset = new THREE.Vector3().subVectors(moonCamera.position, target);
+       const r = offset.length();
+       
+       let sphericalTheta = Math.acos(offset.y / r);
+       let sphericalPhi = Math.atan2(offset.z, offset.x);
+       
+       sphericalPhi -= phi;
+       sphericalTheta = Math.max(0.1, Math.min(Math.PI - 0.1, sphericalTheta - theta));
+       
+       moonCamera.position.x = target.x + r * Math.sin(sphericalTheta) * Math.cos(sphericalPhi);
+       moonCamera.position.y = target.y + r * Math.cos(sphericalTheta);
+       moonCamera.position.z = target.z + r * Math.sin(sphericalTheta) * Math.sin(sphericalPhi);
+       moonCamera.lookAt(target);
+
+       prevX = x;
+       prevY = y;
+    }
+  }, { passive: false });
+
+  moonCanvas.addEventListener('touchend', () => {
+    dragging = false;
+  });
+
   // Moon canvas click handler
   moonCanvas.addEventListener('click', e => {
     if (!moonSurfaceActive || isDragging) return;
@@ -2452,7 +2510,11 @@ function initMoonSurface() {
       if (objName === 'VIPER') {
         roverPOVMode = !roverPOVMode;
         viperManualControl = roverPOVMode;
-        
+
+        if (isMobileDevice) {
+           toggleRoverControls(roverPOVMode);
+        }
+
         // Toggle rock visibility based on POV mode
         if (window.moonRocks) {
           window.moonRocks.forEach(rock => {
@@ -2478,6 +2540,8 @@ function initMoonSurface() {
         viperManualControl = false;
         document.getElementById('moonSurface').classList.remove('active');
         
+        toggleRoverControls(false);
+
         const earthPub = PUBS.find(p => p.body === 'Earth');
         if (earthPub) {
           showDetail(earthPub);
@@ -2991,10 +3055,37 @@ function animate() {
     }
     
     // Animate Moon surface objects
+    // Animate Moon surface objects
     if (isAnimating && !pausedPlanets) {
-      
-      // VIPER rover - automatic control only if NOT in POV mode
-      if (!viperManualControl && !roverPOVMode) {
+
+// --- START NEW ROVER MOVEMENT CODE ---
+// This checks the button state every frame to move the rover
+if (roverPOVMode && moonViper) {
+    // Adjust speed as needed
+    const moveSpeed = 0.5 * animationSpeed; 
+    const rotSpeed = 0.04;
+
+    if (roverState.forward) {
+        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(moonViper.quaternion);
+        moonViper.position.add(forward.multiplyScalar(moveSpeed));
+        moonViper.position.y = 0; // Keep on ground
+    }
+    if (roverState.backward) {
+        const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(moonViper.quaternion);
+        moonViper.position.add(backward.multiplyScalar(moveSpeed));
+        moonViper.position.y = 0;
+    }
+    if (roverState.left) {
+        moonViper.rotation.y += rotSpeed;
+    }
+    if (roverState.right) {
+        moonViper.rotation.y -= rotSpeed;
+    }
+}
+// --- END NEW ROVER MOVEMENT CODE ---
+
+// VIPER rover - automatic control only if NOT in POV mode
+if (!viperManualControl && !roverPOVMode) {
         moonViperAngle += 0.001 * animationSpeed;
         const roverRadius = 12;
         moonViper.position.x = Math.cos(moonViperAngle) * roverRadius;
@@ -3011,6 +3102,8 @@ function animate() {
               window.rocksCollected++;
               
               // Collection animation - make rover flash green
+              window.viperIsGlowing = true; // <--- ADD THIS FLAG
+              
               moonViper.traverse(child => {
                 if (child.material) {
                   if (child.material.emissive) {
@@ -3024,6 +3117,7 @@ function animate() {
               });
 
               setTimeout(() => {
+                window.viperIsGlowing = false;
                 moonViper.traverse(child => {
                   if (child.material) {
                     if (child.material.emissive) {
@@ -3274,6 +3368,9 @@ moonCanvas.addEventListener('mousemove', e => {
   // Always reset ALL objects first
   [moonStarship, moonViper, moonLRO].forEach(obj => {
     if (obj) {
+      // If this is the VIPER and it is currently doing the green flash, skip resetting it
+      if (obj === moonViper && window.viperIsGlowing) return;
+
       obj.traverse(child => {
         if (child.material && child.material.emissive) {
           const objName = obj.userData.name;
@@ -3749,6 +3846,9 @@ document.getElementById('btnReset').addEventListener('click', () => {
     }
     document.getElementById('moonSurface').classList.remove('active');
     
+    // Ensure we switch back to standard controls
+    toggleRoverControls(false);
+
     // Reset rocks
     if (window.moonRocks) {
       window.moonRocks.forEach(rock => {
@@ -3785,6 +3885,36 @@ document.getElementById('btnPause').addEventListener('click', e => {
 
 const speedBtn = document.getElementById('btnSpeed');
 const speedDropdown = document.getElementById('speedDropdown');
+
+// Toggle dropdown
+speedBtn.addEventListener('click', (e) => {
+  e.preventDefault();
+  e.stopPropagation();
+  const isVisible = speedDropdown.style.display === 'flex';
+  speedDropdown.style.display = isVisible ? 'none' : 'flex';
+  speedDropdown.classList.toggle('active', !isVisible);
+});
+
+// Handle selection
+document.querySelectorAll('#speedDropdown button').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const speed = parseFloat(e.target.dataset.speed);
+    animationSpeed = speed * 0.5; // Scale relative to base
+    speedBtn.textContent = speed + 'x';
+    speedDropdown.style.display = 'none';
+    speedDropdown.classList.remove('active');
+  });
+});
+
+// Close when clicking outside
+document.addEventListener('click', (e) => {
+    if(speedDropdown.style.display === 'flex' && !speedBtn.contains(e.target)) {
+        speedDropdown.style.display = 'none';
+        speedDropdown.classList.remove('active');
+    }
+});
 
 speedBtn.addEventListener('click', (e) => {
   e.stopPropagation();
@@ -3987,6 +4117,58 @@ document.addEventListener('keyup', e => {
 
 renderPublications();
 setTimeout(() => initMoonSurface(), 500);
+
+// --- ROVER CONTROL LOGIC ---
+
+// State for continuous movement
+const roverState = {
+    forward: false,
+    backward: false,
+    left: false,
+    right: false
+};
+
+// Function to toggle control visibility
+function toggleRoverControls(showRover) {
+    const stdControls = document.getElementById('standardControls');
+    const rovControls = document.getElementById('roverControls');
+    
+    if (showRover) {
+        stdControls.style.display = 'none';
+        rovControls.style.display = 'flex';
+    } else {
+        stdControls.style.display = 'flex';
+        rovControls.style.display = 'none';
+    }
+}
+
+// Attach listeners to Rover Buttons
+['btnRoverForward', 'btnRoverBackward', 'btnRoverLeft', 'btnRoverRight'].forEach(id => {
+    const btn = document.getElementById(id);
+    const direction = id.replace('btnRover', '').toLowerCase(); // forward, backward, left, right
+    
+    // Touch Start (Mobile) & Mouse Down (Desktop)
+    const startMove = (e) => {
+        e.preventDefault(); 
+        roverState[direction] = true;
+        viperManualControl = true;
+    };
+    
+    // Touch End & Mouse Up
+    const stopMove = (e) => {
+        e.preventDefault();
+        roverState[direction] = false;
+    };
+
+    btn.addEventListener('touchstart', startMove, {passive: false});
+    btn.addEventListener('touchend', stopMove);
+    btn.addEventListener('mousedown', startMove);
+    btn.addEventListener('mouseup', stopMove);
+    btn.addEventListener('mouseleave', stopMove);
+});
+
+
+
 </script>
 </body>
 </html>
