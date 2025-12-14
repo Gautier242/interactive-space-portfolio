@@ -753,24 +753,25 @@ a:hover {
   pointer-events: all;
 }
 
-/* Smaller controls for non-expanded view - 1x size (twice bigger than before), far right */
+/* Smaller controls for non-expanded view - 0.5x size, far right */
 .mobile-device .left:not(.expanded) .controls {
   opacity: 0.6;
   pointer-events: all;
-  padding: 6px;
-  gap: 4px;
+  padding: 3px;
+  gap: 2px;
   max-width: auto;
   left: auto;
   right: 8px;
-  transform: none;
+  transform: scale(0.5);
+  transform-origin: bottom right;
   bottom: 8px;
 }
 
 .mobile-device .left:not(.expanded) .controls button {
-  min-width: 40px;
-  min-height: 36px;
-  padding: 6px 10px;
-  font-size: 14px;
+  min-width: 20px;
+  min-height: 18px;
+  padding: 3px 5px;
+  font-size: 7px;
 }
 
 .mobile-device .controls button {
@@ -863,11 +864,14 @@ a:hover {
   background: rgba(50,90,140,.8);
 }
 
-/* Show rotate/pan buttons on mobile */
-.mobile-device #btnRotate,
-.mobile-device #btnPan,
-.mobile-device #btnPanLeft,
-.mobile-device #btnPanRight {
+/* Show rotate/pan buttons on mobile only when expanded */
+.mobile-device .left:not(.expanded) #btnRotate,
+.mobile-device .left:not(.expanded) #btnPan {
+  display: none;
+}
+
+.mobile-device .left.expanded #btnRotate,
+.mobile-device .left.expanded #btnPan {
   display: inline-block;
 }
 
@@ -1006,21 +1010,18 @@ a:hover {
 
 .mobile-device .detail-image {
   float: left;
-  max-width: 60%;
-  width: 60%;
-  min-height: 300px;
+  max-width: 500px;
+  width: 100%;
   height: auto;
-  aspect-ratio: 1;
-  margin-right: 16px;
-  margin-bottom: 12px;
+  min-height: 350px;
+  margin-right: 20px;
+  margin-bottom: 20px;
   flex-shrink: 0;
 }
 
 .mobile-device .detail-image.about-image {
-  max-width: 60%;
-  width: 60%;
-  min-height: 300px;
-  aspect-ratio: 1;
+  max-width: 125px;
+  min-height: 125px;
 }
 
 .mobile-device .detail-image img {
@@ -1030,27 +1031,23 @@ a:hover {
 }
 
 .mobile-device .detail-top {
-  display: flex;
-  flex-wrap: wrap;
+  display: block;
   margin-bottom: 20px;
 }
 
 .mobile-device .detail-info {
-  overflow: visible;
-  width: auto;
+  overflow: hidden;
   min-width: 0;
-  flex: 1;
-  min-width: calc(40% - 16px);
 }
 
 .mobile-device .detail-title {
   margin-bottom: 8px;
-  width: 100%;
+  width: auto;
 }
 
 .mobile-device .detail-inst,
 .mobile-device .detail-subinst {
-  width: 100%;
+  width: auto;
   margin-bottom: 8px;
 }
 
@@ -1132,8 +1129,6 @@ a:hover {
       <button id="btnZoomOut" title="Zoom Out">−</button>
       <button id="btnRotate" title="Rotate Mode (Drag)" class="active">✋</button>
       <button id="btnPan" title="Pan Mode (Shift+Drag)">✢</button>
-      <button id="btnPanLeft" title="Pan Left">←</button>
-      <button id="btnPanRight" title="Pan Right">→</button>
     </div>
     
     <div class="legend" id="legendText">
@@ -1235,14 +1230,19 @@ if (isMobileDevice) {
         }
       }
       
-      // Force canvas resize after panel change
-      setTimeout(() => {
-        if (typeof onWindowResize === 'function') {
+      // Force canvas resize immediately and multiple times
+      if (typeof onWindowResize === 'function') {
+        onWindowResize();
+        requestAnimationFrame(() => {
           onWindowResize();
-          setTimeout(() => onWindowResize(), 50);
-          setTimeout(() => onWindowResize(), 100);
-        }
-      }, 300);
+          setTimeout(() => {
+            onWindowResize();
+            setTimeout(() => onWindowResize(), 50);
+            setTimeout(() => onWindowResize(), 100);
+            setTimeout(() => onWindowResize(), 200);
+          }, 10);
+        });
+      }
     }
     
     // Panel click handlers - expand/shrink
@@ -1315,6 +1315,32 @@ if (isMobileDevice) {
         instructionsToggle.textContent = legend.classList.contains('visible') 
           ? 'Hide Instructions' 
           : 'View Instructions';
+      });
+    }
+    
+    // Make detail header title clickable to reduce animation
+    const detailHeaderTitle = document.getElementById('detailHeaderTitle');
+    if (detailHeaderTitle && isMobileDevice) {
+      detailHeaderTitle.style.cursor = 'pointer';
+      detailHeaderTitle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const detailView = document.getElementById('detailView');
+        if (detailView && detailView.classList.contains('active')) {
+          // Reduce animation
+          if (leftPanel && rightPanel) {
+            leftPanel.classList.remove('expanded');
+            rightPanel.classList.add('expanded');
+            rightPanel.classList.remove('shrunk');
+            // Force canvas resize
+            setTimeout(() => {
+              if (typeof onWindowResize === 'function') {
+                onWindowResize();
+                setTimeout(() => onWindowResize(), 50);
+                setTimeout(() => onWindowResize(), 100);
+              }
+            }, 100);
+          }
+        }
       });
     }
     
@@ -1801,21 +1827,40 @@ function hideDetail() {
     document.getElementById('btnPause').textContent = '⏸';
   }
   
-  // Restore left panel to 45% when closing detail
-  const leftPanel = document.getElementById('leftPanel');
-  if (leftPanel) {
-    leftPanel.style.flex = '0 0 45%';
-    updateImageSizes(55);
-    // Call resize multiple times during transition to prevent black band
-    requestAnimationFrame(() => {
-      onWindowResize();
-      setTimeout(() => onWindowResize(), 50);
-      setTimeout(() => onWindowResize(), 100);
-      setTimeout(() => onWindowResize(), 150);
-      setTimeout(() => onWindowResize(), 200);
-      setTimeout(() => onWindowResize(), 300);
-      setTimeout(() => onWindowResize(), 350);
-    });
+  // Mobile: Reduce animation when closing detail
+  if (isMobileDevice) {
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.querySelector('.right');
+    if (leftPanel && rightPanel) {
+      leftPanel.classList.remove('expanded');
+      rightPanel.classList.add('expanded');
+      rightPanel.classList.remove('shrunk');
+      // Force canvas resize
+      setTimeout(() => {
+        if (typeof onWindowResize === 'function') {
+          onWindowResize();
+          setTimeout(() => onWindowResize(), 50);
+          setTimeout(() => onWindowResize(), 100);
+        }
+      }, 100);
+    }
+  } else {
+    // Desktop: Restore left panel to 45% when closing detail
+    const leftPanel = document.getElementById('leftPanel');
+    if (leftPanel) {
+      leftPanel.style.flex = '0 0 45%';
+      updateImageSizes(55);
+      // Call resize multiple times during transition to prevent black band
+      requestAnimationFrame(() => {
+        onWindowResize();
+        setTimeout(() => onWindowResize(), 50);
+        setTimeout(() => onWindowResize(), 100);
+        setTimeout(() => onWindowResize(), 150);
+        setTimeout(() => onWindowResize(), 200);
+        setTimeout(() => onWindowResize(), 300);
+        setTimeout(() => onWindowResize(), 350);
+      });
+    }
   }
   
   // Exit Moon surface view when closing detail
@@ -2025,11 +2070,17 @@ if (isMobileDevice && canvas) {
     }
   }, { passive: false });
   
-  // Only allow pinch-to-zoom with fingers, no rotation/pan gestures
-  // Rotation and pan are handled by buttons only
+  // Touch interactions: pinch-to-zoom (2 fingers) or rotate/pan (1 finger if button selected)
+  let touchStartX = 0, touchStartY = 0;
+  let lastTouchX = 0, lastTouchY = 0;
+  let isTouchInteracting = false;
+  
   canvas.addEventListener('touchmove', (e) => {
-    // Only handle pinch-to-zoom (2 fingers)
+    const leftPanel = document.getElementById('leftPanel');
+    const isExpanded = leftPanel && leftPanel.classList.contains('expanded');
+    
     if (e.touches.length === 2) {
+      // Two fingers: Pinch-to-zoom
       e.preventDefault();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -2058,8 +2109,84 @@ if (isMobileDevice && canvas) {
       camera.lookAt(target);
       
       initialCameraDistance = clampedDistance;
+    } else if (e.touches.length === 1 && isExpanded) {
+      // One finger: Rotate or Pan (if button is selected)
+      const rotateBtn = document.getElementById('btnRotate');
+      const panBtn = document.getElementById('btnPan');
+      
+      if (rotateBtn && rotateBtn.classList.contains('active')) {
+        // Rotate mode
+        e.preventDefault();
+        isTouchInteracting = true;
+        const touch = e.touches[0];
+        
+        if (lastTouchX === 0) {
+          lastTouchX = touch.clientX;
+          lastTouchY = touch.clientY;
+          return;
+        }
+        
+        const dx = (touch.clientX - lastTouchX) * 0.005;
+        const dy = (touch.clientY - lastTouchY) * 0.005;
+        
+        const target = getCurrentViewTarget();
+        const offset = new THREE.Vector3().subVectors(camera.position, target);
+        const r = offset.length();
+        
+        let sphericalTheta = Math.acos(offset.y / r);
+        let sphericalPhi = Math.atan2(offset.z, offset.x);
+        
+        sphericalPhi -= dx;
+        sphericalTheta = Math.max(0.1, Math.min(Math.PI - 0.1, sphericalTheta - dy));
+        
+        camera.position.x = target.x + r * Math.sin(sphericalTheta) * Math.cos(sphericalPhi);
+        camera.position.y = target.y + r * Math.cos(sphericalTheta);
+        camera.position.z = target.z + r * Math.sin(sphericalTheta) * Math.sin(sphericalPhi);
+        camera.lookAt(target);
+        cameraFollowTarget = null;
+        
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+      } else if (panBtn && panBtn.classList.contains('active')) {
+        // Pan mode
+        e.preventDefault();
+        isTouchInteracting = true;
+        const touch = e.touches[0];
+        
+        if (lastTouchX === 0) {
+          lastTouchX = touch.clientX;
+          lastTouchY = touch.clientY;
+          return;
+        }
+        
+        const dx = (touch.clientX - lastTouchX) * 0.5;
+        const dy = (touch.clientY - lastTouchY) * 0.5;
+        
+        const right = new THREE.Vector3();
+        const up = new THREE.Vector3();
+        camera.getWorldDirection(right);
+        right.cross(camera.up).normalize();
+        up.copy(camera.up).normalize();
+        
+        right.multiplyScalar(-dx);
+        up.multiplyScalar(dy);
+        
+        camera.position.add(right);
+        camera.position.add(up);
+        cameraFollowTarget = null;
+        
+        lastTouchX = touch.clientX;
+        lastTouchY = touch.clientY;
+      }
     }
-    // Single finger touches are only for object selection (handled by click event)
+  }, { passive: false });
+  
+  canvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 1) {
+      const touch = e.touches[0];
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+    }
   }, { passive: false });
   
   canvas.addEventListener('touchend', (e) => {
@@ -3415,6 +3542,11 @@ raycaster.params.Points.threshold = 0.5;
 const mouse = new THREE.Vector2();
 
 canvas.addEventListener('click', e => {
+  // Mobile: Don't trigger click if we were rotating/panning
+  if (isMobileDevice && isTouchInteracting) {
+    isTouchInteracting = false;
+    return;
+  }
   if (isDragging) return;
   
   const rect = canvas.getBoundingClientRect();
@@ -3815,28 +3947,6 @@ document.getElementById('btnPan').addEventListener('click', e => {
   document.getElementById('btnRotate').classList.remove('active');
 });
 
-// Mobile: Pan left/right buttons
-if (isMobileDevice) {
-  document.getElementById('btnPanLeft').addEventListener('click', () => {
-    const panSpeed = 20;
-    const right = new THREE.Vector3();
-    camera.getWorldDirection(right);
-    right.cross(camera.up).normalize();
-    right.multiplyScalar(-panSpeed);
-    camera.position.add(right);
-    cameraFollowTarget = null;
-  });
-  
-  document.getElementById('btnPanRight').addEventListener('click', () => {
-    const panSpeed = 20;
-    const right = new THREE.Vector3();
-    camera.getWorldDirection(right);
-    right.cross(camera.up).normalize();
-    right.multiplyScalar(panSpeed);
-    camera.position.add(right);
-    cameraFollowTarget = null;
-  });
-}
 
 function onWindowResize() {
   const width = leftPanel.clientWidth;
