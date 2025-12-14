@@ -687,12 +687,12 @@ a:hover {
   min-height: calc(100vh - 120px);
 }
 
-/* Mobile Animation Section - Default: half size */
+/* Mobile Animation Section - Default: 1/4 screen size */
 .mobile-device .left {
   flex: 0 0 auto;
   width: 100%;
-  height: 15vh;
-  min-height: 150px;
+  height: 25vh;
+  min-height: 200px;
   order: 2;
   transition: height 0.3s ease;
   position: relative;
@@ -753,25 +753,25 @@ a:hover {
   pointer-events: all;
 }
 
-/* Smaller controls for non-expanded view - 0.5x size, far right */
+/* Smaller controls for non-expanded view - 0.75x size (50% bigger), far right */
 .mobile-device .left:not(.expanded) .controls {
   opacity: 0.6;
   pointer-events: all;
-  padding: 3px;
-  gap: 2px;
+  padding: 4.5px;
+  gap: 3px;
   max-width: auto;
   left: auto;
   right: 8px;
-  transform: scale(0.5);
+  transform: scale(0.75);
   transform-origin: bottom right;
   bottom: 8px;
 }
 
 .mobile-device .left:not(.expanded) .controls button {
-  min-width: 20px;
-  min-height: 18px;
-  padding: 3px 5px;
-  font-size: 7px;
+  min-width: 30px;
+  min-height: 27px;
+  padding: 4.5px 7.5px;
+  font-size: 10.5px;
 }
 
 .mobile-device .controls button {
@@ -958,13 +958,13 @@ a:hover {
 }
 
 .mobile-device .pub-image {
-  width: 80px;
-  max-width: 80px;
-  min-height: 60px;
-  height: 60px;
+  width: 120px;
+  max-width: 120px;
+  min-height: 120px;
+  height: 120px;
   float: left;
-  margin-right: 12px;
-  margin-bottom: 8px;
+  margin-right: 16px;
+  margin-bottom: 12px;
   flex-shrink: 0;
   box-sizing: border-box;
 }
@@ -973,8 +973,46 @@ a:hover {
   overflow: hidden;
 }
 
+.mobile-device .pub-header {
+  margin-bottom: 8px;
+  width: auto;
+  max-width: calc(100% - 136px);
+}
+
 .mobile-device .pub-title {
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.mobile-device .pub-inst {
+  font-size: 12px;
+  margin-bottom: 2px;
+}
+
+.mobile-device .pub-subinst {
+  font-size: 11px;
+  margin-bottom: 8px;
+}
+
+.mobile-device .pub-desc {
+  clear: both;
+  width: 100%;
+  margin-top: 12px;
   font-size: 14px;
+}
+
+.mobile-device .pub-meta {
+  clear: both;
+  width: 100%;
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+.mobile-device .pub-links {
+  clear: both;
+  width: 100%;
+  margin-top: 8px;
+  font-size: 12px;
 }
 
 .mobile-device .pub-desc {
@@ -1010,18 +1048,20 @@ a:hover {
 
 .mobile-device .detail-image {
   float: left;
-  max-width: 500px;
-  width: 100%;
-  height: auto;
-  min-height: 350px;
-  margin-right: 20px;
-  margin-bottom: 20px;
+  max-width: 150px;
+  width: 150px;
+  min-height: 150px;
+  height: 150px;
+  margin-right: 16px;
+  margin-bottom: 12px;
   flex-shrink: 0;
 }
 
 .mobile-device .detail-image.about-image {
-  max-width: 125px;
-  min-height: 125px;
+  max-width: 150px;
+  min-height: 150px;
+  width: 150px;
+  height: 150px;
 }
 
 .mobile-device .detail-image img {
@@ -1038,17 +1078,26 @@ a:hover {
 .mobile-device .detail-info {
   overflow: hidden;
   min-width: 0;
+  width: auto;
+  max-width: calc(100% - 166px);
 }
 
 .mobile-device .detail-title {
   margin-bottom: 8px;
-  width: auto;
+  width: 100%;
+  font-size: 20px;
 }
 
-.mobile-device .detail-inst,
+.mobile-device .detail-inst {
+  width: 100%;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
 .mobile-device .detail-subinst {
-  width: auto;
-  margin-bottom: 8px;
+  width: 100%;
+  margin-bottom: 12px;
+  font-size: 12px;
 }
 
 .mobile-device .detail-desc {
@@ -1056,6 +1105,7 @@ a:hover {
   width: 100%;
   clear: both;
   margin-top: 12px;
+  font-size: 15px;
 }
 
 .mobile-device .detail-extended {
@@ -1192,43 +1242,59 @@ if (isMobileDevice) {
     const legend = document.getElementById('legendText');
     const canvas = document.getElementById('canvas3d');
     
-    // Toggle function for views
+    // Toggle function for views - with forced display updates
     function toggleView(view) {
       if (view === 'animation') {
         // Toggle animation panel
         if (leftPanel.classList.contains('expanded')) {
-          // Retract animation
+          // Retract animation - FORCE to small size
           leftPanel.classList.remove('expanded');
+          leftPanel.style.height = '25vh';
+          leftPanel.style.minHeight = '200px';
           if (rightPanel) {
             rightPanel.classList.remove('shrunk');
             rightPanel.classList.add('expanded');
+            rightPanel.style.maxHeight = '75vh';
           }
         } else {
           // Expand animation
           leftPanel.classList.add('expanded');
+          leftPanel.style.height = '';
+          leftPanel.style.minHeight = '';
           if (rightPanel) {
             rightPanel.classList.add('shrunk');
             rightPanel.classList.remove('expanded');
+            rightPanel.style.maxHeight = '50vh';
           }
         }
       } else if (view === 'list') {
-        // Toggle list panel
+        // Toggle list panel - FORCE animation to reduce
         if (rightPanel.classList.contains('expanded')) {
           // Retract list
           rightPanel.classList.remove('expanded');
+          rightPanel.style.maxHeight = '';
           if (leftPanel) {
             leftPanel.classList.add('expanded');
+            leftPanel.style.height = '';
             rightPanel.classList.add('shrunk');
+            rightPanel.style.maxHeight = '50vh';
           }
         } else {
-          // Expand list
+          // Expand list - FORCE animation to small
           rightPanel.classList.add('expanded');
           rightPanel.classList.remove('shrunk');
+          rightPanel.style.maxHeight = '75vh';
           if (leftPanel) {
             leftPanel.classList.remove('expanded');
+            leftPanel.style.height = '25vh';
+            leftPanel.style.minHeight = '200px';
           }
         }
       }
+      
+      // Force immediate layout recalculation
+      leftPanel.offsetHeight; // Force reflow
+      if (rightPanel) rightPanel.offsetHeight; // Force reflow
       
       // Force canvas resize immediately and multiple times
       if (typeof onWindowResize === 'function') {
@@ -1237,9 +1303,12 @@ if (isMobileDevice) {
           onWindowResize();
           setTimeout(() => {
             onWindowResize();
+            setTimeout(() => onWindowResize(), 10);
             setTimeout(() => onWindowResize(), 50);
             setTimeout(() => onWindowResize(), 100);
+            setTimeout(() => onWindowResize(), 150);
             setTimeout(() => onWindowResize(), 200);
+            setTimeout(() => onWindowResize(), 300);
           }, 10);
         });
       }
@@ -1318,7 +1387,7 @@ if (isMobileDevice) {
       });
     }
     
-    // Make detail header title clickable to reduce animation
+    // Make detail header title clickable to reduce animation - FORCE update
     const detailHeaderTitle = document.getElementById('detailHeaderTitle');
     if (detailHeaderTitle && isMobileDevice) {
       detailHeaderTitle.style.cursor = 'pointer';
@@ -1326,19 +1395,34 @@ if (isMobileDevice) {
         e.stopPropagation();
         const detailView = document.getElementById('detailView');
         if (detailView && detailView.classList.contains('active')) {
-          // Reduce animation
+          // Reduce animation - FORCE to small size
           if (leftPanel && rightPanel) {
             leftPanel.classList.remove('expanded');
+            leftPanel.style.height = '25vh';
+            leftPanel.style.minHeight = '200px';
             rightPanel.classList.add('expanded');
             rightPanel.classList.remove('shrunk');
-            // Force canvas resize
-            setTimeout(() => {
-              if (typeof onWindowResize === 'function') {
+            rightPanel.style.maxHeight = '75vh';
+            
+            // Force immediate layout recalculation
+            leftPanel.offsetHeight; // Force reflow
+            rightPanel.offsetHeight; // Force reflow
+            
+            // Force canvas resize multiple times
+            if (typeof onWindowResize === 'function') {
+              onWindowResize();
+              requestAnimationFrame(() => {
                 onWindowResize();
-                setTimeout(() => onWindowResize(), 50);
-                setTimeout(() => onWindowResize(), 100);
-              }
-            }, 100);
+                setTimeout(() => {
+                  onWindowResize();
+                  setTimeout(() => onWindowResize(), 10);
+                  setTimeout(() => onWindowResize(), 50);
+                  setTimeout(() => onWindowResize(), 100);
+                  setTimeout(() => onWindowResize(), 150);
+                  setTimeout(() => onWindowResize(), 200);
+                }, 10);
+              });
+            }
           }
         }
       });
@@ -1718,22 +1802,37 @@ function showDetail(item) {
     });
   }
   
-  // Mobile: Auto-shrink animation when opening detail view
+  // Mobile: Auto-shrink animation when opening detail view - FORCE to small size
   if (isMobileDevice) {
     const leftPanel = document.getElementById('leftPanel');
     const rightPanel = document.querySelector('.right');
     if (leftPanel && rightPanel) {
       leftPanel.classList.remove('expanded');
+      leftPanel.style.height = '25vh';
+      leftPanel.style.minHeight = '200px';
       rightPanel.classList.add('expanded');
       rightPanel.classList.remove('shrunk');
-      // Force canvas resize
-      setTimeout(() => {
-        if (typeof onWindowResize === 'function') {
+      rightPanel.style.maxHeight = '75vh';
+      
+      // Force immediate layout recalculation
+      leftPanel.offsetHeight; // Force reflow
+      rightPanel.offsetHeight; // Force reflow
+      
+      // Force canvas resize multiple times
+      if (typeof onWindowResize === 'function') {
+        onWindowResize();
+        requestAnimationFrame(() => {
           onWindowResize();
-          setTimeout(() => onWindowResize(), 50);
-          setTimeout(() => onWindowResize(), 100);
-        }
-      }, 100);
+          setTimeout(() => {
+            onWindowResize();
+            setTimeout(() => onWindowResize(), 10);
+            setTimeout(() => onWindowResize(), 50);
+            setTimeout(() => onWindowResize(), 100);
+            setTimeout(() => onWindowResize(), 150);
+            setTimeout(() => onWindowResize(), 200);
+          }, 10);
+        });
+      }
     }
   }
   
@@ -1827,22 +1926,37 @@ function hideDetail() {
     document.getElementById('btnPause').textContent = '⏸';
   }
   
-  // Mobile: Reduce animation when closing detail
+  // Mobile: Reduce animation when closing detail - FORCE to small size
   if (isMobileDevice) {
     const leftPanel = document.getElementById('leftPanel');
     const rightPanel = document.querySelector('.right');
     if (leftPanel && rightPanel) {
       leftPanel.classList.remove('expanded');
+      leftPanel.style.height = '25vh';
+      leftPanel.style.minHeight = '200px';
       rightPanel.classList.add('expanded');
       rightPanel.classList.remove('shrunk');
-      // Force canvas resize
-      setTimeout(() => {
-        if (typeof onWindowResize === 'function') {
+      rightPanel.style.maxHeight = '75vh';
+      
+      // Force immediate layout recalculation
+      leftPanel.offsetHeight; // Force reflow
+      rightPanel.offsetHeight; // Force reflow
+      
+      // Force canvas resize multiple times
+      if (typeof onWindowResize === 'function') {
+        onWindowResize();
+        requestAnimationFrame(() => {
           onWindowResize();
-          setTimeout(() => onWindowResize(), 50);
-          setTimeout(() => onWindowResize(), 100);
-        }
-      }, 100);
+          setTimeout(() => {
+            onWindowResize();
+            setTimeout(() => onWindowResize(), 10);
+            setTimeout(() => onWindowResize(), 50);
+            setTimeout(() => onWindowResize(), 100);
+            setTimeout(() => onWindowResize(), 150);
+            setTimeout(() => onWindowResize(), 200);
+          }, 10);
+        });
+      }
     }
   } else {
     // Desktop: Restore left panel to 45% when closing detail
