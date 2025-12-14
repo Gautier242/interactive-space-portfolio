@@ -917,7 +917,8 @@ a:hover {
 }
 
 .mobile-device .pub-content {
-  overflow: hidden;
+  overflow: visible;
+  display: block;
 }
 
 .mobile-device .pub-header {
@@ -941,35 +942,11 @@ a:hover {
   margin-bottom: 8px;
 }
 
-.mobile-device .pub-image {
-  width: 120px;
-  max-width: 120px;
-  height: auto;
-  float: none; /* REMOVE FLOAT */
-  margin-right: 0; /* REMOVE RIGHT MARGIN */
-  margin-bottom: 12px;
-  flex-shrink: 0;
-  box-sizing: border-box;
-  display: block; /* MAKE IT BLOCK */
-}
-
-.mobile-device .pub-content {
-  overflow: visible; /* CHANGE FROM HIDDEN */
-  width: 100%; /* FULL WIDTH */
-}
-
-.mobile-device .pub-header {
-  margin-bottom: 8px;
-  width: 100%; /* FULL WIDTH */
-}
-
 .mobile-device .pub-desc {
-  clear: both;
-  width: 100%;
+  display: block;
   margin-top: 12px;
   font-size: 14px;
   line-height: 1.6;
-  text-align: left; /* ENSURE LEFT ALIGN */
 }
 
 .mobile-device .pub-meta {
@@ -1013,16 +990,13 @@ a:hover {
   overflow-y: auto;
 }
 
-.mobile-device .detail-content {
-  padding: 16px;
-}
-
 .mobile-device .detail-image {
-  float: none; 
-  max-width: 100%; 
-  width: 100%;
+  float: left;
+  max-width: 40%;
+  width: auto;
   height: auto;
-  margin-right: 0; 
+  /* Remove fixed min-height - let it adapt to content */
+  margin-right: 20px;
   margin-bottom: 20px;
   flex-shrink: 0;
   border-radius: 12px;
@@ -1054,7 +1028,8 @@ a:hover {
 }
 
 .mobile-device .detail-info {
-  overflow: hidden;
+  overflow: visible;
+  display: block;
   min-width: 0;
 }
 
@@ -1079,8 +1054,6 @@ a:hover {
   text-align: left;
   line-height: 1.6;
   font-size: 15px;
-  clear: both;
-  width: 100%;
   margin-top: 12px;
   /* Always start below the picture from far left to far right */
 }
@@ -1090,6 +1063,15 @@ a:hover {
   width: 100%;
   margin-top: 0;
   padding: 0 20px 20px;
+}
+
+.mobile-device .detail-extended-desc {
+  width: 100%;
+  margin-bottom: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: left;
+  /* Starts from far left below the picture, just like authors/venue */
 }
 
 .mobile-device .detail-content {
@@ -1184,6 +1166,7 @@ a:hover {
           </div>
         </div>
         <div class="detail-extended">
+          <div id="detailExtendedDesc" class="detail-extended-desc"></div>
           <div class="detail-meta">
             <div id="detailAuthors"></div>
             <div id="detailVenue"></div>
