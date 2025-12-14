@@ -1169,7 +1169,7 @@ a:hover {
     <div class="legend" id="legendText">
       <div style="text-align:center; line-height:1.4;">
         <span class="legend-title"><strong>Tips to navigate in the Interactive 3D Solar System</strong></span><br>
-        Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
+        Objects with yellow markers have publications · Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
       </div>
     </div>
   </section>
@@ -2604,7 +2604,57 @@ function initMoonSurface() {
   }, { passive: false });
 }  
 
-// Sun with corona
+function createCornerReticle(s) {
+  const l = s * 0.3; // Length of the L-arms
+  const g = new THREE.BufferGeometry();
+  
+  // Define 3 segments per corner: 
+  // 1. Horizontal arm (l long)
+  // 2. Vertical arm (l long)
+  // 3. Diagonal link between tips (length of l)
+  const v_new_shape = [
+    // Top-Left Corner (x=-s, y=s)
+    // 1. Horizontal arm (from -s to -s+l)
+    -s, s, 0,        -s + l, s, 0,
+    // 2. Vertical arm (from s to s-l)
+    -s, s, 0,        -s, s - l, 0,
+    // 3. Diagonal link (from (-s+l, s) to (-s, s-l))
+    -s + l, s, 0,    -s, s - l, 0,
+    
+    // Top-Right Corner (x=s, y=s)
+    // 1. Horizontal arm (from s to s-l)
+    s, s, 0,         s - l, s, 0,
+    // 2. Vertical arm (from s to s-l)
+    s, s, 0,         s, s - l, 0,
+    // 3. Diagonal link (from (s-l, s) to (s, s-l))
+    s - l, s, 0,     s, s - l, 0,
+    
+    // Bottom-Left Corner (x=-s, y=-s)
+    // 1. Horizontal arm (from -s to -s+l)
+    -s, -s, 0,       -s + l, -s, 0,
+    // 2. Vertical arm (from -s to -s+l)
+    -s, -s, 0,       -s, -s + l, 0,
+    // 3. Diagonal link (from (-s+l, -s) to (-s, -s+l))
+    -s + l, -s, 0,   -s, -s + l, 0,
+    
+    // Bottom-Right Corner (x=s, y=-s)
+    // 1. Horizontal arm (from s to s-l)
+    s, -s, 0,        s - l, -s, 0,
+    // 2. Vertical arm (from -s to -s+l)
+    s, -s, 0,        s, -s + l, 0,
+    // 3. Diagonal link (from (s-l, -s) to (s, -s+l))
+    s - l, -s, 0,    s, -s + l, 0
+  ];
+  
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v_new_shape, 3));
+  const mesh = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xffff00, transparent: true }));
+  
+  // No 45 degree rotation needed for this shape
+  // mesh.rotation.z = Math.PI / 4; 
+  
+  return mesh;
+}
+
 const sunGeo = new THREE.SphereGeometry(18, 64, 64);
 const sunMat = new THREE.MeshBasicMaterial({ 
   color: 0xfdb813,
@@ -2613,6 +2663,12 @@ const sunMat = new THREE.MeshBasicMaterial({
 });
 const sun = new THREE.Mesh(sunGeo, sunMat);
 sun.userData = { name: 'Sun' };
+
+const sunReticle = createCornerReticle(22);
+sun.add(sunReticle);
+sun.userData.reticle = sunReticle;
+
+
 scene.add(sun);
 
 for (let i = 0; i < 4; i++) {
@@ -2957,6 +3013,12 @@ bodyData.forEach(d => {
   }
   
   mesh.userData = { name: d.name };
+  if (['Earth', 'Moon', 'Mars', 'HWO'].includes(d.name)) {
+    const rSz = d.name === 'HWO' ? 5 : (d.size * 1.6); // Custom size adjustments
+    const ret = createCornerReticle(Math.max(rSz, 3.5));
+    mesh.add(ret);
+    mesh.userData.reticle = ret;
+  }
   scene.add(mesh);
   
   bodies[d.name] = { 
@@ -3215,13 +3277,20 @@ if (!viperManualControl && !roverPOVMode) {
     legendEl.innerHTML = `
   <div style="text-align:center; line-height:1.4;">
     <span class="legend-title"><strong>Tips to navigate in the Interactive 3D Solar System</strong></span><br>
-    Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
+    Objects with yellow markers are clickable and have associated projects · Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
   </div>
 `;
   }
   
   // Original solar system animation
   if (isAnimating && !pausedPlanets) {
+
+    // Animate Sun Reticle
+    if (sun.userData.reticle) {
+      sun.userData.reticle.lookAt(camera.position);
+      sun.userData.reticle.material.opacity = 0.7 + Math.sin(Date.now() * 0.0015) * 0.3;
+    }
+
     Object.entries(bodies).forEach(([name, b]) => {
       if (b.orbit > 0) {
         b.angle += b.speed * animationSpeed;
@@ -3289,6 +3358,12 @@ if (!viperManualControl && !roverPOVMode) {
         }
       }
       
+      // Animate Planet Reticles
+      if (b.mesh.userData.reticle) {
+        b.mesh.userData.reticle.lookAt(camera.position);
+        b.mesh.userData.reticle.material.opacity = 0.7 + Math.sin(Date.now() * 0.0015) * 0.3;
+      }
+
       if (b.mesh.rotation && !b.onSurface && !b.isLagrange) {
         b.mesh.rotation.y += 0.002;
       }
