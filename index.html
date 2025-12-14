@@ -753,25 +753,24 @@ a:hover {
   pointer-events: all;
 }
 
-/* Smaller controls for non-expanded view - 0.5x size, far right */
+/* Smaller controls for non-expanded view - 1x size (twice bigger than before), far right */
 .mobile-device .left:not(.expanded) .controls {
   opacity: 0.6;
   pointer-events: all;
-  padding: 3px;
-  gap: 2px;
+  padding: 6px;
+  gap: 4px;
   max-width: auto;
   left: auto;
   right: 8px;
-  transform: scale(0.5);
-  transform-origin: bottom right;
+  transform: none;
   bottom: 8px;
 }
 
 .mobile-device .left:not(.expanded) .controls button {
-  min-width: 20px;
-  min-height: 18px;
-  padding: 3px 5px;
-  font-size: 7px;
+  min-width: 40px;
+  min-height: 36px;
+  padding: 6px 10px;
+  font-size: 14px;
 }
 
 .mobile-device .controls button {
@@ -864,10 +863,12 @@ a:hover {
   background: rgba(50,90,140,.8);
 }
 
-/* Hide rotate/pan buttons on mobile */
+/* Show rotate/pan buttons on mobile */
 .mobile-device #btnRotate,
-.mobile-device #btnPan {
-  display: none;
+.mobile-device #btnPan,
+.mobile-device #btnPanLeft,
+.mobile-device #btnPanRight {
+  display: inline-block;
 }
 
 /* Zoom buttons visible on mobile when expanded */
@@ -892,22 +893,9 @@ a:hover {
   position: relative;
 }
 
-/* "Tap to expand project list" button - appears on animation panel when expanded */
+/* "Tap to reduce animation" button - hidden, using real button element instead */
 .mobile-device .left.expanded::after {
-  content: 'Tap to expand project list';
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(30, 60, 100, 0.9);
-  border: 1px solid rgba(158, 201, 255, 0.4);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 11px;
-  color: var(--accent);
-  z-index: 6;
-  pointer-events: none;
-  opacity: 0.8;
+  display: none;
 }
 
 /* Mobile Publications Section - Shrunk when animation expanded */
@@ -1041,22 +1029,29 @@ a:hover {
   object-fit: contain;
 }
 
+.mobile-device .detail-top {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
 .mobile-device .detail-info {
   overflow: visible;
   width: auto;
   min-width: 0;
+  flex: 1;
+  min-width: calc(40% - 16px);
 }
 
 .mobile-device .detail-title {
   margin-bottom: 8px;
-  width: auto;
-  max-width: calc(100% - 60% - 16px);
+  width: 100%;
 }
 
 .mobile-device .detail-inst,
 .mobile-device .detail-subinst {
-  width: auto;
-  max-width: calc(100% - 60% - 16px);
+  width: 100%;
+  margin-bottom: 8px;
 }
 
 .mobile-device .detail-desc {
@@ -1137,6 +1132,8 @@ a:hover {
       <button id="btnZoomOut" title="Zoom Out">−</button>
       <button id="btnRotate" title="Rotate Mode (Drag)" class="active">✋</button>
       <button id="btnPan" title="Pan Mode (Shift+Drag)">✢</button>
+      <button id="btnPanLeft" title="Pan Left">←</button>
+      <button id="btnPanRight" title="Pan Right">→</button>
     </div>
     
     <div class="legend" id="legendText">
@@ -1252,7 +1249,7 @@ if (isMobileDevice) {
     if (leftPanel) {
       // Make the "tap to expand/retract" button clickable
       leftPanel.addEventListener('click', (e) => {
-        // Only trigger if clicking on the ::before pseudo-element area or panel background
+        // Only trigger if clicking on the ::before or ::after pseudo-element area or panel background
         // Not on canvas, controls, or instructions
         if (e.target.tagName === 'CANVAS' || 
             e.target.closest('.controls') || 
@@ -1265,10 +1262,40 @@ if (isMobileDevice) {
         const rect = leftPanel.getBoundingClientRect();
         const clickY = e.clientY - rect.top;
         
-        if (clickY < 40 || !leftPanel.classList.contains('expanded')) {
-          // Clicked near top or panel is not expanded - toggle animation view
+        if (clickY < 40) {
+          // Clicked near top - toggle animation view
           toggleView('animation');
         }
+      });
+      
+      // Also handle clicks on the ::after pseudo-element (Tap to reduce animation)
+      // We need to use a different approach since ::after can't be directly clicked
+      // Add an overlay div for the expanded state button
+      const reduceButton = document.createElement('div');
+      reduceButton.className = 'mobile-reduce-button';
+      reduceButton.style.cssText = 'position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(30, 60, 100, 0.9); border: 1px solid rgba(158, 201, 255, 0.4); border-radius: 6px; padding: 6px 12px; font-size: 11px; color: var(--accent); z-index: 6; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.3s;';
+      reduceButton.textContent = 'Tap to reduce animation';
+      leftPanel.appendChild(reduceButton);
+      
+      // Show/hide based on expanded state
+      const updateReduceButton = () => {
+        if (leftPanel.classList.contains('expanded')) {
+          reduceButton.style.opacity = '0.8';
+          reduceButton.style.pointerEvents = 'all';
+        } else {
+          reduceButton.style.opacity = '0';
+          reduceButton.style.pointerEvents = 'none';
+        }
+      };
+      
+      // Watch for class changes
+      const observer = new MutationObserver(updateReduceButton);
+      observer.observe(leftPanel, { attributes: true, attributeFilter: ['class'] });
+      updateReduceButton();
+      
+      reduceButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleView('animation');
       });
     }
     
@@ -1998,114 +2025,11 @@ if (isMobileDevice && canvas) {
     }
   }, { passive: false });
   
-  // Touch interactions for expanded view only
-  let touchStartX = 0, touchStartY = 0;
-  let lastTouchX = 0, lastTouchY = 0;
-  let isRotating = false;
-  let isPanning = false;
-  
+  // Only allow pinch-to-zoom with fingers, no rotation/pan gestures
+  // Rotation and pan are handled by buttons only
   canvas.addEventListener('touchmove', (e) => {
-    const leftPanel = document.getElementById('leftPanel');
-    const isExpanded = leftPanel && leftPanel.classList.contains('expanded');
-    
-    if (e.touches.length === 2 && isExpanded) {
-      // Two fingers: Pan/translate
-      e.preventDefault();
-      isPanning = true;
-      isRotating = false;
-      
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const midX = (touch1.clientX + touch2.clientX) / 2;
-      const midY = (touch1.clientY + touch2.clientY) / 2;
-      
-      if (lastTouchX === 0) {
-        lastTouchX = midX;
-        lastTouchY = midY;
-        return;
-      }
-      
-      const dx = (midX - lastTouchX) * 0.5;
-      const dy = (midY - lastTouchY) * 0.5;
-      
-      const right = new THREE.Vector3();
-      const up = new THREE.Vector3();
-      camera.getWorldDirection(right);
-      right.cross(camera.up).normalize();
-      up.copy(camera.up).normalize();
-      
-      right.multiplyScalar(-dx);
-      up.multiplyScalar(dy);
-      
-      camera.position.add(right);
-      camera.position.add(up);
-      cameraFollowTarget = null;
-      
-      lastTouchX = midX;
-      lastTouchY = midY;
-      
-      // Also handle pinch zoom
-      const currentDistance = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      
-      if (initialDistance === 0) {
-        initialDistance = currentDistance;
-        initialCameraDistance = camera.position.length();
-        return;
-      }
-      
-      const ratio = currentDistance / initialDistance;
-      const zoomFactor = 1 + (ratio - 1) * 0.05; // Very low sensitivity
-      const newDistance = initialCameraDistance / zoomFactor;
-      
-      const minDistance = 50;
-      const maxDistance = 2000;
-      const clampedDistance = Math.max(minDistance, Math.min(maxDistance, newDistance));
-      
-      const target = getCurrentViewTarget();
-      const direction = new THREE.Vector3().subVectors(camera.position, target).normalize();
-      camera.position.copy(target).add(direction.multiplyScalar(clampedDistance));
-      camera.lookAt(target);
-      
-      initialCameraDistance = clampedDistance;
-    } else if (e.touches.length === 1 && isExpanded) {
-      // Single finger: Rotate
-      e.preventDefault();
-      isRotating = true;
-      isPanning = false;
-      
-      const touch = e.touches[0];
-      if (lastTouchX === 0) {
-        lastTouchX = touch.clientX;
-        lastTouchY = touch.clientY;
-        return;
-      }
-      
-      const dx = (touch.clientX - lastTouchX) * 0.005;
-      const dy = (touch.clientY - lastTouchY) * 0.005;
-      
-      const target = getCurrentViewTarget();
-      const offset = new THREE.Vector3().subVectors(camera.position, target);
-      const r = offset.length();
-      
-      let sphericalTheta = Math.acos(offset.y / r);
-      let sphericalPhi = Math.atan2(offset.z, offset.x);
-      
-      sphericalPhi -= dx;
-      sphericalTheta = Math.max(0.1, Math.min(Math.PI - 0.1, sphericalTheta - dy));
-      
-      camera.position.x = target.x + r * Math.sin(sphericalTheta) * Math.cos(sphericalPhi);
-      camera.position.y = target.y + r * Math.cos(sphericalTheta);
-      camera.position.z = target.z + r * Math.sin(sphericalTheta) * Math.sin(sphericalPhi);
-      camera.lookAt(target);
-      cameraFollowTarget = null;
-      
-      lastTouchX = touch.clientX;
-      lastTouchY = touch.clientY;
-    } else if (e.touches.length === 2 && !isExpanded) {
-      // Two fingers on small view: only zoom
+    // Only handle pinch-to-zoom (2 fingers)
+    if (e.touches.length === 2) {
       e.preventDefault();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -2135,15 +2059,12 @@ if (isMobileDevice && canvas) {
       
       initialCameraDistance = clampedDistance;
     }
+    // Single finger touches are only for object selection (handled by click event)
   }, { passive: false });
   
   canvas.addEventListener('touchend', (e) => {
     if (e.touches.length < 2) {
       initialDistance = 0;
-      lastTouchX = 0;
-      lastTouchY = 0;
-      isRotating = false;
-      isPanning = false;
     }
   }, { passive: false });
 }
@@ -3866,6 +3787,25 @@ document.getElementById('btnRotate').addEventListener('click', e => {
   panMode = false;
   e.target.classList.add('active');
   document.getElementById('btnPan').classList.remove('active');
+  
+  // Mobile: Rotate view when button is clicked
+  if (isMobileDevice) {
+    const rotAmount = Math.PI / 8; // 22.5 degrees
+    const target = getCurrentViewTarget();
+    const offset = new THREE.Vector3().subVectors(camera.position, target);
+    const r = offset.length();
+    
+    let sphericalTheta = Math.acos(offset.y / r);
+    let sphericalPhi = Math.atan2(offset.z, offset.x);
+    
+    sphericalPhi -= rotAmount; // Rotate around Y axis
+    
+    camera.position.x = target.x + r * Math.sin(sphericalTheta) * Math.cos(sphericalPhi);
+    camera.position.y = target.y + r * Math.cos(sphericalTheta);
+    camera.position.z = target.z + r * Math.sin(sphericalTheta) * Math.sin(sphericalPhi);
+    camera.lookAt(target);
+    cameraFollowTarget = null;
+  }
 });
 
 document.getElementById('btnPan').addEventListener('click', e => {
@@ -3874,6 +3814,29 @@ document.getElementById('btnPan').addEventListener('click', e => {
   e.target.classList.add('active');
   document.getElementById('btnRotate').classList.remove('active');
 });
+
+// Mobile: Pan left/right buttons
+if (isMobileDevice) {
+  document.getElementById('btnPanLeft').addEventListener('click', () => {
+    const panSpeed = 20;
+    const right = new THREE.Vector3();
+    camera.getWorldDirection(right);
+    right.cross(camera.up).normalize();
+    right.multiplyScalar(-panSpeed);
+    camera.position.add(right);
+    cameraFollowTarget = null;
+  });
+  
+  document.getElementById('btnPanRight').addEventListener('click', () => {
+    const panSpeed = 20;
+    const right = new THREE.Vector3();
+    camera.getWorldDirection(right);
+    right.cross(camera.up).normalize();
+    right.multiplyScalar(panSpeed);
+    camera.position.add(right);
+    cameraFollowTarget = null;
+  });
+}
 
 function onWindowResize() {
   const width = leftPanel.clientWidth;
