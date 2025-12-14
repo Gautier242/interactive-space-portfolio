@@ -1067,6 +1067,15 @@ a:hover {
   padding: 0 20px 20px;
 }
 
+.mobile-device .detail-extended-desc {
+  width: 100%;
+  margin-bottom: 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  text-align: left;
+  /* Starts from far left below the picture, just like authors/venue */
+}
+
 .mobile-device .detail-content {
   padding: 16px;
 }
@@ -1159,6 +1168,7 @@ a:hover {
           </div>
         </div>
         <div class="detail-extended">
+          <div id="detailExtendedDesc" class="detail-extended-desc"></div>
           <div class="detail-meta">
             <div id="detailAuthors"></div>
             <div id="detailVenue"></div>
@@ -1411,7 +1421,7 @@ const PUBS = [
 
 const ABOUT_ME = {
   id: "about",
-  title: "About Gautier Bardi de Fourtou",
+  title: " Gautier Bardi de Fourtou",
   inst: "MIT · NASA JPL · ISU",
   desc: "Researcher at the intersection of AI and Space Technology, developing innovative solutions for space exploration and Earth observation.",
   extendedDesc: "Currently pursuing PhD applications focusing on AI for space applications. My work spans from developing intelligent sensor systems for the International Space Station to creating foundation models for lunar exploration. I'm passionate about leveraging artificial intelligence to advance our understanding of the cosmos and improve life on Earth. My research combines deep learning, computer vision, physics-informed machine learning, and systems engineering to solve complex challenges in space science and exploration.",
@@ -1627,7 +1637,24 @@ function showDetail(item) {
   detailInst.innerHTML = item.inst;
   detailSubInst.innerHTML = item.subInst || '';
   detailSubInst.style.display = item.subInst ? 'block' : 'none';
-  detailDesc.innerHTML = item.extendedDesc || item.desc;
+  
+  // On mobile: desc goes below picture, extendedDesc goes in extended section
+  // On desktop: extendedDesc goes in desc if available, otherwise desc
+  const detailExtendedDesc = document.getElementById('detailExtendedDesc');
+  if (isMobileDevice) {
+    detailDesc.innerHTML = item.desc || '';
+    if (detailExtendedDesc) {
+      detailExtendedDesc.innerHTML = item.extendedDesc || '';
+      detailExtendedDesc.style.display = item.extendedDesc ? 'block' : 'none';
+    }
+  } else {
+    detailDesc.innerHTML = item.extendedDesc || item.desc;
+    if (detailExtendedDesc) {
+      detailExtendedDesc.innerHTML = '';
+      detailExtendedDesc.style.display = 'none';
+    }
+  }
+  
   detailAuthors.innerHTML = item.authors ? '<strong>Authors:</strong> ' + item.authors : '';
   detailVenue.innerHTML = item.venue ? '<strong>Venue:</strong> ' + item.venue : '';
   detailHeaderTitle.textContent = item.id === 'about' ? 'About Me' : 'Publication Details';
@@ -2050,14 +2077,81 @@ if (isMobileDevice && canvas) {
       // If it was a quick tap (less than 300ms and less than 10px movement), allow click
       if (touchDuration < 300 && moveDistance < 10) {
         isTouchInteracting = false; // Allow click event to fire
-        // Trigger click event manually for object selection
-        const clickEvent = new MouseEvent('click', {
-          bubbles: true,
-          cancelable: true,
-          clientX: touch.clientX,
-          clientY: touch.clientY
-        });
-        canvas.dispatchEvent(clickEvent);
+        
+        // Get canvas rect for proper coordinate calculation
+        const rect = canvas.getBoundingClientRect();
+        const mouse = new THREE.Vector2();
+        mouse.x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+        
+        // Handle Moon surface clicks
+        if (moonSurfaceActive) {
+          raycaster.setFromCamera(mouse, moonCamera);
+          const moonClickables = [moonStarship, moonViper, moonLRO, moonEarth].filter(obj => obj);
+          const moonHits = raycaster.intersectObjects(moonClickables, true);
+          
+          if (moonHits.length > 0) {
+            let objName = moonHits[0].object.userData.name;
+            if (!objName && moonHits[0].object.parent) {
+              objName = moonHits[0].object.parent.userData.name;
+            }
+            if (!objName && moonHits[0].object.parent && moonHits[0].object.parent.parent) {
+              objName = moonHits[0].object.parent.parent.userData.name;
+            }
+            
+            if (moonEarth && (moonHits[0].object === moonEarth || moonHits[0].object.parent === moonEarth)) {
+              moonSurfaceActive = false;
+              document.getElementById('moonSurface').classList.remove('active');
+              const earthPub = PUBS.find(p => p.body === 'Earth');
+              if (earthPub) {
+                showDetail(earthPub);
+                highlightPublication('Earth');
+                setTimeout(() => zoomToBody('Earth'), 100);
+              }
+              hasMoved = false;
+              return;
+            }
+            
+            if (objName) {
+              const pub = PUBS.find(p => p.body === objName);
+              if (pub) {
+                showDetail(pub);
+                highlightPublication(objName);
+              }
+            }
+            hasMoved = false;
+            return;
+          }
+        }
+        
+        // Handle solar system clicks
+        raycaster.setFromCamera(mouse, camera);
+        const clickables = Object.values(bodies).map(b => b.mesh).concat([sun]);
+        const hits = raycaster.intersectObjects(clickables, true);
+        
+        if (hits.length > 0) {
+          let bodyName = hits[0].object.userData.name;
+          if (!bodyName && hits[0].object.parent && hits[0].object.parent.userData) {
+            bodyName = hits[0].object.parent.userData.name;
+          }
+          if (!bodyName && hits[0].object.parent && hits[0].object.parent.parent && hits[0].object.parent.parent.userData) {
+            bodyName = hits[0].object.parent.parent.userData.name;
+          }
+          
+          if (bodyName) {
+            selectedBody = bodyName;
+            const bodyInfo = bodyData.find(b => b.name === bodyName);
+            const targetBody = bodyInfo && bodyInfo.body ? bodyInfo.body : bodyName;
+            zoomToBody(bodyName);
+            const pub = PUBS.find(p => p.body === targetBody);
+            if (pub) {
+              setTimeout(() => showDetail(pub), 300);
+              highlightPublication(targetBody);
+            } else {
+              hideDetail();
+            }
+          }
+        }
       }
     }
     hasMoved = false;
