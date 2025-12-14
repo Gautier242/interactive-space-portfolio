@@ -687,44 +687,19 @@ a:hover {
   min-height: calc(100vh - 120px);
 }
 
-/* Mobile Animation Section - Default: 1/4 screen size */
+/* Mobile Animation Section - Always fixed reduced size (1/5th smaller than 25vh = 20vh) */
 .mobile-device .left {
   flex: 0 0 auto;
   width: 100%;
-  height: 25vh;
-  min-height: 200px;
+  height: 20vh !important;
+  min-height: 180px !important;
   order: 2;
-  transition: height 0.3s ease;
   position: relative;
 }
 
+/* Remove expand button */
 .mobile-device .left::before {
-  content: 'Tap to expand animation';
-  position: absolute;
-  top: 8px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(30, 60, 100, 0.9);
-  border: 1px solid rgba(158, 201, 255, 0.4);
-  border-radius: 6px;
-  padding: 6px 12px;
-  font-size: 11px;
-  color: var(--accent);
-  z-index: 6;
-  pointer-events: all;
-  cursor: pointer;
-  opacity: 0.8;
-  transition: opacity 0.3s;
-}
-
-.mobile-device .left.expanded::before {
-  content: 'Tap to retract animation';
-}
-
-/* Mobile Animation Section - Expanded: 50% of screen */
-.mobile-device .left.expanded {
-  height: 50vh;
-  min-height: 400px;
+  display: none;
 }
 
 .mobile-device .resizer {
@@ -748,30 +723,25 @@ a:hover {
   overflow-x: auto;
 }
 
-.mobile-device .left.expanded .controls {
-  opacity: 1;
-  pointer-events: all;
-}
-
-/* Smaller controls for non-expanded view - 0.75x size (50% bigger), far right */
-.mobile-device .left:not(.expanded) .controls {
+/* Smaller controls for mobile - 1.125x size (50% bigger than 0.75x), far right, always visible */
+.mobile-device .left .controls {
   opacity: 0.6;
   pointer-events: all;
-  padding: 4.5px;
-  gap: 3px;
+  padding: 5px;
+  gap: 3.5px;
   max-width: auto;
   left: auto;
   right: 8px;
-  transform: scale(0.75);
+  transform: scale(1.125);
   transform-origin: bottom right;
   bottom: 8px;
 }
 
-.mobile-device .left:not(.expanded) .controls button {
-  min-width: 30px;
-  min-height: 27px;
-  padding: 4.5px 7.5px;
-  font-size: 10.5px;
+.mobile-device .left .controls button {
+  min-width: 33px;
+  min-height: 30px;
+  padding: 5px 8px;
+  font-size: 11px;
 }
 
 .mobile-device .controls button {
@@ -805,7 +775,8 @@ a:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.mobile-device .left.expanded .instructions-toggle {
+/* Instructions toggle always visible on mobile */
+.mobile-device .instructions-toggle {
   opacity: 1;
   pointer-events: all;
 }
@@ -864,14 +835,9 @@ a:hover {
   background: rgba(50,90,140,.8);
 }
 
-/* Show rotate/pan buttons on mobile only when expanded */
-.mobile-device .left:not(.expanded) #btnRotate,
-.mobile-device .left:not(.expanded) #btnPan {
-  display: none;
-}
-
-.mobile-device .left.expanded #btnRotate,
-.mobile-device .left.expanded #btnPan {
+/* Rotate/pan buttons always visible on mobile */
+.mobile-device #btnRotate,
+.mobile-device #btnPan {
   display: inline-block;
 }
 
@@ -886,30 +852,13 @@ a:hover {
   display: inline-block;
 }
 
-/* Mobile Publications Section - Default: larger size (like old animation) */
+/* Mobile Publications Section - Always takes remaining space */
 .mobile-device .right {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
   order: 3;
-  max-height: 85vh;
-  min-height: 500px;
-  transition: max-height 0.3s ease;
-  cursor: pointer;
+  max-height: 80vh;
+  min-height: 400px;
   position: relative;
-}
-
-/* "Tap to reduce animation" button - hidden, using real button element instead */
-.mobile-device .left.expanded::after {
-  display: none;
-}
-
-/* Mobile Publications Section - Shrunk when animation expanded */
-.mobile-device .right.shrunk {
-  max-height: 50vh;
-  min-height: 300px;
-}
-
-.mobile-device .right.expanded {
-  max-height: 85vh;
 }
 
 .mobile-device .section-title {
@@ -939,16 +888,8 @@ a:hover {
 
 .mobile-device .pubs-scroll {
   padding: 12px;
-  max-height: calc(85vh - 50px);
+  max-height: calc(80vh - 50px);
   overflow-y: auto;
-}
-
-.mobile-device .right.shrunk .pubs-scroll {
-  max-height: calc(50vh - 50px);
-}
-
-.mobile-device .right.expanded .pubs-scroll {
-  max-height: calc(85vh - 50px);
 }
 
 /* Mobile Publication Cards */
@@ -998,7 +939,10 @@ a:hover {
   clear: both;
   width: 100%;
   margin-top: 12px;
+  margin-left: 0;
+  padding-left: 0;
   font-size: 14px;
+  display: block;
 }
 
 .mobile-device .pub-meta {
@@ -1013,10 +957,6 @@ a:hover {
   width: 100%;
   margin-top: 8px;
   font-size: 12px;
-}
-
-.mobile-device .pub-desc {
-  font-size: 11px;
 }
 
 /* Disable hover effects on mobile */
@@ -1053,7 +993,7 @@ a:hover {
   min-height: 150px;
   height: 150px;
   margin-right: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   flex-shrink: 0;
 }
 
@@ -1072,7 +1012,8 @@ a:hover {
 
 .mobile-device .detail-top {
   display: block;
-  margin-bottom: 20px;
+  margin-bottom: 0;
+  overflow: hidden;
 }
 
 .mobile-device .detail-info {
@@ -1080,6 +1021,7 @@ a:hover {
   min-width: 0;
   width: auto;
   max-width: calc(100% - 166px);
+  margin-bottom: 0;
 }
 
 .mobile-device .detail-title {
@@ -1096,7 +1038,7 @@ a:hover {
 
 .mobile-device .detail-subinst {
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 0;
   font-size: 12px;
 }
 
@@ -1105,7 +1047,10 @@ a:hover {
   width: 100%;
   clear: both;
   margin-top: 12px;
+  margin-left: 0;
+  padding-left: 0;
   font-size: 15px;
+  display: block;
 }
 
 .mobile-device .detail-extended {
@@ -1116,14 +1061,6 @@ a:hover {
 
 .mobile-device .detail-content {
   padding: 16px;
-}
-
-.mobile-device .detail-title {
-  font-size: 18px;
-}
-
-.mobile-device .detail-desc {
-  font-size: 13px;
 }
 
 /* Disable thin interactions on mobile */
@@ -1242,189 +1179,27 @@ if (isMobileDevice) {
     const legend = document.getElementById('legendText');
     const canvas = document.getElementById('canvas3d');
     
-    // Toggle function for views - with forced display updates
-    function toggleView(view) {
-      if (view === 'animation') {
-        // Toggle animation panel
-        if (leftPanel.classList.contains('expanded')) {
-          // Retract animation - FORCE to small size
-          leftPanel.classList.remove('expanded');
-          leftPanel.style.height = '25vh';
-          leftPanel.style.minHeight = '200px';
-          if (rightPanel) {
-            rightPanel.classList.remove('shrunk');
-            rightPanel.classList.add('expanded');
-            rightPanel.style.maxHeight = '75vh';
-          }
-        } else {
-          // Expand animation
-          leftPanel.classList.add('expanded');
-          leftPanel.style.height = '';
-          leftPanel.style.minHeight = '';
-          if (rightPanel) {
-            rightPanel.classList.add('shrunk');
-            rightPanel.classList.remove('expanded');
-            rightPanel.style.maxHeight = '50vh';
-          }
-        }
-      } else if (view === 'list') {
-        // Toggle list panel - FORCE animation to reduce
-        if (rightPanel.classList.contains('expanded')) {
-          // Retract list
-          rightPanel.classList.remove('expanded');
-          rightPanel.style.maxHeight = '';
-          if (leftPanel) {
-            leftPanel.classList.add('expanded');
-            leftPanel.style.height = '';
-            rightPanel.classList.add('shrunk');
-            rightPanel.style.maxHeight = '50vh';
-          }
-        } else {
-          // Expand list - FORCE animation to small
-          rightPanel.classList.add('expanded');
-          rightPanel.classList.remove('shrunk');
-          rightPanel.style.maxHeight = '75vh';
-          if (leftPanel) {
-            leftPanel.classList.remove('expanded');
-            leftPanel.style.height = '25vh';
-            leftPanel.style.minHeight = '200px';
-          }
-        }
-      }
-      
-      // Force immediate layout recalculation
-      leftPanel.offsetHeight; // Force reflow
-      if (rightPanel) rightPanel.offsetHeight; // Force reflow
-      
-      // Force canvas resize immediately and multiple times
-      if (typeof onWindowResize === 'function') {
-        onWindowResize();
-        requestAnimationFrame(() => {
-          onWindowResize();
-          setTimeout(() => {
-            onWindowResize();
-            setTimeout(() => onWindowResize(), 10);
-            setTimeout(() => onWindowResize(), 50);
-            setTimeout(() => onWindowResize(), 100);
-            setTimeout(() => onWindowResize(), 150);
-            setTimeout(() => onWindowResize(), 200);
-            setTimeout(() => onWindowResize(), 300);
-          }, 10);
-        });
-      }
-    }
-    
-    // Panel click handlers - expand/shrink
+    // Remove all expand/reduce functionality - animation always stays at fixed reduced size
+    // Just ensure animation is always at reduced size
     if (leftPanel) {
-      // Make the "tap to expand/retract" button clickable
-      leftPanel.addEventListener('click', (e) => {
-        // Only trigger if clicking on the ::before or ::after pseudo-element area or panel background
-        // Not on canvas, controls, or instructions
-        if (e.target.tagName === 'CANVAS' || 
-            e.target.closest('.controls') || 
-            e.target.closest('.instructions-toggle') ||
-            e.target.closest('.legend')) {
-          return;
-        }
-        
-        // Check if click is in the top area (where the button is)
-        const rect = leftPanel.getBoundingClientRect();
-        const clickY = e.clientY - rect.top;
-        
-        if (clickY < 40) {
-          // Clicked near top - toggle animation view
-          toggleView('animation');
-        }
-      });
-      
-      // Also handle clicks on the ::after pseudo-element (Tap to reduce animation)
-      // We need to use a different approach since ::after can't be directly clicked
-      // Add an overlay div for the expanded state button
-      const reduceButton = document.createElement('div');
-      reduceButton.className = 'mobile-reduce-button';
-      reduceButton.style.cssText = 'position: absolute; top: 8px; left: 50%; transform: translateX(-50%); background: rgba(30, 60, 100, 0.9); border: 1px solid rgba(158, 201, 255, 0.4); border-radius: 6px; padding: 6px 12px; font-size: 11px; color: var(--accent); z-index: 6; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity 0.3s;';
-      reduceButton.textContent = 'Tap to reduce animation';
-      leftPanel.appendChild(reduceButton);
-      
-      // Show/hide based on expanded state
-      const updateReduceButton = () => {
-        if (leftPanel.classList.contains('expanded')) {
-          reduceButton.style.opacity = '0.8';
-          reduceButton.style.pointerEvents = 'all';
-        } else {
-          reduceButton.style.opacity = '0';
-          reduceButton.style.pointerEvents = 'none';
-        }
-      };
-      
-      // Watch for class changes
-      const observer = new MutationObserver(updateReduceButton);
-      observer.observe(leftPanel, { attributes: true, attributeFilter: ['class'] });
-      updateReduceButton();
-      
-      reduceButton.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleView('animation');
-      });
+      leftPanel.classList.remove('expanded');
+      leftPanel.style.height = '20vh';
+      leftPanel.style.minHeight = '180px';
     }
     
-    if (rightPanel && sectionTitle) {
-      // Make section title clickable to toggle list view
-      sectionTitle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        toggleView('list');
-      });
+    if (rightPanel) {
+      rightPanel.classList.remove('expanded', 'shrunk');
+      rightPanel.style.maxHeight = '';
     }
     
     // Instructions toggle
     if (instructionsToggle && legend) {
       instructionsToggle.addEventListener('click', (e) => {
-        e.stopPropagation(); // Prevent triggering panel expansion
+        e.stopPropagation();
         legend.classList.toggle('visible');
         instructionsToggle.textContent = legend.classList.contains('visible') 
           ? 'Hide Instructions' 
           : 'View Instructions';
-      });
-    }
-    
-    // Make detail header title clickable to reduce animation - FORCE update
-    const detailHeaderTitle = document.getElementById('detailHeaderTitle');
-    if (detailHeaderTitle && isMobileDevice) {
-      detailHeaderTitle.style.cursor = 'pointer';
-      detailHeaderTitle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const detailView = document.getElementById('detailView');
-        if (detailView && detailView.classList.contains('active')) {
-          // Reduce animation - FORCE to small size
-          if (leftPanel && rightPanel) {
-            leftPanel.classList.remove('expanded');
-            leftPanel.style.height = '25vh';
-            leftPanel.style.minHeight = '200px';
-            rightPanel.classList.add('expanded');
-            rightPanel.classList.remove('shrunk');
-            rightPanel.style.maxHeight = '75vh';
-            
-            // Force immediate layout recalculation
-            leftPanel.offsetHeight; // Force reflow
-            rightPanel.offsetHeight; // Force reflow
-            
-            // Force canvas resize multiple times
-            if (typeof onWindowResize === 'function') {
-              onWindowResize();
-              requestAnimationFrame(() => {
-                onWindowResize();
-                setTimeout(() => {
-                  onWindowResize();
-                  setTimeout(() => onWindowResize(), 10);
-                  setTimeout(() => onWindowResize(), 50);
-                  setTimeout(() => onWindowResize(), 100);
-                  setTimeout(() => onWindowResize(), 150);
-                  setTimeout(() => onWindowResize(), 200);
-                }, 10);
-              });
-            }
-          }
-        }
       });
     }
     
@@ -1802,36 +1577,22 @@ function showDetail(item) {
     });
   }
   
-  // Mobile: Auto-shrink animation when opening detail view - FORCE to small size
+  // Mobile: Ensure animation stays at fixed reduced size when opening detail view
   if (isMobileDevice) {
     const leftPanel = document.getElementById('leftPanel');
     const rightPanel = document.querySelector('.right');
     if (leftPanel && rightPanel) {
       leftPanel.classList.remove('expanded');
-      leftPanel.style.height = '25vh';
-      leftPanel.style.minHeight = '200px';
-      rightPanel.classList.add('expanded');
-      rightPanel.classList.remove('shrunk');
-      rightPanel.style.maxHeight = '75vh';
+      leftPanel.style.height = '20vh';
+      leftPanel.style.minHeight = '180px';
+      rightPanel.classList.remove('expanded', 'shrunk');
+      rightPanel.style.maxHeight = '';
       
-      // Force immediate layout recalculation
-      leftPanel.offsetHeight; // Force reflow
-      rightPanel.offsetHeight; // Force reflow
-      
-      // Force canvas resize multiple times
+      // Force canvas resize
       if (typeof onWindowResize === 'function') {
         onWindowResize();
-        requestAnimationFrame(() => {
-          onWindowResize();
-          setTimeout(() => {
-            onWindowResize();
-            setTimeout(() => onWindowResize(), 10);
-            setTimeout(() => onWindowResize(), 50);
-            setTimeout(() => onWindowResize(), 100);
-            setTimeout(() => onWindowResize(), 150);
-            setTimeout(() => onWindowResize(), 200);
-          }, 10);
-        });
+        setTimeout(() => onWindowResize(), 50);
+        setTimeout(() => onWindowResize(), 100);
       }
     }
   }
@@ -1926,36 +1687,22 @@ function hideDetail() {
     document.getElementById('btnPause').textContent = '⏸';
   }
   
-  // Mobile: Reduce animation when closing detail - FORCE to small size
+  // Mobile: Ensure animation stays at fixed reduced size when closing detail
   if (isMobileDevice) {
     const leftPanel = document.getElementById('leftPanel');
     const rightPanel = document.querySelector('.right');
     if (leftPanel && rightPanel) {
       leftPanel.classList.remove('expanded');
-      leftPanel.style.height = '25vh';
-      leftPanel.style.minHeight = '200px';
-      rightPanel.classList.add('expanded');
-      rightPanel.classList.remove('shrunk');
-      rightPanel.style.maxHeight = '75vh';
+      leftPanel.style.height = '20vh';
+      leftPanel.style.minHeight = '180px';
+      rightPanel.classList.remove('expanded', 'shrunk');
+      rightPanel.style.maxHeight = '';
       
-      // Force immediate layout recalculation
-      leftPanel.offsetHeight; // Force reflow
-      rightPanel.offsetHeight; // Force reflow
-      
-      // Force canvas resize multiple times
+      // Force canvas resize
       if (typeof onWindowResize === 'function') {
         onWindowResize();
-        requestAnimationFrame(() => {
-          onWindowResize();
-          setTimeout(() => {
-            onWindowResize();
-            setTimeout(() => onWindowResize(), 10);
-            setTimeout(() => onWindowResize(), 50);
-            setTimeout(() => onWindowResize(), 100);
-            setTimeout(() => onWindowResize(), 150);
-            setTimeout(() => onWindowResize(), 200);
-          }, 10);
-        });
+        setTimeout(() => onWindowResize(), 50);
+        setTimeout(() => onWindowResize(), 100);
       }
     }
   } else {
@@ -2190,9 +1937,6 @@ if (isMobileDevice && canvas) {
   let isTouchInteracting = false;
   
   canvas.addEventListener('touchmove', (e) => {
-    const leftPanel = document.getElementById('leftPanel');
-    const isExpanded = leftPanel && leftPanel.classList.contains('expanded');
-    
     if (e.touches.length === 2) {
       // Two fingers: Pinch-to-zoom
       e.preventDefault();
@@ -2223,7 +1967,7 @@ if (isMobileDevice && canvas) {
       camera.lookAt(target);
       
       initialCameraDistance = clampedDistance;
-    } else if (e.touches.length === 1 && isExpanded) {
+    } else if (e.touches.length === 1) {
       // One finger: Rotate or Pan (if button is selected)
       const rotateBtn = document.getElementById('btnRotate');
       const panBtn = document.getElementById('btnPan');
