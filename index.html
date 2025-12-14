@@ -711,13 +711,14 @@ a:hover {
   font-size: 11px;
   color: var(--accent);
   z-index: 6;
-  pointer-events: none;
+  pointer-events: all;
+  cursor: pointer;
   opacity: 0.8;
   transition: opacity 0.3s;
 }
 
 .mobile-device .left.expanded::before {
-  display: none;
+  content: 'Tap to retract animation';
 }
 
 /* Mobile Animation Section - Expanded: 50% of screen */
@@ -752,20 +753,25 @@ a:hover {
   pointer-events: all;
 }
 
-/* Smaller controls for non-expanded view */
+/* Smaller controls for non-expanded view - 0.5x size, far right */
 .mobile-device .left:not(.expanded) .controls {
   opacity: 0.6;
   pointer-events: all;
-  padding: 6px;
-  gap: 4px;
-  max-width: 100%;
+  padding: 3px;
+  gap: 2px;
+  max-width: auto;
+  left: auto;
+  right: 8px;
+  transform: scale(0.5);
+  transform-origin: bottom right;
+  bottom: 8px;
 }
 
 .mobile-device .left:not(.expanded) .controls button {
-  min-width: 40px;
-  min-height: 36px;
-  padding: 6px 10px;
-  font-size: 14px;
+  min-width: 20px;
+  min-height: 18px;
+  padding: 3px 5px;
+  font-size: 7px;
 }
 
 .mobile-device .controls button {
@@ -920,6 +926,12 @@ a:hover {
   cursor: pointer;
   user-select: none;
   position: relative;
+  background: rgba(30, 60, 100, 0.3);
+  transition: background 0.2s;
+}
+
+.mobile-device .section-title:active {
+  background: rgba(30, 60, 100, 0.5);
 }
 
 .mobile-device .section-title::after {
@@ -1006,34 +1018,58 @@ a:hover {
 
 .mobile-device .detail-image {
   float: left;
-  max-width: 300px;
+  max-width: 60%;
+  width: 60%;
   min-height: 300px;
-  width: 300px;
-  height: 300px;
+  height: auto;
+  aspect-ratio: 1;
   margin-right: 16px;
   margin-bottom: 12px;
   flex-shrink: 0;
 }
 
 .mobile-device .detail-image.about-image {
-  max-width: 300px;
+  max-width: 60%;
+  width: 60%;
   min-height: 300px;
-  width: 300px;
-  height: 300px;
+  aspect-ratio: 1;
 }
 
 .mobile-device .detail-image img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .mobile-device .detail-info {
-  overflow: hidden;
+  overflow: visible;
+  width: auto;
+  min-width: 0;
+}
+
+.mobile-device .detail-title {
+  margin-bottom: 8px;
+  width: auto;
+  max-width: calc(100% - 60% - 16px);
+}
+
+.mobile-device .detail-inst,
+.mobile-device .detail-subinst {
+  width: auto;
+  max-width: calc(100% - 60% - 16px);
 }
 
 .mobile-device .detail-desc {
   text-align: left;
+  width: 100%;
+  clear: both;
+  margin-top: 12px;
+}
+
+.mobile-device .detail-extended {
+  clear: both;
+  width: 100%;
+  margin-top: 16px;
 }
 
 .mobile-device .detail-content {
@@ -1164,105 +1200,84 @@ if (isMobileDevice) {
     const legend = document.getElementById('legendText');
     const canvas = document.getElementById('canvas3d');
     
-    // Panel click handlers - expand/shrink
-    if (leftPanel) {
-      // Add a clickable header area
-      const expandHeader = document.createElement('div');
-      expandHeader.style.cssText = 'position: absolute; top: 0; left: 0; right: 0; height: 50px; z-index: 7; cursor: pointer;';
-      expandHeader.className = 'mobile-panel-header';
-      leftPanel.appendChild(expandHeader);
-      
-      expandHeader.addEventListener('click', (e) => {
+    // Toggle function for views
+    function toggleView(view) {
+      if (view === 'animation') {
+        // Toggle animation panel
         if (leftPanel.classList.contains('expanded')) {
-          // Already expanded, do nothing
-          return;
+          // Retract animation
+          leftPanel.classList.remove('expanded');
+          if (rightPanel) {
+            rightPanel.classList.remove('shrunk');
+            rightPanel.classList.add('expanded');
+          }
         } else {
-          // Expand animation panel
+          // Expand animation
           leftPanel.classList.add('expanded');
           if (rightPanel) {
             rightPanel.classList.add('shrunk');
             rightPanel.classList.remove('expanded');
           }
-          // Force canvas resize after expansion
-          setTimeout(() => {
-            if (typeof onWindowResize === 'function') {
-              onWindowResize();
-              setTimeout(() => onWindowResize(), 50);
-              setTimeout(() => onWindowResize(), 100);
-            }
-          }, 300);
         }
-      });
-      
-      // Also allow clicking on panel background (not canvas) to expand
-      leftPanel.addEventListener('click', (e) => {
-        // Only if not clicking on canvas, controls, or instructions
-        if (e.target.tagName === 'CANVAS' || 
-            e.target.closest('.controls') || 
-            e.target.closest('.instructions-toggle') ||
-            e.target.closest('.legend') ||
-            e.target.closest('.mobile-panel-header')) {
-          return;
-        }
-        
-        if (!leftPanel.classList.contains('expanded')) {
-          leftPanel.classList.add('expanded');
-          if (rightPanel) {
-            rightPanel.classList.add('shrunk');
-            rightPanel.classList.remove('expanded');
-          }
-          // Force canvas resize after expansion
-          setTimeout(() => {
-            if (typeof onWindowResize === 'function') {
-              onWindowResize();
-              setTimeout(() => onWindowResize(), 50);
-              setTimeout(() => onWindowResize(), 100);
-            }
-          }, 300);
-        }
-      });
-    }
-    
-    if (rightPanel && sectionTitle) {
-      // Click on publications section to expand it
-      const handleRightPanelClick = (e) => {
-        // Don't trigger if clicking on a publication card or detail view
-        if (e.target.closest('.pub-card') || e.target.closest('.detail-view')) {
-          return;
-        }
-        
+      } else if (view === 'list') {
+        // Toggle list panel
         if (rightPanel.classList.contains('expanded')) {
-          // Already expanded, do nothing
-          return;
+          // Retract list
+          rightPanel.classList.remove('expanded');
+          if (leftPanel) {
+            leftPanel.classList.add('expanded');
+            rightPanel.classList.add('shrunk');
+          }
         } else {
-          // Expand publications panel
+          // Expand list
           rightPanel.classList.add('expanded');
           rightPanel.classList.remove('shrunk');
           if (leftPanel) {
             leftPanel.classList.remove('expanded');
           }
-          // Force canvas resize after panel change
-          setTimeout(() => {
-            if (typeof onWindowResize === 'function') {
-              onWindowResize();
-              setTimeout(() => onWindowResize(), 50);
-              setTimeout(() => onWindowResize(), 100);
-            }
-          }, 300);
         }
-      };
-      
-      sectionTitle.addEventListener('click', handleRightPanelClick);
-      // Also allow clicking on the scroll area
-      const pubsScroll = rightPanel.querySelector('.pubs-scroll');
-      if (pubsScroll) {
-        pubsScroll.addEventListener('click', (e) => {
-          // Only if clicking on empty space, not on cards
-          if (e.target === pubsScroll || e.target.classList.contains('institution-group')) {
-            handleRightPanelClick(e);
-          }
-        });
       }
+      
+      // Force canvas resize after panel change
+      setTimeout(() => {
+        if (typeof onWindowResize === 'function') {
+          onWindowResize();
+          setTimeout(() => onWindowResize(), 50);
+          setTimeout(() => onWindowResize(), 100);
+        }
+      }, 300);
+    }
+    
+    // Panel click handlers - expand/shrink
+    if (leftPanel) {
+      // Make the "tap to expand/retract" button clickable
+      leftPanel.addEventListener('click', (e) => {
+        // Only trigger if clicking on the ::before pseudo-element area or panel background
+        // Not on canvas, controls, or instructions
+        if (e.target.tagName === 'CANVAS' || 
+            e.target.closest('.controls') || 
+            e.target.closest('.instructions-toggle') ||
+            e.target.closest('.legend')) {
+          return;
+        }
+        
+        // Check if click is in the top area (where the button is)
+        const rect = leftPanel.getBoundingClientRect();
+        const clickY = e.clientY - rect.top;
+        
+        if (clickY < 40 || !leftPanel.classList.contains('expanded')) {
+          // Clicked near top or panel is not expanded - toggle animation view
+          toggleView('animation');
+        }
+      });
+    }
+    
+    if (rightPanel && sectionTitle) {
+      // Make section title clickable to toggle list view
+      sectionTitle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleView('list');
+      });
     }
     
     // Instructions toggle
@@ -1650,6 +1665,25 @@ function showDetail(item) {
     });
   }
   
+  // Mobile: Auto-shrink animation when opening detail view
+  if (isMobileDevice) {
+    const leftPanel = document.getElementById('leftPanel');
+    const rightPanel = document.querySelector('.right');
+    if (leftPanel && rightPanel) {
+      leftPanel.classList.remove('expanded');
+      rightPanel.classList.add('expanded');
+      rightPanel.classList.remove('shrunk');
+      // Force canvas resize
+      setTimeout(() => {
+        if (typeof onWindowResize === 'function') {
+          onWindowResize();
+          setTimeout(() => onWindowResize(), 50);
+          setTimeout(() => onWindowResize(), 100);
+        }
+      }, 100);
+    }
+  }
+  
   // Pause animation and center on related object
   if (item.body && item.id !== 'about') {
     pausedPlanets = true;
@@ -1887,9 +1921,9 @@ const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x000000);
 
 const camera = new THREE.PerspectiveCamera(50, leftPanel.clientWidth / leftPanel.clientHeight, 0.1, 15000);
-// Mobile: Start with better perspective (more angled view like after interaction)
+// Mobile: Start with the same perspective as expanded view (what user sees after clicking expand)
 if (isMobileDevice) {
-  camera.position.set(150, 120, 180); // Better perspective angle
+  camera.position.set(200, 150, 200); // Match expanded view perspective
 } else {
   camera.position.set(250, 200, 250);
 }
