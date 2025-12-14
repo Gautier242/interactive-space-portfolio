@@ -723,17 +723,17 @@ a:hover {
   overflow-x: auto;
 }
 
-/* Smaller controls for mobile - 1.125x size (50% bigger than 0.75x), far right, always visible */
+/* Smaller controls for mobile - 1.125x size (50% bigger than 0.75x), bottom center, always visible */
 .mobile-device .left .controls {
   opacity: 0.6;
   pointer-events: all;
   padding: 5px;
   gap: 3.5px;
   max-width: auto;
-  left: auto;
-  right: 8px;
-  transform: scale(1.125);
-  transform-origin: bottom right;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%) scale(1.125);
+  transform-origin: bottom center;
   bottom: 8px;
 }
 
@@ -905,7 +905,7 @@ a:hover {
   height: 120px;
   float: left;
   margin-right: 16px;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
   flex-shrink: 0;
   box-sizing: border-box;
 }
@@ -917,7 +917,7 @@ a:hover {
 .mobile-device .pub-header {
   margin-bottom: 8px;
   width: auto;
-  max-width: calc(100% - 136px);
+  /* No max-width constraint - let it flow naturally to the right of image */
 }
 
 .mobile-device .pub-title {
@@ -936,19 +936,16 @@ a:hover {
 }
 
 .mobile-device .pub-desc {
-  clear: both;
-  width: 100%;
-  margin-top: 12px;
-  margin-left: 0;
-  padding-left: 0;
+  /* No clear: both - let it flow to the right of image, then wrap below */
+  margin-top: 8px;
   font-size: 14px;
-  display: block;
+  line-height: 1.6;
 }
 
 .mobile-device .pub-meta {
   clear: both;
   width: 100%;
-  margin-top: 8px;
+  margin-top: 12px;
   font-size: 12px;
 }
 
@@ -988,75 +985,75 @@ a:hover {
 
 .mobile-device .detail-image {
   float: left;
-  max-width: 150px;
-  width: 150px;
-  min-height: 150px;
-  height: 150px;
-  margin-right: 16px;
-  margin-bottom: 0;
+  max-width: 500px;
+  width: auto;
+  height: auto;
+  min-height: 350px;
+  margin-right: 20px;
+  margin-bottom: 20px;
   flex-shrink: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #1a3a6a, #0d1f3f);
 }
 
 .mobile-device .detail-image.about-image {
-  max-width: 150px;
-  min-height: 150px;
-  width: 150px;
-  height: 150px;
+  max-width: 125px;
+  min-height: 125px;
+  width: 125px;
+  height: 125px;
 }
 
 .mobile-device .detail-image img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .mobile-device .detail-top {
   display: block;
-  margin-bottom: 0;
+  margin-bottom: 20px;
   overflow: hidden;
 }
 
 .mobile-device .detail-info {
   overflow: hidden;
   min-width: 0;
-  width: auto;
-  max-width: calc(100% - 166px);
-  margin-bottom: 0;
 }
 
 .mobile-device .detail-title {
-  margin-bottom: 8px;
-  width: 100%;
+  margin-bottom: 12px;
   font-size: 20px;
+  line-height: 1.2;
 }
 
 .mobile-device .detail-inst {
-  width: 100%;
-  margin-bottom: 4px;
+  margin-bottom: 12px;
   font-size: 13px;
 }
 
 .mobile-device .detail-subinst {
-  width: 100%;
-  margin-bottom: 0;
+  margin-top: -8px;
+  margin-bottom: 12px;
   font-size: 12px;
 }
 
 .mobile-device .detail-desc {
   text-align: left;
-  width: 100%;
-  clear: both;
-  margin-top: 12px;
-  margin-left: 0;
-  padding-left: 0;
+  line-height: 1.6;
   font-size: 15px;
-  display: block;
+  /* No clear: both - let it flow to the right of image, then wrap below */
 }
 
 .mobile-device .detail-extended {
   clear: both;
   width: 100%;
-  margin-top: 16px;
+  margin-top: 0;
+  padding: 0 20px 20px;
 }
 
 .mobile-device .detail-content {
@@ -3777,25 +3774,7 @@ document.getElementById('btnRotate').addEventListener('click', e => {
   panMode = false;
   e.target.classList.add('active');
   document.getElementById('btnPan').classList.remove('active');
-  
-  // Mobile: Rotate view when button is clicked
-  if (isMobileDevice) {
-    const rotAmount = Math.PI / 8; // 22.5 degrees
-    const target = getCurrentViewTarget();
-    const offset = new THREE.Vector3().subVectors(camera.position, target);
-    const r = offset.length();
-    
-    let sphericalTheta = Math.acos(offset.y / r);
-    let sphericalPhi = Math.atan2(offset.z, offset.x);
-    
-    sphericalPhi -= rotAmount; // Rotate around Y axis
-    
-    camera.position.x = target.x + r * Math.sin(sphericalTheta) * Math.cos(sphericalPhi);
-    camera.position.y = target.y + r * Math.cos(sphericalTheta);
-    camera.position.z = target.z + r * Math.sin(sphericalTheta) * Math.sin(sphericalPhi);
-    camera.lookAt(target);
-    cameraFollowTarget = null;
-  }
+  // Removed automatic view rotation - view should not move when selecting button
 });
 
 document.getElementById('btnPan').addEventListener('click', e => {
