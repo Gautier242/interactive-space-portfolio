@@ -901,13 +901,19 @@ a:hover {
 .mobile-device .pub-image {
   width: 120px;
   max-width: 120px;
-  min-height: 120px;
-  height: 120px;
+  height: auto;
+  /* Remove fixed height - let it adapt to content */
   float: left;
   margin-right: 16px;
   margin-bottom: 20px;
   flex-shrink: 0;
   box-sizing: border-box;
+}
+
+.mobile-device .pub-image img {
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 
 .mobile-device .pub-content {
@@ -936,10 +942,12 @@ a:hover {
 }
 
 .mobile-device .pub-desc {
-  /* No clear: both - let it flow to the right of image, then wrap below */
-  margin-top: 8px;
+  clear: both;
+  width: 100%;
+  margin-top: 12px;
   font-size: 14px;
   line-height: 1.6;
+  /* Always start below the picture from far left to far right */
 }
 
 .mobile-device .pub-meta {
@@ -985,10 +993,10 @@ a:hover {
 
 .mobile-device .detail-image {
   float: left;
-  max-width: 500px;
+  max-width: 40%;
   width: auto;
   height: auto;
-  min-height: 350px;
+  /* Remove fixed min-height - let it adapt to content */
   margin-right: 20px;
   margin-bottom: 20px;
   flex-shrink: 0;
@@ -1046,7 +1054,10 @@ a:hover {
   text-align: left;
   line-height: 1.6;
   font-size: 15px;
-  /* No clear: both - let it flow to the right of image, then wrap below */
+  clear: both;
+  width: 100%;
+  margin-top: 12px;
+  /* Always start below the picture from far left to far right */
 }
 
 .mobile-device .detail-extended {
@@ -1060,9 +1071,9 @@ a:hover {
   padding: 16px;
 }
 
-/* Disable thin interactions on mobile */
+/* Disable thin interactions on mobile - no pinch zoom */
 .mobile-device canvas {
-  touch-action: pan-x pan-y pinch-zoom;
+  touch-action: pan-x pan-y;
 }
 
 /* Prevent text selection during drag on mobile */
@@ -1928,42 +1939,20 @@ if (isMobileDevice && canvas) {
     }
   }, { passive: false });
   
-  // Touch interactions: pinch-to-zoom (2 fingers) or rotate/pan (1 finger if button selected)
-  let touchStartX = 0, touchStartY = 0;
+  // Touch interactions: rotate/pan (1 finger if button selected) or tap for object selection
   let lastTouchX = 0, lastTouchY = 0;
   let isTouchInteracting = false;
+  let touchStartTime = 0;
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let hasMoved = false;
   
   canvas.addEventListener('touchmove', (e) => {
+    // Disable pinch-to-zoom - only allow zoom via +/- buttons
     if (e.touches.length === 2) {
-      // Two fingers: Pinch-to-zoom
+      // Two fingers: Do nothing - zoom disabled
       e.preventDefault();
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const currentDistance = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      
-      if (initialDistance === 0) {
-        initialDistance = currentDistance;
-        initialCameraDistance = camera.position.length();
-        return;
-      }
-      
-      const ratio = currentDistance / initialDistance;
-      const zoomFactor = 1 + (ratio - 1) * 0.05;
-      const newDistance = initialCameraDistance / zoomFactor;
-      
-      const minDistance = 50;
-      const maxDistance = 2000;
-      const clampedDistance = Math.max(minDistance, Math.min(maxDistance, newDistance));
-      
-      const target = getCurrentViewTarget();
-      const direction = new THREE.Vector3().subVectors(camera.position, target).normalize();
-      camera.position.copy(target).add(direction.multiplyScalar(clampedDistance));
-      camera.lookAt(target);
-      
-      initialCameraDistance = clampedDistance;
+      return;
     } else if (e.touches.length === 1) {
       // One finger: Rotate or Pan (if button is selected)
       const rotateBtn = document.getElementById('btnRotate');
@@ -1973,6 +1962,7 @@ if (isMobileDevice && canvas) {
         // Rotate mode
         e.preventDefault();
         isTouchInteracting = true;
+        hasMoved = true; // Mark that we've moved
         const touch = e.touches[0];
         
         if (lastTouchX === 0) {
@@ -2006,6 +1996,7 @@ if (isMobileDevice && canvas) {
         // Pan mode
         e.preventDefault();
         isTouchInteracting = true;
+        hasMoved = true; // Mark that we've moved
         const touch = e.touches[0];
         
         if (lastTouchX === 0) {
@@ -2041,13 +2032,36 @@ if (isMobileDevice && canvas) {
       const touch = e.touches[0];
       lastTouchX = touch.clientX;
       lastTouchY = touch.clientY;
+      touchStartX = touch.clientX;
+      touchStartY = touch.clientY;
+      touchStartTime = Date.now();
+      hasMoved = false;
+      isTouchInteracting = false; // Reset - will be set to true if we detect a drag
     }
   }, { passive: false });
   
   canvas.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) {
-      initialDistance = 0;
+    // Check if this was a tap (not a drag) - allow object selection
+    if (e.changedTouches.length === 1 && !hasMoved) {
+      const touch = e.changedTouches[0];
+      const touchDuration = Date.now() - touchStartTime;
+      const moveDistance = Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY);
+      
+      // If it was a quick tap (less than 300ms and less than 10px movement), allow click
+      if (touchDuration < 300 && moveDistance < 10) {
+        isTouchInteracting = false; // Allow click event to fire
+        // Trigger click event manually for object selection
+        const clickEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          clientX: touch.clientX,
+          clientY: touch.clientY
+        });
+        canvas.dispatchEvent(clickEvent);
+      }
     }
+    hasMoved = false;
+    initialDistance = 0;
   }, { passive: false });
 }
 
