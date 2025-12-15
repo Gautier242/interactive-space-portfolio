@@ -763,12 +763,12 @@ a:hover {
   position: absolute;
   top: 12px;
   right: 12px;
-  background: rgba(30, 60, 100, 0.95);
+  background: rgba(30, 60, 100, 0.6);
   border: 2px solid rgba(158, 201, 255, 0.4);
   border-radius: 8px;
-  padding: 10px 14px;
+  padding: 7px 9px;
   color: var(--accent);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   z-index: 15;
@@ -1126,7 +1126,7 @@ a:hover {
   </div>
   <div class="links">
     <a href="#about" onclick="showAbout(); return false;">About Me</a>
-    <a href="https://scholar.google.com/citations?user=Dm0hKWoAAAAJ&hl=fr" target="_blank">Google Scholar</a>
+    <a href="https://scholar.google.co.uk/citations?user=Dm0hKWoAAAAJ&hl=en" target="_blank">Google Scholar</a>
     <a href="https://www.researchgate.net/profile/Gautier-Bardi-De-Fourtou" target="_blank">ResearchGate</a>
     <a href="https://github.com/Gautier242?tab=overview&from=2025-12-01&to=2025-12-09" target="_blank">GitHub</a>
   </div>
@@ -1135,7 +1135,7 @@ a:hover {
   <section class="left" id="leftPanel">
     <canvas id="canvas3d"></canvas>
     <canvas id="moonSurface" class="moon-surface"></canvas>
-    <button class="instructions-toggle" id="instructionsToggle">How to use</button>
+    <button class="instructions-toggle" id="instructionsToggle">View interaction tips</button>
     <div class="controls">
       <button id="btnReset" title="Reset View">Reset</button>
       <button id="btnPause" title="Pause/Play">⏸</button>
@@ -1247,8 +1247,8 @@ if (isMobileDevice) {
         e.stopPropagation();
         legend.classList.toggle('visible');
         instructionsToggle.textContent = legend.classList.contains('visible') 
-          ? 'Close' 
-          : 'How to use';
+          ? 'Hide interaction tips' 
+          : 'View interaction tips';
       });
     }
     
