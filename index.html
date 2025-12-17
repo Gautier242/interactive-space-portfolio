@@ -353,6 +353,11 @@ a:hover {
   color: #000;
 }
 
+/* Hide "HOW TO EXPLORE" button on mobile - mobile uses "View interaction tips" button instead */
+.mobile-device .help-toggle-btn {
+  display: none;
+}
+
 .section-title {
   font-size: 13px;
   color: var(--muted);
@@ -899,7 +904,7 @@ a:hover {
   right: 16px;
   font-size: 11px;
   color: var(--ink);
-  background: rgba(30, 60, 100, 0.95);
+  background: rgba(30, 60, 100, 0.5);
   border: 2px solid rgba(158, 201, 255, 0.4);
   padding: 12px 16px;
   border-radius: 12px;
@@ -986,12 +991,7 @@ a:hover {
   background: rgba(30, 60, 100, 0.5);
 }
 
-.mobile-device .section-title::after {
-  content: '▼';
-  position: absolute;
-  right: 16px;
-  transition: transform 0.3s;
-}
+
 
 .mobile-device .right.expanded .section-title::after {
   transform: rotate(180deg);
@@ -1277,11 +1277,11 @@ a:hover {
 
     <div class="legend active visible" id="legendText" onclick="toggleHelp()">
   <div style="text-align:justify; line-height:1.6;">
-    <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:10px; text-align:center;">How to Explore</div>
-    <div style="margin-bottom:6px;">• <strong>Interaction:</strong> Objects with yellow reticles are projects. Click them to view details.</div>
-    <div style="margin-bottom:6px;">• <strong>Controls:</strong> Use the bottom bar to reset, pause, or change speed.</div>
-    <div style="margin-bottom:6px;">• <strong>Navigation:</strong> Drag to rotate, Shift+Drag to pan, Scroll to zoom.</div>
-    <div style="margin-bottom:10px;">• <strong>Panels:</strong> Drag the vertical divider to resize your view.</div>
+    <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:25px; text-align:center;">  </div>
+    <div style="margin-bottom:1px;">• Objects with yellow reticles are linked to projects. Click them to view details.</div>
+    <div style="margin-bottom:1px;">• Use the bottom bar to pause, play, change speed or reset the animation.</div>
+    <div style="margin-bottom:1px;">• Drag to rotate, Shift+Drag to pan, Scroll to zoom.</div>
+    <div style="margin-bottom:7px;">• Drag the vertical divider to resize your view.</div>
     <div style="text-align:center; color:var(--accent); font-size:11px; font-weight:bold;">(Click anywhere on this panel to close)</div>
   </div>
 </div>
@@ -1367,8 +1367,15 @@ if (isMobileDevice) {
       rightPanel.style.maxHeight = '';
     }
     
-    // Instructions toggle
+    // Instructions toggle - restore old mobile legend content
     if (instructionsToggle && legend) {
+      // Set the old mobile-specific legend content
+      legend.innerHTML = '<div style="text-align:center; line-height:1.4;"><span class="legend-title"><strong>Tips to navigate in the Interactive 3D Solar System</strong></span><br>Objects with yellow markers have publications · Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels</div>';
+      
+      // Remove active/visible classes so legend starts hidden on mobile
+      legend.classList.remove('active', 'visible');
+      legend.onclick = null; // Remove the toggleHelp onclick from HTML
+      
       instructionsToggle.addEventListener('click', (e) => {
         e.stopPropagation();
         legend.classList.toggle('visible');
@@ -3427,7 +3434,11 @@ if (!viperManualControl && !roverPOVMode) {
     // --- ONLY OVERWRITE ON MOBILE ---
     if (isMobileDevice) {
         const legendEl = document.getElementById('legendText');
-        legendEl.innerHTML = '<span class="legend-title">🎮 How to Navigate</span><strong>Interactive 3D Solar System</strong> – Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels';
+        legendEl.innerHTML = `
+    <div style="margin-bottom:1px;">• Objects with yellow reticles are linked to projects. Click them to view details.</div>
+    <div style="margin-bottom:1px;">• Use the bottom bar to pause, play, change speed or reset the animation.</div>
+    <div style="margin-bottom:7px;">• When driving the lunar rover, click on play and use arrows of the bottom bar.</div>
+`;
     }
     // Laptop (else) does nothing here, allowing your manual HTML to stay as it is.
   }
