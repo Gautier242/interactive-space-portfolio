@@ -50,20 +50,20 @@
 }
 
 /* List View Scaling */
-.pub-card { font-size: calc(14px * var(--list-font-scale)); }
-.pub-title { font-size: calc(15px * var(--list-font-scale)) !important; }
-.pub-inst { font-size: calc(11px * var(--list-font-scale)) !important; }
-.pub-subinst { font-size: calc(10px * var(--list-font-scale)) !important; }
-.pub-desc { font-size: calc(14px * var(--list-font-scale)) !important; }
-.pub-links { font-size: calc(11px * var(--list-font-scale)) !important; }
+.pub-card { font-size: calc(15px * var(--list-font-scale)); }
+.pub-title { font-size: calc(16px * var(--list-font-scale)) !important; }
+.pub-inst { font-size: calc(12px * var(--list-font-scale)) !important; }
+.pub-subinst { font-size: calc(11px * var(--list-font-scale)) !important; }
+.pub-desc { font-size: calc(15px * var(--list-font-scale)) !important; }
+.pub-links { font-size: calc(12px * var(--list-font-scale)) !important; }
 
-/* Detail View Scaling - Linking both views to one variable */
-.detail-title { font-size: calc(22px * var(--list-font-scale)) !important; }
-.detail-inst { font-size: calc(12px * var(--list-font-scale)) !important; }
-.detail-subinst { font-size: calc(11px * var(--list-font-scale)) !important; }
-.detail-desc, .detail-extended-desc { font-size: calc(15px * var(--list-font-scale)) !important; }
-.detail-meta, .detail-subsection li { font-size: calc(14px * var(--list-font-scale)) !important; }
-.detail-links a { font-size: calc(12px * var(--list-font-scale)) !important; }
+/* Detail View - Increasing base sizes for readability */
+.detail-title { font-size: calc(24px * var(--list-font-scale)) !important; }
+.detail-inst { font-size: calc(13px * var(--list-font-scale)) !important; }
+.detail-subinst { font-size: calc(12px * var(--list-font-scale)) !important; }
+.detail-desc, .detail-extended-desc { font-size: calc(16px * var(--list-font-scale)) !important; }
+.detail-meta, .detail-subsection li { font-size: calc(15px * var(--list-font-scale)) !important; }
+.detail-links a { font-size: calc(13px * var(--list-font-scale)) !important; }
 
 * {
   box-sizing: border-box;
@@ -4287,10 +4287,12 @@ document.addEventListener('keyup', e => {
 renderPublications();
 setTimeout(() => initMoonSurface(), 500);
 
-let globalFontScale = 1.0;
+let globalFontScale = 1.1;
 function changeGlobalTextSize(delta) {
     globalFontScale = Math.max(0.8, Math.min(1.8, globalFontScale + delta));
     document.documentElement.style.setProperty('--list-font-scale', globalFontScale);
+    
+    if (typeof onWindowResize === 'function') onWindowResize();
 }
 
 // --- ROVER CONTROL LOGIC ---
