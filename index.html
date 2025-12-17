@@ -23,7 +23,37 @@
   --accent: #9ec9ff;
   --link: #a7d1ff;
   --selected: #6ea3ff;
+  --list-font-scale: 1; 
 }
+.pub-card {
+  font-size: calc(14px * var(--list-font-scale));
+}
+.pub-title {
+  font-size: calc(15px * var(--list-font-scale)) !important;
+}
+.pub-inst {
+  font-size: calc(11px * var(--list-font-scale)) !important;
+}
+.pub-subinst {
+  font-size: calc(10px * var(--list-font-scale)) !important;
+}
+.pub-desc {
+  font-size: calc(14px * var(--list-font-scale)) !important;
+}
+.pub-links {
+  font-size: calc(11px * var(--list-font-scale)) !important;
+}
+.detail-content {
+  font-size: calc(15px * var(--list-font-scale));
+}
+
+.detail-meta {
+  font-size: calc(14px * var(--list-font-scale)) !important;
+}
+.detail-links a {
+  font-size: calc(12px * var(--list-font-scale)) !important;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -442,6 +472,30 @@ a:hover {
 .detail-view.active {
   display: block;
 }
+
+:root {
+  --detail-font-scale: 1;
+}
+.detail-content {
+  font-size: calc(16px * var(--detail-font-scale));
+}
+.text-size-controls {
+  display: flex;
+  gap: 5px;
+  margin-left: auto;
+  align-items: center;
+}
+.text-size-controls button {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--accent);
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
 .detail-header {
   display: flex;
   align-items: center;
@@ -1178,15 +1232,26 @@ a:hover {
   <aside class="right">
     <div class="neural-bg" id="rightNeural"></div>
     
-    <div class="section-title">Publications & Projects</div>
-    <div class="pubs-scroll" id="pubsList"></div>
+    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+      Publications & Projects
+      <div class="text-size-controls" style="display: flex; gap: 8px;">
+          <span style="font-size: 10px; color: var(--muted); text-transform: none; font-weight: normal;">Text Size:</span>
+          <button onclick="changeGlobalTextSize(-0.1)" style="padding: 2px 8px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 4px;">−</button>
+          <button onclick="changeGlobalTextSize(0.1)" style="padding: 2px 8px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 4px;">+</button>
+      </div>
+      </div>
+  <div class="pubs-scroll" id="pubsList"></div>
     
     <!-- Detail View -->
     <div class="detail-view" id="detailView">
       <div class="detail-header">
         <button class="detail-close" onclick="hideDetail()" title="Close">×</button>
         <h2 id="detailHeaderTitle">Publication Details</h2>
-      </div>
+        <div class="text-size-controls">
+          <button onclick="changeTextSize(-0.1)" title="Decrease text size">−</button>
+          <button onclick="changeTextSize(0.1)" title="Increase text size">+</button>
+        </div>
+        </div>
       <div class="detail-content">
         <div class="detail-top">
           <div class="detail-image" id="detailImageContainer">
@@ -1738,6 +1803,12 @@ function showDetail(item) {
 
 function showAbout() {
   showDetail(ABOUT_ME);
+}
+
+let currentFontScale = 1.0;
+function changeTextSize(delta) {
+  currentFontScale = Math.max(0.7, Math.min(1.5, currentFontScale + delta));
+  document.documentElement.style.setProperty('--detail-font-scale', currentFontScale);
 }
 
 function hideDetail() {
@@ -4201,6 +4272,16 @@ document.addEventListener('keyup', e => {
 
 renderPublications();
 setTimeout(() => initMoonSurface(), 500);
+
+let globalFontScale = 1.0;
+function changeGlobalTextSize(delta) {
+    // Limits the scale between 0.8x and 1.6x size
+    globalFontScale = Math.max(0.8, Math.min(1.6, globalFontScale + delta));
+    document.documentElement.style.setProperty('--list-font-scale', globalFontScale);
+    
+    // Optional: Force a small refresh of layout if needed
+    if (typeof onWindowResize === 'function') onWindowResize();
+}
 
 // --- ROVER CONTROL LOGIC ---
 
