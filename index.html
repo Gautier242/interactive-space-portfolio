@@ -323,15 +323,20 @@ a:hover {
   display: block; /* Shown when button is clicked */
 }
 
+.mobile-device .legend.visible {
+  display: block;
+}
+
 .help-toggle-btn {
   position: absolute;
   top: 16px;
-  left: 16px;
+  left: 50%;                
+  transform: translateX(-50%); 
   z-index: 101;
   background: rgba(30, 60, 100, 0.9);
   border: 1px solid var(--accent);
   color: var(--accent);
-  padding: 8px 12px;
+  padding: 8px 16px;        
   border-radius: 8px;
   cursor: pointer;
   font-size: 12px;
@@ -340,6 +345,7 @@ a:hover {
   align-items: center;
   gap: 6px;
   transition: all 0.2s;
+  white-space: nowrap;       
 }
 
 .help-toggle-btn:hover {
@@ -1269,7 +1275,7 @@ a:hover {
       <span>ⓘ</span> HOW TO EXPLORE
     </button>
 
-    <div class="legend" id="legendText" onclick="toggleHelp()">
+    <div class="legend active visible" id="legendText" onclick="toggleHelp()">
   <div style="text-align:justify; line-height:1.6;">
     <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:10px; text-align:center;">How to Explore</div>
     <div style="margin-bottom:6px;">• <strong>Interaction:</strong> Objects with yellow reticles are projects. Click them to view details.</div>
@@ -1861,8 +1867,11 @@ function showAbout() {
 
 function toggleHelp() {
     const legend = document.getElementById('legendText');
-    legend.classList.toggle('active');
-    legend.classList.toggle('visible');
+    if (isMobileDevice) {
+        legend.classList.toggle('visible');
+    } else {
+        legend.classList.toggle('active');
+    }
 }
 
 let currentFontScale = 1.0;
@@ -3237,12 +3246,24 @@ function animate() {
   requestAnimationFrame(animate);
   
   if (moonSurfaceActive) {
-    // Update legend for Moon view
     const legendEl = document.getElementById('legendText');
-    if (roverPOVMode) {
-      legendEl.innerHTML = `<span class="legend-title">🎮 Rover Controls</span><strong>VIPER Rover POV</strong> – 🪨 Rocks Collected: ${window.rocksCollected || 0}/15 · Use Arrow Keys: ↑ Forward · ↓ Backward · ← Turn Left · → Turn Right · Spacebar: Speed Boost · Change simulation speed for rover speed`;
+    
+    // --- START OF FIX ---
+    if (isMobileDevice) {
+        // MOBILE ONLY: Show the simple layout you liked before
+        if (roverPOVMode) {
+          legendEl.innerHTML = `<span class="legend-title">🎮 Rover Controls</span><strong>VIPER Rover POV</strong> – 🪨 Rocks Collected: ${window.rocksCollected || 0}/15 · Use Arrow Keys: ↑ Forward · ↓ Backward · ← Turn Left · → Turn Right · Spacebar: Speed Boost`;
+        } else {
+          legendEl.innerHTML = '<span class="legend-title">🌕 Moon Surface</span><strong>Click objects</strong> to view details · <strong>Click Earth</strong> to return · <strong>Drag</strong> to rotate · <strong>Pinch</strong> to zoom';
+        }
     } else {
-      legendEl.innerHTML = '<div style="text-align:left; line-height:1.6;"><div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:10px; text-align:center;">Moon Surface View</div><div style="margin-bottom:8px;"><strong>Click VIPER rover</strong> to enter driving mode and control the rover</div><div style="margin-bottom:8px;"><strong>Click Starship, LRO, or Earth</strong> to view associated publications</div><div><strong>Drag</strong> to rotate the view · <strong>Scroll</strong> to zoom</div></div>';
+        // LAPTOP ONLY: Only update the "Rocks Collected" text if needed, 
+        // otherwise let the HTML layout stay as it is.
+        if (roverPOVMode) {
+            legendEl.innerHTML = `<div style="text-align:center; font-weight:bold;">🎮 ROVER MODE: 🪨 ${window.rocksCollected || 0}/15 Rocks Collected</div>`;
+        }
+        // If not in roverPOVMode, we do NOTHING here. 
+        // This keeps your "How to Explore" HTML visible.
     }
     
     // Update rover POV camera if active
@@ -3403,7 +3424,12 @@ if (!viperManualControl && !roverPOVMode) {
     moonRenderer.render(moonScene, moonCamera);
     return;
   } else {
-    
+    // --- ONLY OVERWRITE ON MOBILE ---
+    if (isMobileDevice) {
+        const legendEl = document.getElementById('legendText');
+        legendEl.innerHTML = '<span class="legend-title">🎮 How to Navigate</span><strong>Interactive 3D Solar System</strong> – Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels';
+    }
+    // Laptop (else) does nothing here, allowing your manual HTML to stay as it is.
   }
   
   // Original solar system animation
