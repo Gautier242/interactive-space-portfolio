@@ -307,14 +307,46 @@ a:hover {
   right: 16px;
   font-size: 12px;
   color: var(--ink);
-  background: rgba(30, 60, 100, 0.95);
-  border: 2px solid rgba(158, 201, 255, 0.4);
-  padding: 14px 18px;
+  background: rgba(30, 60, 100, 0.98); /* Slightly more opaque for readability */
+  border: 2px solid var(--accent);
+  padding: 16px;
   border-radius: 12px;
   backdrop-filter: blur(12px);
   line-height: 1.6;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: none; /* Hidden by default */
+  pointer-events: auto;
 }
+
+.legend.active {
+  display: block; /* Shown when button is clicked */
+}
+
+.help-toggle-btn {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 101;
+  background: rgba(30, 60, 100, 0.9);
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.help-toggle-btn:hover {
+  background: var(--accent);
+  color: #000;
+}
+
 .section-title {
   font-size: 13px;
   color: var(--muted);
@@ -1233,12 +1265,20 @@ a:hover {
       </div>
     </div>
     
-    <div class="legend" id="legendText">
-      <div style="text-align:center; line-height:1.4;">
-        <span class="legend-title"><strong>Tips to navigate in the Interactive 3D Solar System</strong></span><br>
-        Objects with yellow markers have publications · Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels
-      </div>
-    </div>
+    <button class="help-toggle-btn" onclick="toggleHelp()">
+      <span>ⓘ</span> HOW TO EXPLORE
+    </button>
+
+    <div class="legend" id="legendText" onclick="toggleHelp()">
+  <div style="text-align:justify; line-height:1.6;">
+    <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:10px; text-align:center;">How to Explore</div>
+    <div style="margin-bottom:6px;">• <strong>Interaction:</strong> Objects with yellow reticles are projects. Click them to view details.</div>
+    <div style="margin-bottom:6px;">• <strong>Controls:</strong> Use the bottom bar to reset, pause, or change speed.</div>
+    <div style="margin-bottom:6px;">• <strong>Navigation:</strong> Drag to rotate, Shift+Drag to pan, Scroll to zoom.</div>
+    <div style="margin-bottom:10px;">• <strong>Panels:</strong> Drag the vertical divider to resize your view.</div>
+    <div style="text-align:center; color:var(--accent); font-size:11px; font-weight:bold;">(Click anywhere on this panel to close)</div>
+  </div>
+</div>
   </section>
   <div class="resizer" id="resizer"></div>
   <aside class="right">
@@ -1817,6 +1857,12 @@ function showDetail(item) {
 
 function showAbout() {
   showDetail(ABOUT_ME);
+}
+
+function toggleHelp() {
+    const legend = document.getElementById('legendText');
+    legend.classList.toggle('active');
+    legend.classList.toggle('visible');
 }
 
 let currentFontScale = 1.0;
@@ -3357,17 +3403,7 @@ if (!viperManualControl && !roverPOVMode) {
     moonRenderer.render(moonScene, moonCamera);
     return;
   } else {
-    // Reset legend when not in Moon view
-    const legendEl = document.getElementById('legendText');
-    // legendEl.innerHTML = '<span class="legend-title">🎮 How to Navigate</span><strong>Interactive 3D Solar System</strong> – Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels';
-    legendEl.innerHTML = `
-  <div style="text-align:justify; line-height:1.6;">
-    <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:10px; text-align:center;">How to Explore</div>
-    <div style="margin-bottom:0;">  -> Each object with yellow reticle is associated to a project. Click on it to open detailed information of the project on the right.</div>
-    <div style="margin-bottom:0;">  -> Use the <strong>control bar at the bottom</strong> to reset animation, pause or start it, control speed, rotate and pan.</div> 
-    <div style="margin-bottom:0;">  -> Drag the divider</strong> between panels to resize each panel</div>
-  </div>
-`;
+    
   }
   
   // Original solar system animation
