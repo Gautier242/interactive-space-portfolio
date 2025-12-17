@@ -34,6 +34,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   overflow: hidden;
+
 }
 a {
   color: var(--link);
@@ -143,7 +144,7 @@ a:hover {
   position: relative;
 }
 .left {
-  flex: 0 0 45%;
+  flex: 0 0 35%;
   position: relative;
   background: #000;
   overflow: hidden;
@@ -403,14 +404,14 @@ a:hover {
   font-style: italic;
 }
 .pub-desc {
-  font-size: 12px;
+  font-size: 14px;
   color: #dbe7ff;
   line-height: 1.4;
   margin-bottom: 8px;
   text-align: justify;
 }
 .pub-meta {
-  font-size: 10px;
+  font-size: 1px;
   color: var(--muted);
   line-height: 1.5;
   margin-top: 8px;
@@ -1329,8 +1330,8 @@ setTimeout(() => {
 const PUBS = [
   { 
     id: "mit", 
-    title: "ML-Based Signal Clustering for Smart Fiber Data from the ISS", 
-    inst: "Massachusetts Institute of Technology", 
+    title: "Signal processing and clustering with ML for smart fiber data from the ISS", 
+    inst: "MASSACHUSETTS INSTITUTE OF TECHNOLOGY", 
     subInst: "Media Lab - Responsive Environments - Dr. Joseph Pardiso, 2025",
     icon: "https://picsum.photos/seed/mit/400/300", 
     body: "ISS",
@@ -1353,7 +1354,7 @@ const PUBS = [
     "<br><strong style='color: #9ec9ff;'>Publications and presentations</strong>: 1 abstract accepted at AGU24, 1 oral presentation at AGU24 and 1 paper currently in progress",
     authors: "<strong>G. Bardi</strong>, T. Lu, M. Archer, J. Wang", 
     // venue: "AGU 2024",
-    links: [{t: "Link to abstract for AGU 2024", u: "https://agu.confex.com/agu/agu24/meetingapp.cgi/Paper/1655008"}],
+    links: [{t: "Accepted for oral presentation - link to abstract", u: "https://agu.confex.com/agu/agu24/meetingapp.cgi/Paper/1655008"}],
     img: "images/swot.gif"
   },
   { 
@@ -1366,46 +1367,46 @@ const PUBS = [
     extendedDesc: "With the goal to improve real time motion prediction on Moon regolith for a virtual test lab with rover digital twins, I developed a physics informed machine learning (PIML) architecture that merges Newton's second law with neural networks to emulate how a rover moves on loose lunar soil. Solving the issue of limited available dataset for training by identifying Chrono Engine developed by University of Wisconsin and tested in cooperation with NASA Ames, we generated a rich ground-truth dataset of rover behavior under various slope conditions using Omniverse and Fusion 360. The PIML model mixing mechanics laws and simple neural network was then trained on these simulations with different slopes, capturing complex terramechanics in its parameters. By injecting physical knowledge (through ordinary differential equations) into the network’s design, the model achieved high accuracy, reducing position error from meters to mere centimeters. The main advantage of this method being the inference time reducing from hours with full FEM simulation to real time (~0.2 seconds) with PIML. This physics-informed ML approach effectively creates a real time motion prediction on Moon surface, enabling digital twins testing and mission planners to quickly evaluate rover routes, anticipate slippage or sinkage, and make on-the-fly decisions. The work demonstrates an original solution for space robotics, combining simulation, machine learning, and understanding of mechanics equations of motion to tackle the challenge of real-time prediction in off-world environments.",
     authors: "<strong>G. Bardi</strong>, T. Lu, E. Chow",
     venue: "International Astronautical Congress 2024", 
-    links: [{t: "Link to full paper", u: "https://www.researchgate.net/publication/388579787_Digital_Twin_and_Physics_Informed_Machine_Learning_for_Rover_Motion_Simulation"}],
+    links: [{t: "Link to full paper ", u: "https://www.researchgate.net/publication/388579787_Digital_Twin_and_Physics_Informed_Machine_Learning_for_Rover_Motion_Simulation"}],
     img: "images/rover.png"
   },
   { 
     id: "lunarfm", 
     title: "Lunar Foundation Model", 
-    inst: "FDL", 
+    inst: "FRONTIER DEVELOPMENT LAB (FDL)", 
     icon: "https://picsum.photos/seed/lunar/400/300", 
     body: "LRO",
-    desc: "Contributed to the creation of the first <span style=\"color: #9ec9ff; font-weight: 900;\">foundation model</span> for the Moon unifying decades of data recorded by various instruments such as LROC, LOLA, GRAIL, or Clementine) into a single queryable system. The Lunar Foundation Model uses multimodal ML techniques to allow scientists and mission planners to retrieve lunar properties, minerals predictions and perform additional downstream tasks through outputted embeddings and natural language queries. This project lays the groundwork for AI-driven lunar exploration and decision-making.",
+    desc: "Developed a <span style=\"color: #9ec9ff; font-weight: 900;\">machine learning and signal processing pipeline</span> to automatically analyze and cluster over 100,000 of triggers from a new instrument sent to the <span style=\"color: #9ec9ff; font-weight: 900;\">International Space Station and identify</span> their probable causes. This instrument, based on custom-made piezoelectric fibers woven into the outer insulation layer, is designed to <span style=\"color: #9ec9ff; font-weight: 900;\">detect micrometeorite impacts</span> on the structure, improving eventually real-time structural health monitoring in orbit.",
     extendedDesc: "We used a wide array of lunar datasets from missions like GRAIL (gravity field), LRO/LOLA (topography), Clementine (multispectral imagery), and Mini-RF (radar) to train a <span style=\"color: #9ec9ff; font-weight: 700;\"> visual transformer to grasp a multimodal understanding of the Moon</span>. Rather than treating each dataset in isolation, the foundation model fuses them, learning the complex interdependencies (e.g. how surface mineral signals correlate with subsurface density or gravity anomalies) to answer complex tasks. Through <span style=\"color: #9ec9ff; font-weight: 700;\">multi masked autoencoder</span>, we obtained condensed informative <span style=\"color: #9ec9ff; font-weight: 700;\">embeddings that can be used for downstream tasks</span>, similarity search or to augment the vocabulary of an LLM. Users can interact with this model via <span style=\"color: #9ec9ff; font-weight: 700;\">high-level queries</span> for example, asking which regions have high titanium content or predict geologic features of a given location and receive informed answers with supporting maps. The system thus functions as an <span style=\"color: #9ec9ff; font-weight: 700;\">AI lunar agent</span>, capturing both measured data and learned predictions about unmeasured properties. By providing instant access to integrated lunar information, the <span style=\"color: #9ec9ff; font-weight: 700;\">Lunar Foundation Model aims at supporting scientific discovery or mission planning</span>. It represents a shift from siloed analysis to a holistic, data-driven approach for planetary science, illustrating how foundation models can accelerate our return to the Moon with better information and confidence.",
-    authors: "publication in progress", 
-    venue: "LunarLab.ai – In progress",
-    links: [{t: "LunarLab", u: "https://lunarlab.ai/"}],
+    authors: "G. Bardi*, J. Gawlikowski*, M. Girona-Mata*, S. Goski*, S.Kaczmarek, R. Ramos", 
+    venue: "Publication in progress",
+    links: [{t: "Link to website and technical presentation", u: "https://lunarlab.ai/"}],
     img: "images/lunarlab2.png"
   },
   { 
     id: "esa", 
     title: "Moon Mineral Classification from VNIR", 
-    inst: "ESA", 
+    inst: "EUROPEAN SPACE AGENCY - EUROPEAN ASTRONAUT CENTER", 
     icon: "https://picsum.photos/seed/esa/400/300", 
     body: "Moon",
     desc: "Contributed to the development of the Machine Learning capabilities of a comprehensive tool set developed to be sent to the Moon to help astronauts select relevant lunar rocks to bring back to Earth.The goal of this CNN based model was to predict the mineral composition of lunar rocks and mineral based on their visible and near-infrared (VNIR) spectra. After improving the current CNN, I proposed a <span style=\"color: #9ec9ff; font-weight: 900;\">new method improving the best CNN accuracy by 15%, and reducing the variance by 90%</span>.",
     extendedDesc: "At  ESA European Astronaut Centre, I developed an AI-driven tool to assist astronauts in the field. In order to predict the mineral composition of a given rock based on its visible and near-infrared (VNIR) spectra, a first CNN was trained and optimized based on a dataset of VNIR spectra of various minerals, essentially learning to recognize the spectral “fingerprints” of different minerals (like plagioclase, olivine, pyroxene, etc.). This dataset was however quite unbalanced with very few examples for some classes and a lot of NaNs on some spectra. The first challenge was, therefore, to develop a sensible preprocessing pipeline to select relevant spectra, clean them, and rebalance the dataset using techniques such as SMOTE. After this data pipeline was validated, I was able to propose improvements to the best CNN, not only increasing its accuracy but also reducing the number of parameters while maintaining similar performance, an important consideration for embedded systems. I then built a new pipeline inspired by time series classifications using 1D convolution feature extractions combined with a ridge classifier. This technique improved the accuracy of the best CNN by ~15%  and dramatically reduced the variability in predictions (by nearly 90%) when training and testing the same model but splitting the same dataset in different train/val/test sets.. The outcome is an instant identification of the likely mineral type as an astronaut scans a rock, without needing Earth-based analysis. This real-time feedback is crucial for surface operations. It lets the crew quickly prioritize interesting samples (for example, spotting a high-titanium basalt worth returning) and avoid wasting limited time on redundant rocks without having them trained as professional geologists. By blending remote sensing techniques with machine learning, the project exemplifies how AI can enhance human exploration, augmenting astronauts’ abilities to conduct science on the Moon.",
-    authors: "<strong>G. Bardi</strong>", 
-    venue: "European Astronaut Centre (ESA), 2022", 
+    authors: "<strong>G. Bardi</strong>, I. Drozdovsky",  
+    venue: "Confidential manuscript at European Astronaut Centre (ESA), 2022", 
     links: [],
     img: "images/esa.png"
   },
   { 
     id: "isu", 
     title: "From Spacecraft to Habitat – Starship HLS", 
-    inst: "ISU", 
+    inst: "INTERNATIONAL SPACE UNIVERSITY (ISU)", 
     icon: "https://media.giphy.com/media/l0HlQXlQ3nHyLMvte/giphy.gif", 
     body: "Starship",
     desc: "Performed a comprehensive systems engineering study on repurposing SpaceX’s Starship Human Landing System (HLS) as a permanent lunar habitat. This concept study examined how the Starship HLS, originally designed to transport crew to the Moon, could be converted into a long-term living and research facility on the lunar surface. We analyzed structural modifications, life support and environmental control upgrades, radiation shielding strategies, crew habitability and psychology factors, and operational logistics needed to sustain a Moon base using a landed Starship as the core module.",
-    extendedDesc: "This project, conducted at ISU’s Space Studies Program, tackled the challenge of establishing a permanent habitat on the Moon. Inspired by multiple NASA concepts of reusing past structures into new ones, such as Skylab, we developed the first concept of reusing the Starship Human Landing System (HLS) for that purpose. The team assessed the structural engineering changes required to turn a Starship HLS into a habitat, such as reinforcing the pressure vessel for multi-year use, adding insulation, and integrating airlocks and modules for mobility. We designed an Environmental Control and Life Support System (ECLSS) that could be retrofitted into the vehicle’s large interior, providing air recycling, water purification, and temperature control for a crew of several astronauts over months. Because radiation on the Moon is a serious concern, we evaluated shielding options for instance, lining sections of the Starship with water or packing lunar regolith against its hull to protect inhabitants from solar flares and cosmic rays. Human factors were central: the layout was planned to include crew quarters, workspaces, and exercise areas in the Starship’s voluminous upper stage We also considered psychological well-being (lighting, color, privacy, communications) for occupants during isolation. On the operations side, the study detailed how many launches would be necessary in total and nex concepts of autonomous rovers to perform this transformation such as reusing its propulsion tanks and structures for storage or scientific spaces. The scale of this concept is ambitious: a ~100-ton spacecraft repurposed as a moon base but our analysis showed it is technically feasible and could jump-start a sustainable human presence on the Moon. The study’s results, presented to the international space engineering community, highlighted an original solution: leveraging a lander (Starship HLS) as a ready-made infrastructure for lunar settlement, potentially saving cost and time in humanity’s return to the Moon.",
-    authors: "<strong>G. Bardi</strong>, S. Monat, A. Abdin, ISU Team", 
-    venue: "IAC 2021–2023",
-    links: [{t: "Project Page", u: "https://starship1.onuniverse.com/"}],
+    extendedDesc: "This project, conducted at International Space University’s (ISU) Space Studies Program, tackled the challenge of establishing a permanent habitat on the Moon. Inspired by multiple NASA concepts of reusing past structures into new ones, such as Skylab, we developed the first concept of reusing the Starship Human Landing System (HLS) for that purpose. The team assessed the structural engineering changes required to turn a Starship HLS into a habitat, such as reinforcing the pressure vessel for multi-year use, adding insulation, and integrating airlocks and modules for mobility. We designed an Environmental Control and Life Support System (ECLSS) that could be retrofitted into the vehicle’s large interior, providing air recycling, water purification, and temperature control for a crew of several astronauts over months. Because radiation on the Moon is a serious concern, we evaluated shielding options for instance, lining sections of the Starship with water or packing lunar regolith against its hull to protect inhabitants from solar flares and cosmic rays. Human factors were central: the layout was planned to include crew quarters, workspaces, and exercise areas in the Starship’s voluminous upper stage We also considered psychological well-being (lighting, color, privacy, communications) for occupants during isolation. On the operations side, the study detailed how many launches would be necessary in total and nex concepts of autonomous rovers to perform this transformation such as reusing its propulsion tanks and structures for storage or scientific spaces. The scale of this concept is ambitious: a ~100-ton spacecraft repurposed as a moon base but our analysis showed it is technically feasible and could jump-start a sustainable human presence on the Moon. The study’s results, presented to the international space engineering community, highlighted an original solution: leveraging a lander (Starship HLS) as a ready-made infrastructure for lunar settlement, potentially saving cost and time in humanity’s return to the Moon.",
+    authors: "A. Abdin*, <strong>G. Bardi*</strong>, S. Monat*, et al. - *equal contribution ", 
+    venue: "International Astronautical Congress 2021",
+    links: [{t: "Project full report, executive summary and paper", u: "https://starship1.onuniverse.com/"}],
     img: "images/ISU-starship.png"
   },
   
@@ -1418,34 +1419,34 @@ const PUBS = [
     desc: "Contributing to NASA’s next flagship exoplanet mission, the Habitable Worlds Observatory, through participation in the AI and ML working group for mission operations, and data analysis. This work explores how intelligent algorithms can optimize many capabilities of the HWO including observation schedules, automate telescope operations, and enhance analysis of faint exoplanet signals, addressing the grand challenge of detecting biosignatures on distant Earth-like planets.",
     extendedDesc: "As part of HWO development, early stage working groups have been constituted including on AI. As part of several AI working groups, I contributed to investigating machine learning strategies to support different capabilities of this future flagship telescope. On the mission operations side, we thought of how  AI could improve planners to autonomously schedule observations and calibrations, making real-time decisions to maximize the telescope’s productivity. For data analysis, we analyzed the possibility of having  ML models to sift through vast astronomical datasets and identify spectral or imaging clues indicative of exoplanets and potential biosignatures. The context is analogous to what the James Webb Space Telescope achieved, but HWO aims even further: directly imaging Earth-sized exoplanets in the habitable zone, which pushes the limits of sensitivity and data volume. AI tools will help isolate exoplanet light from overwhelming starlight, using advanced signal processing and anomaly detection to spot atmospheric biomarkers. We also contributed to a community white paper outlining how AI can assist in HWO’s mission architecture and science workflows. By embedding AI into this flagship’s design from the start, the project exemplifies how autonomous systems and human scientists can collaborate to accelerate discovery. The HWO AI/ML effort is thus paving the way for more efficient, insightful exoplanet exploration, potentially transforming how we search for life beyond our solar system.",
     authors: "V. Da Poian, U. Rebbapragada, <strong>G. Bardi</strong>, et al.", 
-    venue: "AGU 2024 · HWO Science Working Group", 
-    links: [{t: "HWO Mission", u: "https://www.nasa.gov/"}],
+    venue: "AGU 2024", 
+    links: [{t: "Link to AGU abstract", u: "https://www.nasa.gov/"}],
     img: "images/hwo.png"
   },
   { 
     id: "megsai", 
     title: "MEGS‑AI – EUV from AIA", 
-    inst: "FDL", 
+    inst: "FRONTIER DEVELOPMENT LAB (FDL)",  
     icon: "https://picsum.photos/seed/megsai/400/300", 
     body: "Mars",  // Linked to Mars
     desc: "Contributed to a deep learning model (“MEGS-AI”) that estimates the Sun’s full extreme ultraviolet (EUV) spectral irradiance using only images from the Solar Dynamics Observatory’s AIA camera. MEGS-AI bridges gaps when direct EUV spectrometers are offline or unavailable by reconstructing hidden spectral data from imaging. This capability helps provide continuous monitoring of solar irradiance  critical to space weather understanding and preserving assets in space.",
     extendedDesc: "This project addressed a key space weather challenge: improving the predictions of solar EUV flux in wavelength bands that aren’t directly measured at all times. By adapting the datasets and testing new architectures, we trained new neural networks, such as KANs (Kolmogorov-Arnold Networks), on historical data where both imaging and spectral readings were available, learning the complex mapping from 2D solar images to full spectral irradiance curves. The model ingests multi-band ultraviolet images from SDO/AIA (Atmospheric Imaging Assembly) instruments and outputs an estimated spectrum (e.g. data the EUV sensors like SDO/EVE would provide). By capturing correlations between the sun’s visible coronal structures and its emitted spectrum, our approach can fill in missing data during instrument outages or when only imagers are active. MEGS-AI (Machine-learning EUV Global Spectrum from AIA) employs deep learning architectures to achieve high accuracy, and it continues to improve as more labeled data (image-spectrum pairs) are accumulated. Using previous project SuNeRF to provide estimations of images of the Sun seen from the surface of Mars, MEGS-AI can then provide predictions of the full irradiance spectrum that can be validated against measurements performed by MAVEN (Mars Atmosphere and Volatile EvolutioN) probe. This work can  offer a real-time proxy for solar irradiance, which is a key input for models of Earth’s ionosphere, satellite drag calculations, and radiation dose forecasting for astronauts. In essence, this project aims at  demonstrating how AI can act as a virtual sensor in space science, augmenting physical instruments and ensuring robustness in crucial space weather data streams.",
     authors: "<strong>G. Bardi</strong>, B. Isola, R. Jarolim, et al.", 
     venue: "AGU 2024 · FDL 2024",
-    links: [{t: "FDL", u: "https://fdl.ai/"}],
+    links: [{t: "Accepted for oral presentation - link to abstract", u: "https://fdl.ai/"}],
     img: "images/megsai.png"
   },
   { 
     id: "sunerfs", 
     title: "SuNeRFs – 4D Solar Corona", 
-    inst: "FDL", 
+    inst: "FRONTIER DEVELOPMENT LAB (FDL)",  
     icon: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif", 
     body: "Sun",  // Linked to Sun
     desc: "Contributed to the development of Neural Radiance Field (NeRF) techniques to reconstruct a time-varying 3D model of the Sun’s corona from multi-viewpoint imagery. This deep learning approach captures the evolving density and temperature structure of the solar corona, enabling new scientific approximations  of solar characteristics. By creating a dynamic, volumetric map of the Sun’s atmosphere, the project provides researchers with unprecedented insight into the drivers of space weather.",
     extendedDesc: "In this interdisciplinary heliophysics project (part of NASA’s FDL AI accelerator), we built on top of the existing first 3D model of the sun (SuNeRF) leveraging NeRF technique typically  used for photorealistic scene reconstruction. This model  combines images from multiple spacecrafts (e.g. SDO/AIA and STEREO) to feed a neural network that learns a volumetric representation of the solar corona. The resulting “SuNeRF” model is a four-dimensional dataset (3D space + time) that shows values of emission and absorption in the sun . Technically, the neural network encodes the physics of light transport through glowing plasma, allowing it to infer hidden structures between observed viewpoints. The reconstructed output can be rendered from any angle, providing scientists estimations of visualizations not observed at a given time or never observed before. We contributed to improve this model by adding more physics into the model to predict not only emission and absorption but temperature and density as more useful insights for scientists. This original application of NeRF to solar physics opens the door for AI-driven models in space science ultimately improving our knowledge of the sun and coronal mass ejections that can affect satellites and power grids.",
     authors: "B. Isola, <strong>G. Bardi</strong>, R. Jarolim, et al.", 
     venue: "AGU 2024 · FDL 2024",
-    links: [{t: "FDL", u: "https://fdl.ai/"}],
+    links: [{t: "Accepted for interactive presentation - link to abstract", u: "https://fdl.ai/"}],
     img: "images/SUNERF.png"
   }
 ];
@@ -1478,9 +1479,9 @@ const ABOUT_ME = {
     }
   ],
   links: [
-    {t: "CV/Resume", u: "#"},
-    {t: "Research Portfolio", u: "#"},
-    {t: "Contact", u: "mailto:georgex@example.com"}
+    // {t: "CV/Resume", u: "#"},
+    // {t: "Research Portfolio", u: "#"},
+    {t: "Contact", u: "https://www.linkedin.com/in/bardi242/"}
   ],
   img: "images/headshot.jpg"
 };
@@ -1771,7 +1772,7 @@ function hideDetail() {
     // Desktop: Restore left panel to 45% when closing detail
     const leftPanel = document.getElementById('leftPanel');
     if (leftPanel) {
-      leftPanel.style.flex = '0 0 45%';
+      leftPanel.style.flex = '0 0 35%';
       updateImageSizes(55);
       // Call resize multiple times during transition to prevent black band
       requestAnimationFrame(() => {
@@ -3275,7 +3276,7 @@ if (!viperManualControl && !roverPOVMode) {
     const legendEl = document.getElementById('legendText');
     // legendEl.innerHTML = '<span class="legend-title">🎮 How to Navigate</span><strong>Interactive 3D Solar System</strong> – Click planets to highlight publications · ✋ Rotate: drag to orbit · ✢ Pan: click button or Shift+drag to translate · Scroll/pinch to zoom · Click publication to see details & zoom to planet · ⟷ Drag center divider to resize panels';
     legendEl.innerHTML = `
-  <div style="text-align:left; line-height:1.6;">
+  <div style="text-align:justify; line-height:1.6;">
     <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:10px; text-align:center;">How to Explore</div>
     <div style="margin-bottom:0;">  -> Each object with yellow reticle is associated to a project. Click on it to open detailed information of the project on the right.</div>
     <div style="margin-bottom:0;">  -> Use the <strong>control bar at the bottom</strong> to reset animation, pause or start it, control speed, rotate and pan.</div> 
