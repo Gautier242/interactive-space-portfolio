@@ -25,34 +25,30 @@
   --selected: #6ea3ff;
   --list-font-scale: 1; 
 }
-.pub-card {
-  font-size: calc(14px * var(--list-font-scale));
-}
-.pub-title {
-  font-size: calc(15px * var(--list-font-scale)) !important;
-}
-.pub-inst {
-  font-size: calc(11px * var(--list-font-scale)) !important;
-}
-.pub-subinst {
-  font-size: calc(10px * var(--list-font-scale)) !important;
-}
-.pub-desc {
-  font-size: calc(14px * var(--list-font-scale)) !important;
-}
-.pub-links {
-  font-size: calc(11px * var(--list-font-scale)) !important;
-}
-.detail-content {
-  font-size: calc(15px * var(--list-font-scale));
+
+.text-size-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  margin-right: 5px;
 }
 
-.detail-meta {
-  font-size: calc(14px * var(--list-font-scale)) !important;
-}
-.detail-links a {
-  font-size: calc(12px * var(--list-font-scale)) !important;
-}
+/* List View Scaling */
+.pub-card { font-size: calc(14px * var(--list-font-scale)); }
+.pub-title { font-size: calc(15px * var(--list-font-scale)) !important; }
+.pub-inst { font-size: calc(11px * var(--list-font-scale)) !important; }
+.pub-subinst { font-size: calc(10px * var(--list-font-scale)) !important; }
+.pub-desc { font-size: calc(14px * var(--list-font-scale)) !important; }
+.pub-links { font-size: calc(11px * var(--list-font-scale)) !important; }
+
+/* Detail View Scaling - Linking both views to one variable */
+.detail-title { font-size: calc(22px * var(--list-font-scale)) !important; }
+.detail-inst { font-size: calc(12px * var(--list-font-scale)) !important; }
+.detail-subinst { font-size: calc(11px * var(--list-font-scale)) !important; }
+.detail-desc, .detail-extended-desc { font-size: calc(15px * var(--list-font-scale)) !important; }
+.detail-meta, .detail-subsection li { font-size: calc(14px * var(--list-font-scale)) !important; }
+.detail-links a { font-size: calc(12px * var(--list-font-scale)) !important; }
 
 * {
   box-sizing: border-box;
@@ -1234,12 +1230,12 @@ a:hover {
     
     <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
       Publications & Projects
-      <div class="text-size-controls" style="display: flex; gap: 8px;">
-          <span style="font-size: 10px; color: var(--muted); text-transform: none; font-weight: normal;">Text Size:</span>
-          <button onclick="changeGlobalTextSize(-0.1)" style="padding: 2px 8px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 4px;">−</button>
-          <button onclick="changeGlobalTextSize(0.1)" style="padding: 2px 8px; cursor: pointer; background: rgba(255,255,255,0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 4px;">+</button>
+      <div class="text-size-controls" style="display: flex; gap: 8px; align-items: center;">
+          <span class="text-size-label">SET TEXT SIZE:</span>
+          <button onclick="changeGlobalTextSize(-0.1)" style="padding: 2px 10px; cursor: pointer; background: rgba(158,201,255,0.1); border: 2px solid var(--accent); color: var(--accent); border-radius: 4px; font-weight: bold;">−</button>
+          <button onclick="changeGlobalTextSize(0.1)" style="padding: 2px 10px; cursor: pointer; background: rgba(158,201,255,0.1); border: 2px solid var(--accent); color: var(--accent); border-radius: 4px; font-weight: bold;">+</button>
       </div>
-      </div>
+  </div>
   <div class="pubs-scroll" id="pubsList"></div>
     
     <!-- Detail View -->
@@ -1248,9 +1244,9 @@ a:hover {
         <button class="detail-close" onclick="hideDetail()" title="Close">×</button>
         <h2 id="detailHeaderTitle">Publication Details</h2>
         <div class="text-size-controls">
-          <button onclick="changeTextSize(-0.1)" title="Decrease text size">−</button>
-          <button onclick="changeTextSize(0.1)" title="Increase text size">+</button>
-        </div>
+          <button onclick="changeGlobalTextSize(-0.1)" title="Decrease text size">−</button>
+          <button onclick="changeGlobalTextSize(0.1)" title="Increase text size">+</button>
+      </div>
         </div>
       <div class="detail-content">
         <div class="detail-top">
@@ -4275,11 +4271,13 @@ setTimeout(() => initMoonSurface(), 500);
 
 let globalFontScale = 1.0;
 function changeGlobalTextSize(delta) {
-    // Limits the scale between 0.8x and 1.6x size
-    globalFontScale = Math.max(0.8, Math.min(1.6, globalFontScale + delta));
+    // Limits the scale between 0.8x and 1.8x size
+    globalFontScale = Math.max(0.8, Math.min(1.8, globalFontScale + delta));
+    
+    // This one variable now controls BOTH list and detail view 
+    // because we mapped them both to --list-font-scale in the CSS
     document.documentElement.style.setProperty('--list-font-scale', globalFontScale);
     
-    // Optional: Force a small refresh of layout if needed
     if (typeof onWindowResize === 'function') onWindowResize();
 }
 
