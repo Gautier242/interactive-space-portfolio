@@ -3,50 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Solar System Research Map – Gautier Bardi de Fourtou</title>
+<title>Gautier Bardi de Fourtou — AI for Space · Interactive Mission Portfolio</title>
+<meta name="description" content="Interactive space portfolio of Gautier Bardi de Fourtou — AI for Space research at MIT Media Lab (Responsive Environments) and NASA Jet Propulsion Laboratory. Explore the solar system to discover publications and projects.">
 <script>
 // Mobile detection - add class to body before styles load
 (function() {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
                    (window.innerWidth <= 768 && window.innerHeight <= 1024);
   if (isMobile) {
     document.documentElement.classList.add('mobile-device');
   }
 })();
 </script>
-</script>
+<link rel="preload" href="assets/fonts/cabinet-grotesk-800.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/ibm-plex-sans-var-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/ibm-plex-mono-500-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="css/main.css">
+<link rel="stylesheet" href="css/theme.css">
 </head>
 <body>
 <!-- Simple Analytics counter -->
 <script data-goatcounter="https://g242-space-portfolio.goatcounter.com/count"
         async src="//gc.zgo.at/count.js"></script>
 <header class="header">
-  <div class="neural-bg" id="headerNeural"></div>
-  
-  <img src="images/headshot.jpg" alt="Gautier Bardi de Fourtou" onclick="showAbout()"/>
+  <div class="neural-bg" id="headerNeural" aria-hidden="true"></div>
+
+  <img src="images/headshot.jpg" alt="Portrait of Gautier Bardi de Fourtou" onclick="showAbout()"/>
   <div>
-    <div class="name" onclick="showAbout()">Gautier Bardi de Fourtou</div>
+    <h1 class="name" onclick="showAbout()" tabindex="0" role="button"
+        onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showAbout();}">Gautier Bardi de Fourtou</h1>
     <div class="sub">AI for Space · MIT Media Lab (Responsive Environments) · NASA Jet Propulsion Laboratory</div>
   </div>
-  <div class="links">
+  <nav class="links" aria-label="Profile links">
     <a href="#about" onclick="showAbout(); return false;">About Me</a>
-    <a href="https://scholar.google.co.uk/citations?user=Dm0hKWoAAAAJ&hl=en" target="_blank">Google Scholar</a>
-    <a href="https://www.researchgate.net/profile/Gautier-Bardi-De-Fourtou" target="_blank">ResearchGate</a>
-    <a href="https://github.com/Gautier242?tab=overview&from=2025-12-01&to=2025-12-09" target="_blank">GitHub</a>
-  </div>
+    <a href="https://scholar.google.co.uk/citations?user=Dm0hKWoAAAAJ&hl=en" target="_blank" rel="noopener">Google Scholar</a>
+    <a href="https://www.researchgate.net/profile/Gautier-Bardi-De-Fourtou" target="_blank" rel="noopener">ResearchGate</a>
+    <a href="https://github.com/Gautier242?tab=overview&from=2025-12-01&to=2025-12-09" target="_blank" rel="noopener">GitHub</a>
+  </nav>
 </header>
 <div class="app">
-  <section class="left" id="leftPanel">
+  <section class="left" id="leftPanel" aria-label="Interactive solar system">
     <canvas id="canvas3d"></canvas>
     <canvas id="moonSurface" class="moon-surface"></canvas>
     <button class="instructions-toggle" id="instructionsToggle">View interaction tips</button>
-    <div class="controls">
-      <button id="btnReset" title="Reset View">Reset</button>
-      <button id="btnPause" title="Pause/Play">⏸</button>
-      
+    <div class="controls" role="toolbar" aria-label="Scene controls">
+      <button id="btnReset" title="Reset View" aria-label="Reset view">Reset</button>
+      <button id="btnPause" title="Pause/Play" aria-label="Pause or play animation">⏸</button>
+
       <div style="position: relative;">
-        <button id="btnSpeed" title="Animation Speed">1x</button>
+        <button id="btnSpeed" title="Animation Speed" aria-label="Animation speed">1x</button>
         <div class="speed-dropdown" id="speedDropdown">
           <button data-speed="0.25">0.25x</button>
           <button data-speed="0.5">0.5x</button>
@@ -57,28 +62,28 @@
       </div>
 
       <div id="standardControls" style="display: flex; gap: 8px;">
-        <button id="btnZoomIn" title="Zoom In">+</button>
-        <button id="btnZoomOut" title="Zoom Out">−</button>
-        <button id="btnRotate" title="Rotate Mode (Drag)" class="active">✋</button>
-        <button id="btnPan" title="Pan Mode (Shift+Drag)">✢</button>
+        <button id="btnZoomIn" title="Zoom In" aria-label="Zoom in">+</button>
+        <button id="btnZoomOut" title="Zoom Out" aria-label="Zoom out">−</button>
+        <button id="btnRotate" title="Rotate Mode (Drag)" aria-label="Rotate mode" class="active">✋</button>
+        <button id="btnPan" title="Pan Mode (Shift+Drag)" aria-label="Pan mode">✢</button>
       </div>
 
       <div id="roverControls" style="display: none; gap: 8px;">
-        <button id="btnRoverForward" title="Forward">↑</button>
-        <button id="btnRoverBackward" title="Backward">↓</button>
-        <button id="btnRoverLeft" title="Left">←</button>
-        <button id="btnRoverRight" title="Right">→</button>
+        <button id="btnRoverForward" title="Forward" aria-label="Drive forward">↑</button>
+        <button id="btnRoverBackward" title="Backward" aria-label="Drive backward">↓</button>
+        <button id="btnRoverLeft" title="Left" aria-label="Turn left">←</button>
+        <button id="btnRoverRight" title="Right" aria-label="Turn right">→</button>
       </div>
     </div>
-    
+
     <button class="help-toggle-btn" onclick="toggleHelp()">
-      <span>ⓘ</span> HOW TO EXPLORE
+      <span aria-hidden="true">ⓘ</span> HOW TO EXPLORE
     </button>
 
     <div class="legend active visible" id="legendText" onclick="toggleHelp()">
   <div style="text-align:justify; line-height:1.6;">
     <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:25px; text-align:center;">  </div>
-    <div style="margin-bottom:1px;">• Objects with yellow reticles are linked to projects. Click them to view details.</div>
+    <div style="margin-bottom:1px;">• Objects with amber reticles are linked to projects. Click them to view details.</div>
     <div style="margin-bottom:1px;">• Use the bottom bar to pause, play, change speed or reset the animation.</div>
     <div style="margin-bottom:1px;">• Drag to rotate, Shift+Drag to pan, Scroll to zoom.</div>
     <div style="margin-bottom:7px;">• Drag the vertical divider to resize your view.</div>
@@ -86,30 +91,30 @@
   </div>
 </div>
   </section>
-  <div class="resizer" id="resizer"></div>
+  <div class="resizer" id="resizer" role="separator" aria-label="Resize panels" aria-orientation="vertical"></div>
   <aside class="right">
-    <div class="neural-bg" id="rightNeural"></div>
-    
+    <div class="neural-bg" id="rightNeural" aria-hidden="true"></div>
+
     <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
-      Publications & Projects
+      <h2 style="font: inherit; letter-spacing: inherit; margin: 0;">Publications &amp; Projects</h2>
       <div class="text-size-controls" style="display: flex; gap: 8px; align-items: center; margin-left: auto;">
         <span class="text-size-label">SET TEXT SIZE:</span>
-        <button onclick="changeGlobalTextSize(-0.1)" title="Decrease text size">−</button>
-        <button onclick="changeGlobalTextSize(0.1)" title="Increase text size">+</button>
+        <button onclick="changeGlobalTextSize(-0.1)" title="Decrease text size" aria-label="Decrease text size">−</button>
+        <button onclick="changeGlobalTextSize(0.1)" title="Increase text size" aria-label="Increase text size">+</button>
     </div>
   </div>
   <div class="pubs-scroll" id="pubsList"></div>
-    
+
     <!-- Detail View -->
-    <div class="detail-view" id="detailView">
+    <div class="detail-view" id="detailView" role="region" aria-label="Project details">
       <div class="detail-header">
-        <button class="detail-close" onclick="hideDetail()" title="Close">×</button>
+        <button class="detail-close" onclick="hideDetail()" title="Close" aria-label="Close details">×</button>
         <h2 id="detailHeaderTitle">Publication Details</h2>
-        
+
         <div class="text-size-controls" style="display: flex; gap: 10px; align-items: center; margin-left: auto;">
             <span class="text-size-label">SET TEXT SIZE:</span>
-            <button onclick="changeGlobalTextSize(-0.1)" title="Decrease text size">−</button>
-            <button onclick="changeGlobalTextSize(0.1)" title="Increase text size">+</button>
+            <button onclick="changeGlobalTextSize(-0.1)" title="Decrease text size" aria-label="Decrease text size">−</button>
+            <button onclick="changeGlobalTextSize(0.1)" title="Increase text size" aria-label="Increase text size">+</button>
         </div>
         </div>
       <div class="detail-content">
@@ -137,10 +142,9 @@
     </div>
   </aside>
   <div class="hover-hint" id="hoverHint"></div>
-  </section>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="vendor/three.min.js"></script>
+<script src="js/ui.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
