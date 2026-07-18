@@ -998,53 +998,15 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(leftPanel.clientWidth, leftPanel.clientHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-const ambient = new THREE.AmbientLight(0x222244, 0.4);
+const ambient = new THREE.AmbientLight(0x1c2333, 0.32);
 scene.add(ambient);
 
-const sunLight = new THREE.PointLight(0xfff8e7, 2.8, 2000);
+const sunLight = new THREE.PointLight(0xfff8e7, 3.1, 2000);
 sunLight.position.set(0, 0, 0);
 scene.add(sunLight);
 
-// Enhanced starfield
-const starsGeo = new THREE.BufferGeometry();
-const starsVerts = [];
-const starsColors = [];
-const starsSizes = [];
-
-for (let i = 0; i < 25000; i++) {
-  const x = (Math.random() - 0.5) * 4000;
-  const y = (Math.random() - 0.5) * 4000;
-  const z = (Math.random() - 0.5) * 4000;
-  starsVerts.push(x, y, z);
-  
-  const color = new THREE.Color();
-  const colorType = Math.random();
-  if (colorType < 0.7) {
-    color.setHSL(0.6, 0.2, 0.8 + Math.random() * 0.2);
-  } else if (colorType < 0.85) {
-    color.setHSL(0.15, 0.3, 0.9);
-  } else {
-    color.setHSL(0.05, 0.5, 0.95);
-  }
-  starsColors.push(color.r, color.g, color.b);
-  
-  starsSizes.push(0.8 + Math.random() * 1.5);
-}
-
-starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starsVerts, 3));
-starsGeo.setAttribute('color', new THREE.Float32BufferAttribute(starsColors, 3));
-starsGeo.setAttribute('size', new THREE.Float32BufferAttribute(starsSizes, 1));
-
-const starsMat = new THREE.PointsMaterial({ 
-  size: 1.5,
-  vertexColors: true,
-  transparent: true,
-  opacity: 0.9,
-  sizeAttenuation: true
-});
-
-const starField = new THREE.Points(starsGeo, starsMat);
-scene.add(starField);
+// Deep-space environment: layered starfield + Milky Way dome (environment.js)
+SpaceEnv.init(scene);
 
 // Moon Surface Scene
 let moonScene, moonCamera, moonRenderer;
@@ -1476,17 +1438,8 @@ sun.userData.reticle = sunReticle;
 
 scene.add(sun);
 
-for (let i = 0; i < 4; i++) {
-  const glowGeo = new THREE.SphereGeometry(22 + i * 4, 32, 32);
-  const glowMat = new THREE.MeshBasicMaterial({
-    color: 0xffaa00,
-    transparent: true,
-    opacity: 0.18 - i * 0.04,
-    side: THREE.BackSide
-  });
-  const glow = new THREE.Mesh(glowGeo, glowMat);
-  sun.add(glow);
-}
+// Granulation shader, corona sprite and chromosphere rim (environment.js)
+SpaceEnv.initSun(sun);
 
 // BODY DATA - CUSTOMIZE 3D OBJECTS HERE
 const bodyData = [
@@ -1848,8 +1801,8 @@ bodyData.forEach(d => {
     }
     
     const orbitGeo = new THREE.BufferGeometry().setFromPoints(points);
-    const orbitMat = new THREE.LineDashedMaterial({ 
-      color: 0xffffff, transparent: true, opacity: 0.35, dashSize: 3, gapSize: 2, linewidth: 1
+    const orbitMat = new THREE.LineDashedMaterial({
+      color: 0x8fb0c4, transparent: true, opacity: 0.18, dashSize: 3, gapSize: 2, linewidth: 1
     });
     const orbitLine = new THREE.Line(orbitGeo, orbitMat);
     orbitLine.computeLineDistances();
@@ -1866,8 +1819,8 @@ bodyData.forEach(d => {
     }
     
     const moonOrbitGeo = new THREE.BufferGeometry().setFromPoints(points);
-    const moonOrbitMat = new THREE.LineDashedMaterial({ 
-      color: 0x888888, transparent: true, opacity: 0.25, dashSize: 2, gapSize: 1.5
+    const moonOrbitMat = new THREE.LineDashedMaterial({
+      color: 0x6e8494, transparent: true, opacity: 0.12, dashSize: 2, gapSize: 1.5
     });
     const moonOrbitLine = new THREE.Line(moonOrbitGeo, moonOrbitMat);
     moonOrbitLine.computeLineDistances();
@@ -1908,7 +1861,8 @@ let starshipDirection = 1; // 1 for up, -1 for down
 
 function animate() {
   requestAnimationFrame(animate);
-  
+  SpaceEnv.update(performance.now() * 0.001);
+
   if (moonSurfaceActive) {
     const legendEl = document.getElementById('legendText');
     
