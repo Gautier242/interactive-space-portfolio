@@ -86,7 +86,7 @@
         'void main() {',
         '  vec2 uv = gl_PointCoord - 0.5;',
         '  float d = length(uv);',
-        '  float a = smoothstep(0.5, 0.08, d) * vTwinkle;',
+        '  float a = (1.0 - smoothstep(0.08, 0.5, d)) * vTwinkle;',
         '  gl_FragColor = vec4(vColor, a);',
         '}'
       ].join('\n'),

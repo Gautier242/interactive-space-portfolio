@@ -619,19 +619,13 @@ function highlightBody(bodyName) {
   if (!body) return;
   
   const mesh = body.mesh || body;
-  if (mesh.material) {
-    if (mesh.material.emissive) {
-      mesh.material.emissive.setHex(0xffffff);
-      mesh.material.emissiveIntensity = 0.3;
+  if (PlanetMats.setHighlight(mesh, true)) return;
+  mesh.traverse(node => {
+    if (node.material && node.material.emissive) {
+      node.material.emissive.setHex(0xffffff);
+      node.material.emissiveIntensity = 0.3;
     }
-  } else if (mesh.children) {
-    mesh.children.forEach(child => {
-      if (child.material && child.material.emissive) {
-        child.material.emissive.setHex(0xffffff);
-        child.material.emissiveIntensity = 0.3;
-      }
-    });
-  }
+  });
 }
 
 function unhighlightBody(bodyName) {
@@ -639,21 +633,13 @@ function unhighlightBody(bodyName) {
   if (!body) return;
   
   const mesh = body.mesh || body;
-  const originalColor = bodyData.find(d => d.name === bodyName)?.color || 0x888888;
-  
-  if (mesh.material) {
-    if (mesh.material.emissive) {
-      mesh.material.emissive.setHex(originalColor);
-      mesh.material.emissiveIntensity = 0.05;
+  if (PlanetMats.setHighlight(mesh, false)) return;
+  mesh.traverse(node => {
+    if (node.material && node.material.emissive) {
+      node.material.emissive.setHex(0x000000);
+      node.material.emissiveIntensity = 0;
     }
-  } else if (mesh.children) {
-    mesh.children.forEach(child => {
-      if (child.material && child.material.emissive) {
-        child.material.emissive.setHex(originalColor);
-        child.material.emissiveIntensity = 0.05;
-      }
-    });
-  }
+  });
 }
 
 function getCurrentViewTarget() {
@@ -1414,7 +1400,7 @@ function createCornerReticle(s) {
   ];
   
   g.setAttribute('position', new THREE.Float32BufferAttribute(v_new_shape, 3));
-  const mesh = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xffff00, transparent: true }));
+  const mesh = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ color: 0xf0a548, transparent: true }));
   
   // No 45 degree rotation needed for this shape
   // mesh.rotation.z = Math.PI / 4; 
@@ -1476,300 +1462,21 @@ const originalColors = new Map();
 
 bodyData.forEach(d => {
   let mesh;
-  
+
   if (d.isStation) {
-    const group = new THREE.Group();
-    
-    const trussGeo = new THREE.BoxGeometry(10, 0.3, 0.3);
-    const trussMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.2 });
-    const truss = new THREE.Mesh(trussGeo, trussMat);
-    group.add(truss);
-    
-    const moduleGeo = new THREE.CylinderGeometry(0.5, 0.5, 3, 16);
-    const moduleMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, metalness: 0.8, roughness: 0.3 });
-    
-    const zarya = new THREE.Mesh(moduleGeo, moduleMat);
-    zarya.rotation.z = Math.PI / 2;
-    zarya.position.x = -2;
-    group.add(zarya);
-    
-    const unity = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.5, 16), moduleMat);
-    unity.rotation.z = Math.PI / 2;
-    group.add(unity);
-    
-    const destiny = new THREE.Mesh(moduleGeo, moduleMat);
-    destiny.rotation.z = Math.PI / 2;
-    destiny.position.x = 2;
-    group.add(destiny);
-    
-    const zvezdaGeo = new THREE.CylinderGeometry(0.45, 0.45, 2.5, 16);
-    const zvezda = new THREE.Mesh(zvezdaGeo, moduleMat);
-    zvezda.rotation.z = Math.PI / 2;
-    zvezda.position.x = -4;
-    group.add(zvezda);
-    
-    const panelGeo = new THREE.BoxGeometry(4.5, 0.05, 1.8);
-    const panelMat = new THREE.MeshStandardMaterial({ 
-      color: 0x1a3a5a, 
-      metalness: 0.7, 
-      roughness: 0.2,
-      emissive: 0x0a1f3a,
-      emissiveIntensity: 0.3
-    });
-    
-    for (let i = 0; i < 2; i++) {
-      const panel = new THREE.Mesh(panelGeo, panelMat);
-      panel.position.set(-3.5, 0, 2.5 + i * 1);
-      panel.rotation.x = Math.PI / 2;
-      group.add(panel);
-    }
-    
-    for (let i = 0; i < 2; i++) {
-      const panel = new THREE.Mesh(panelGeo, panelMat);
-      panel.position.set(-3.5, 0, -2.5 - i * 1);
-      panel.rotation.x = Math.PI / 2;
-      group.add(panel);
-    }
-    
-    for (let i = 0; i < 2; i++) {
-      const panel = new THREE.Mesh(panelGeo, panelMat);
-      panel.position.set(3.5, 0, 2.5 + i * 1);
-      panel.rotation.x = Math.PI / 2;
-      group.add(panel);
-    }
-    
-    for (let i = 0; i < 2; i++) {
-      const panel = new THREE.Mesh(panelGeo, panelMat);
-      panel.position.set(3.5, 0, -2.5 - i * 1);
-      panel.rotation.x = Math.PI / 2;
-      group.add(panel);
-    }
-    
-    const radiatorGeo = new THREE.BoxGeometry(0.3, 0.05, 2);
-    const radiatorMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.6, roughness: 0.4 });
-    
-    for (let i = 0; i < 6; i++) {
-      const radiator = new THREE.Mesh(radiatorGeo, radiatorMat);
-      radiator.position.set(-1 + i * 0.8, 0.7, 0);
-      group.add(radiator);
-    }
-    
-    const armGeo = new THREE.CylinderGeometry(0.08, 0.08, 2.5, 12);
-    const arm = new THREE.Mesh(armGeo, trussMat);
-    arm.position.set(1, 0.6, 0.5);
-    arm.rotation.z = 0.5;
-    group.add(arm);
-    group.scale.set(0.5, 0.5, 0.5); 
-    group.userData = { name: d.name };
-    group.userData = { name: d.name };
-    mesh = group;
-    
+    mesh = Spacecraft.buildISS();
   } else if (d.isLagrange) {
-    // Habitable Worlds Observatory - telescope design
-    const group = new THREE.Group();
-    
-    // Primary mirror (hexagonal segments style)
-    const mirrorGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.15, 6);
-    const mirrorMat = new THREE.MeshStandardMaterial({ 
-      color: 0xffd700, 
-      metalness: 0.95, 
-      roughness: 0.05,
-      emissive: 0x887700,
-      emissiveIntensity: 0.2
-    });
-    const mirror = new THREE.Mesh(mirrorGeo, mirrorMat);
-    mirror.rotation.x = Math.PI / 2;
-    mirror.position.z = -0.5;
-    group.add(mirror);
-    
-    // Secondary mirror
-    const secMirrorGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.08, 6);
-    const secMirror = new THREE.Mesh(secMirrorGeo, mirrorMat);
-    secMirror.rotation.x = Math.PI / 2;
-    secMirror.position.z = 1.5;
-    group.add(secMirror);
-    
-    // Support struts
-    const strutGeo = new THREE.CylinderGeometry(0.03, 0.03, 2, 8);
-    const strutMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
-    
-    for (let i = 0; i < 4; i++) {
-      const strut = new THREE.Mesh(strutGeo, strutMat);
-      const angle = (i / 4) * Math.PI * 2;
-      strut.position.x = Math.cos(angle) * 0.6;
-      strut.position.y = Math.sin(angle) * 0.6;
-      strut.position.z = 0.5;
-      group.add(strut);
-    }
-    
-    // Telescope body/bus
-    const bodyGeo = new THREE.BoxGeometry(0.8, 0.8, 1.5);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.4 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.z = -1.5;
-    group.add(body);
-    
-    // Sun shield (multi-layer)
-    const shieldGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.05, 6);
-    const shieldMat = new THREE.MeshStandardMaterial({ 
-      color: 0x8888aa, 
-      metalness: 0.6, 
-      roughness: 0.3,
-      transparent: true,
-      opacity: 0.9
-    });
-    
-    for (let i = 0; i < 3; i++) {
-      const shield = new THREE.Mesh(shieldGeo, shieldMat);
-      shield.rotation.x = Math.PI / 2;
-      shield.position.z = -2.5 - i * 0.3;
-      group.add(shield);
-    }
-    
-    // Solar panels
-    const panelGeo = new THREE.BoxGeometry(2, 0.03, 0.8);
-    const panelMat = new THREE.MeshStandardMaterial({ 
-      color: 0x1a3a5a, 
-      metalness: 0.7, 
-      roughness: 0.2,
-      emissive: 0x0a1f3a,
-      emissiveIntensity: 0.3
-    });
-    
-    const panel1 = new THREE.Mesh(panelGeo, panelMat);
-    panel1.position.set(-1.2, 0, -1.5);
-    group.add(panel1);
-    
-    const panel2 = new THREE.Mesh(panelGeo, panelMat);
-    panel2.position.set(1.2, 0, -1.5);
-    group.add(panel2);
-    
-    // High-gain antenna
-    const antennaGeo = new THREE.ConeGeometry(0.4, 0.3, 16);
-    const antenna = new THREE.Mesh(antennaGeo, strutMat);
-    antenna.position.set(0, 0, -3.5);
-    antenna.rotation.x = Math.PI;
-    group.add(antenna);
-    
-    group.userData = { name: d.name };
-    mesh = group;
-    
+    mesh = Spacecraft.buildHWO();
   } else if (d.isSpacecraft) {
-    const group = new THREE.Group();
-    const bodyGeo = new THREE.CylinderGeometry(0.25, 0.23, 1.5, 16);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xf0f0f0, metalness: 0.9, roughness: 0.2 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 1.4;
-    group.add(body);
-    
-    const noseGeo = new THREE.ConeGeometry(0.25, 0.5, 16);
-    const nose = new THREE.Mesh(noseGeo, bodyMat);
-    nose.position.y = 2.4;
-    group.add(nose);
-    
-    const legGeo = new THREE.CylinderGeometry(0.03, 0.05, 0.9, 8);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
-    for (let i = 0; i < 4; i++) {
-      const leg = new THREE.Mesh(legGeo, legMat);
-      const angle = (i / 4) * Math.PI * 2;
-      leg.position.x = Math.cos(angle) * 0.3;
-      leg.position.z = Math.sin(angle) * 0.3;
-      leg.position.y = 0.45;
-      leg.rotation.z = Math.cos(angle) * 0.15;
-      leg.rotation.x = Math.sin(angle) * 0.15;
-      group.add(leg);
-    }
-    
-    const engineGeo = new THREE.CylinderGeometry(0.23, 0.25, 0.4, 16);
-    const engineMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.7, roughness: 0.4 });
-    const engine = new THREE.Mesh(engineGeo, engineMat);
-    engine.position.y = 0.5;
-    group.add(engine);
-    group.scale.set(0.5, 0.5, 0.5);
-    group.userData = { name: d.name };
-    mesh = group;
-    
+    mesh = Spacecraft.buildStarship();
   } else if (d.isRover) {
-    const group = new THREE.Group();
-    const bodyGeo = new THREE.BoxGeometry(0.5, 0.25, 0.6);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.7, roughness: 0.4 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    body.position.y = 0.2;
-    group.add(body);
-    
-    const wheelGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.12, 12);
-    const wheelMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.8 });
-    const wheelPositions = [[-0.25, 0.1, 0.35], [-0.25, 0.1, -0.35], [0.25, 0.1, 0.35], [0.25, 0.1, -0.35]];
-    wheelPositions.forEach(pos => {
-      const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-      wheel.rotation.z = Math.PI / 2;
-      wheel.position.set(...pos);
-      group.add(wheel);
-    });
-    
-    const armGeo = new THREE.BoxGeometry(0.08, 0.5, 0.08);
-    const armMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.8, roughness: 0.3 });
-    const arm = new THREE.Mesh(armGeo, armMat);
-    arm.position.set(0.3, 0.35, 0);
-    arm.rotation.z = -0.3;
-    group.add(arm);
-    
-    const panelGeo = new THREE.BoxGeometry(0.6, 0.02, 0.5);
-    const panelMat = new THREE.MeshStandardMaterial({ color: 0x0a1f40, metalness: 0.6, roughness: 0.3 });
-    const panel = new THREE.Mesh(panelGeo, panelMat);
-    panel.position.y = 0.4;
-    panel.rotation.x = -0.15;
-    group.add(panel);
-    
-    const antennaGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.3, 8);
-    const antenna = new THREE.Mesh(antennaGeo, armMat);
-    antenna.position.set(-0.2, 0.5, -0.2);
-    group.add(antenna);
-    group.userData = { name: d.name };
-    mesh = group;
-    
+    mesh = Spacecraft.buildViper();
   } else if (d.isSatellite) {
-    const group = new THREE.Group();
-    const bodyGeo = new THREE.BoxGeometry(0.4, 0.4, 0.6);
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.3 });
-    const body = new THREE.Mesh(bodyGeo, bodyMat);
-    group.add(body);
-    
-    const panelGeo = new THREE.BoxGeometry(1.2, 0.02, 0.5);
-    const panelMat = new THREE.MeshStandardMaterial({ color: 0x0a1f40, metalness: 0.7, roughness: 0.3 });
-    const panel1 = new THREE.Mesh(panelGeo, panelMat);
-    panel1.position.x = -0.6;
-    group.add(panel1);
-    const panel2 = new THREE.Mesh(panelGeo, panelMat);
-    panel2.position.x = 0.6;
-    group.add(panel2);
-    
-    const antennaGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.5, 8);
-    const antennaMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.9, roughness: 0.2 });
-    const antenna = new THREE.Mesh(antennaGeo, antennaMat);
-    antenna.position.y = 0.45;
-    group.add(antenna);
-    
-    const dishGeo = new THREE.ConeGeometry(0.15, 0.1, 16);
-    const dish = new THREE.Mesh(dishGeo, antennaMat);
-    dish.position.y = 0.7;
-    dish.rotation.x = Math.PI;
-    group.add(dish);
-    group.userData = { name: d.name };
-    mesh = group;
-    
+    mesh = Spacecraft.buildLRO();
   } else {
-    const geo = new THREE.SphereGeometry(d.size, 64, 64);
-    const mat = new THREE.MeshStandardMaterial({ 
-      color: d.color,
-      roughness: d.roughness || 0.7,
-      metalness: 0,
-      emissive: d.color,
-      emissiveIntensity: 0.05
-    });
-    mesh = new THREE.Mesh(geo, mat);
+    mesh = PlanetMats.createPlanet(d);
   }
-  
+
   mesh.userData = { name: d.name };
   if (['Earth', 'Moon', 'Mars', 'HWO'].includes(d.name)) {
     const rSz = d.name === 'HWO' ? 5 : (d.size * 1.6); // Custom size adjustments
@@ -1830,16 +1537,7 @@ bodyData.forEach(d => {
   }
   
   if (d.hasRing) {
-    const ringGeo = new THREE.RingGeometry(d.size * 1.5, d.size * 2.5, 128);
-    const ringMat = new THREE.MeshBasicMaterial({ 
-      color: 0xc9b18a,
-      side: THREE.DoubleSide,
-      transparent: true,
-      opacity: 0.7
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    mesh.add(ring);
+    PlanetMats.addRing(mesh, d.size);
   }
 });
 
@@ -1861,7 +1559,9 @@ let starshipDirection = 1; // 1 for up, -1 for down
 
 function animate() {
   requestAnimationFrame(animate);
-  SpaceEnv.update(performance.now() * 0.001);
+  const tNow = performance.now() * 0.001;
+  SpaceEnv.update(tNow);
+  PlanetMats.update(tNow);
 
   if (moonSurfaceActive) {
     const legendEl = document.getElementById('legendText');
