@@ -457,6 +457,134 @@ body.first-light #canvas3d {
   to { opacity: 1; filter: brightness(1) blur(0); }
 }
 
+/* ==========================================================================
+   MISSION: VIPER — instrument HUD, intro card, exit control
+   ========================================================================== */
+#missionHud {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 60;
+  font-family: var(--font-mono);
+  background: rgba(7, 10, 16, 0.82);
+  border: 1px solid var(--hairline-strong);
+  border-top: 2px solid var(--signal);
+  border-radius: 8px;
+  padding: 10px 14px;
+  min-width: 148px;
+  display: none;
+  backdrop-filter: blur(6px);
+}
+#missionHud.visible { display: block; animation: hud-boot 0.5s ease-out; }
+.hud-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+  line-height: 1.9;
+}
+.hud-title {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--signal);
+  border-bottom: 1px solid var(--hairline);
+  padding-bottom: 5px;
+  margin-bottom: 5px;
+}
+.hud-label { color: var(--muted); font-size: 10px; letter-spacing: 0.08em; }
+.hud-value { color: var(--ink); font-weight: 600; margin-left: auto; font-variant-numeric: tabular-nums; }
+.hud-unit { color: var(--muted); font-size: 9px; }
+
+#missionExit {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 60;
+  display: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  background: rgba(7, 10, 16, 0.85);
+  border: 1px solid rgba(240, 165, 72, 0.5);
+  color: var(--signal);
+  border-radius: 7px;
+  padding: 9px 14px;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+}
+#missionExit.visible { display: block; }
+#missionExit:hover { background: var(--signal); color: #0a0c12; }
+
+#missionIntro {
+  position: absolute;
+  inset: 0;
+  z-index: 90;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(ellipse at 50% 45%, rgba(1, 2, 8, 0.25), rgba(1, 2, 8, 0.78));
+}
+#missionIntro.visible { display: flex; }
+.intro-card {
+  max-width: 340px;
+  margin: 16px;
+  background: rgba(9, 12, 18, 0.96);
+  border: 1px solid var(--hairline-strong);
+  border-top: 2px solid var(--signal);
+  border-radius: 10px;
+  padding: 22px 24px;
+  text-align: center;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.7);
+  animation: hud-boot 0.45s ease-out;
+}
+.intro-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.intro-card h3 {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 22px;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+.intro-card p { font-size: 13px; color: #c9cfd9; line-height: 1.55; margin-bottom: 14px; }
+.intro-keys {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.intro-keys span { color: var(--signal); font-weight: 600; }
+#missionStart {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  background: var(--signal);
+  color: #0a0c12;
+  border: none;
+  border-radius: 7px;
+  padding: 11px 22px;
+  cursor: pointer;
+}
+#missionStart:hover { background: var(--signal-bright); }
+
+@keyframes hud-boot {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.mobile-device #missionHud { top: 10px; right: 10px; min-width: 122px; padding: 8px 10px; }
+.mobile-device #missionHud .hud-row { font-size: 10.5px; line-height: 1.7; }
+.mobile-device #missionExit { bottom: 76px; right: 10px; }
+
 /* ---- Reduced motion: kill all decorative animation ------------------------ */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

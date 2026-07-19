@@ -404,20 +404,23 @@
     g.userData.wheels = [];
     wheelPos.forEach(function (wp) {
       var wheel = new THREE.Group();
+      // inner spin group: rotates about the cylinder axis so wheels can roll
+      var spin = new THREE.Group();
       var tire = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 0.34, 18), dark);
-      wheel.add(tire);
+      spin.add(tire);
       for (var i = 0; i < 12; i++) {
         var a = (i / 12) * Math.PI * 2;
         var grouser = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.36, 0.04), steel);
         grouser.position.set(Math.cos(a) * 0.45, 0, Math.sin(a) * 0.45);
         grouser.rotation.y = -a;
         grouser.rotation.z = Math.PI / 2;
-        wheel.add(grouser);
+        spin.add(grouser);
       }
+      wheel.add(spin);
       wheel.rotation.z = Math.PI / 2;
       wheel.position.set(wp[0], wp[1], wp[2]);
       g.add(wheel);
-      g.userData.wheels.push(wheel);
+      g.userData.wheels.push(spin);
       // suspension arm
       var arm = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.08, 0.08), steel);
       arm.position.set(wp[0] * 0.75, 0.75, wp[2]);

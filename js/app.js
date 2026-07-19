@@ -144,7 +144,7 @@ const PUBS = [
     authors: "<strong>G. Bardi</strong>, T. Lu, M. Archer, J. Wang", 
     // venue: "AGU 2024",
     links: [{t: "Accepted for oral presentation - link to abstract", u: "https://agu.confex.com/agu/agu24/meetingapp.cgi/Paper/1655008"}],
-    img: "images/swot.gif"
+    img: "images/swot.webp"
   },
   { 
     id: "rover", 
@@ -315,7 +315,7 @@ function renderPublications() {
       
       card.innerHTML = `
         <div class="pub-image">
-          <img src="${pub.img}" alt="${pub.title}" onerror="this.src='${pub.icon}'"/>
+          <img src="${pub.img}" alt="${pub.title}" loading="lazy" onerror="this.onerror=null;this.src=window.PLACEHOLDER_IMG"/>
         </div>
         <div class="pub-content">
           <div class="pub-header">
@@ -337,6 +337,7 @@ function renderPublications() {
         if (moonSurfaceActive) {
           moonSurfaceActive = false;
           document.getElementById('moonSurface').classList.remove('active');
+        MoonMission.hideMission();
         }
         
         showDetail(pub);
@@ -451,7 +452,8 @@ function showDetail(item) {
   
   detailImg.src = item.img;
   detailImg.onerror = function() {
-    this.src = item.icon;
+    this.onerror = null;
+    this.src = window.PLACEHOLDER_IMG;
   };
   
   detailTitle.textContent = item.title;
@@ -595,6 +597,7 @@ function hideDetail() {
   if (moonSurfaceActive) {
     moonSurfaceActive = false;
     document.getElementById('moonSurface').classList.remove('active');
+        MoonMission.hideMission();
   }
   
   document.querySelectorAll('.pub-card').forEach(card => {
@@ -923,6 +926,7 @@ if (isMobileDevice && canvas) {
             if (moonEarth && (moonHits[0].object === moonEarth || moonHits[0].object.parent === moonEarth)) {
               moonSurfaceActive = false;
               document.getElementById('moonSurface').classList.remove('active');
+        MoonMission.hideMission();
               const earthPub = PUBS.find(p => p.body === 'Earth');
               if (earthPub) {
                 showDetail(earthPub);
@@ -982,7 +986,7 @@ if (isMobileDevice && canvas) {
 
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setSize(leftPanel.clientWidth, leftPanel.clientHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobileDevice ? 1.5 : 2));
 
 const ambient = new THREE.AmbientLight(0x1c2333, 0.32);
 scene.add(ambient);
@@ -1011,154 +1015,73 @@ function initMoonSurface() {
   
   moonRenderer = new THREE.WebGLRenderer({ canvas: moonCanvas, antialias: true });
   moonRenderer.setSize(leftPanel.clientWidth, leftPanel.clientHeight);
-  moonRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  moonRenderer.setPixelRatio(Math.min(window.devicePixelRatio, isMobileDevice ? 1.5 : 2));
   
-  // Lighting
-  const ambientMoon = new THREE.AmbientLight(0x404040, 0.3);
+  // Lighting: hard sun at a low angle for long lunar shadows, faint
+  // blue earthshine fill. Shadows only exist in this scene.
+  moonRenderer.shadowMap.enabled = true;
+  moonRenderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  const ambientMoon = new THREE.AmbientLight(0x8899bb, 0.22);
   moonScene.add(ambientMoon);
-  
-  const sunLightMoon = new THREE.DirectionalLight(0xffffff, 1.2);
-  sunLightMoon.position.set(100, 50, 50);
+
+  const sunLightMoon = new THREE.DirectionalLight(0xfff6e8, 1.55);
+  sunLightMoon.position.set(160, 40, 60);
+  sunLightMoon.castShadow = true;
+  sunLightMoon.shadow.mapSize.set(1024, 1024);
+  sunLightMoon.shadow.camera.left = -80;
+  sunLightMoon.shadow.camera.right = 80;
+  sunLightMoon.shadow.camera.top = 80;
+  sunLightMoon.shadow.camera.bottom = -80;
+  sunLightMoon.shadow.camera.near = 20;
+  sunLightMoon.shadow.camera.far = 420;
+  sunLightMoon.shadow.bias = -0.0015;
   moonScene.add(sunLightMoon);
-  
-  // Moon terrain
-  const terrainGeo = new THREE.PlaneGeometry(500, 500, 100, 100);
-  const vertices = terrainGeo.attributes.position.array;
-  for (let i = 0; i < vertices.length; i += 3) {
-    vertices[i + 2] = Math.random() * 2 - 0.5;
-  }
-  terrainGeo.attributes.position.needsUpdate = true;
-  terrainGeo.computeVertexNormals();
-  
-  const terrainMat = new THREE.MeshStandardMaterial({ 
-    color: 0x888888,
-    roughness: 0.95,
-    metalness: 0.1
-  });
-  const terrain = new THREE.Mesh(terrainGeo, terrainMat);
-  terrain.rotation.x = -Math.PI / 2;
-  moonScene.add(terrain);
-  
-  // Add craters
-  for (let i = 0; i < 20; i++) {
-    const craterSize = 2 + Math.random() * 8;
-    const craterGeo = new THREE.CylinderGeometry(craterSize, craterSize * 0.8, 0.5, 16);
-    const crater = new THREE.Mesh(craterGeo, terrainMat);
-    crater.position.x = (Math.random() - 0.5) * 200;
-    crater.position.z = (Math.random() - 0.5) * 200;
-    crater.position.y = -0.3;
-    moonScene.add(crater);
-  }
-  
-  // Starship base
-  const starshipGroup = new THREE.Group();
-  const bodyGeo = new THREE.CylinderGeometry(1.5, 1.4, 9, 16);
-  const bodyMat = new THREE.MeshStandardMaterial({ 
-    color: 0xf0f0f0, 
-    metalness: 0.9, 
-    roughness: 0.2,
-    emissive: 0xf0f0f0,
-    emissiveIntensity: 0.05
-  });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
-  body.position.y = 5.5;
-  starshipGroup.add(body);
-  
-  const noseGeo = new THREE.ConeGeometry(1.5, 3, 16);
-  const nose = new THREE.Mesh(noseGeo, bodyMat);
-  nose.position.y = 11.5;
-  starshipGroup.add(nose);
-  
-  const legGeo = new THREE.CylinderGeometry(0.2, 0.3, 5, 8);
-  const legMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
-  for (let i = 0; i < 4; i++) {
-    const leg = new THREE.Mesh(legGeo, legMat);
-    const angle = (i / 4) * Math.PI * 2;
-    leg.position.x = Math.cos(angle) * 2;
-    leg.position.z = Math.sin(angle) * 2;
-    leg.position.y = 2.5;
-    leg.rotation.z = Math.cos(angle) * 0.2;
-    leg.rotation.x = Math.sin(angle) * 0.2;
-    starshipGroup.add(leg);
-  }
-  
-  starshipGroup.position.set(-15, 0, -20);
+  moonScene.add(sunLightMoon.target);
+
+  // Terrain heightfield + regolith/wheel-track texture + dust (moon-mission.js)
+  MoonMission.buildTerrain(moonScene);
+  MoonMission.initDust(moonScene);
+
+  // Starship on the pad (shared builder, surface scale)
+  const starshipGroup = Spacecraft.buildStarship();
+  starshipGroup.scale.multiplyScalar(2.6);
+  starshipGroup.position.set(-15, MoonMission.heightAt(-15, -20), -20);
+  starshipGroup.traverse(o => { if (o.isMesh) o.castShadow = true; });
   starshipGroup.userData = { name: 'Starship', type: 'clickable' };
   moonScene.add(starshipGroup);
   moonStarship = starshipGroup;
-  
+
   // VIPER rover
-  const viperGroup = new THREE.Group();
-  const roverBody = new THREE.BoxGeometry(2, 1, 2.5);
-  // const roverMat = new THREE.MeshStandardMaterial({ color: 0x999999, metalness: 0.7, roughness: 0.4 });
-  const roverMat = new THREE.MeshStandardMaterial({ 
-    color: 0xf0f0f0, 
-    metalness: 0.9, 
-    roughness: 0.2,
-    emissive: 0x333333,
-    emissiveIntensity: 100
-  });
-  const roverMesh = new THREE.Mesh(roverBody, roverMat);
-  roverMesh.position.y = 1;
-  viperGroup.add(roverMesh);
-  
-  const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.5, 12);
-  const wheelMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5, roughness: 0.8 });
-  const wheelPositions = [[-1, 0.4, 1.5], [-1, 0.4, -1.5], [1, 0.4, 1.5], [1, 0.4, -1.5]];
-  wheelPositions.forEach(pos => {
-    const wheel = new THREE.Mesh(wheelGeo, wheelMat);
-    wheel.rotation.z = Math.PI / 2;
-    wheel.position.set(...pos);
-    viperGroup.add(wheel);
-  });
-  
-  const panelGeo = new THREE.BoxGeometry(2.5, 0.1, 2);
-  const panelMat = new THREE.MeshStandardMaterial({ color: 0x0a1f40, metalness: 0.6, roughness: 0.3 });
-  const panel = new THREE.Mesh(panelGeo, panelMat);
-  panel.position.y = 2;
-  panel.rotation.x = -0.2;
-  viperGroup.add(panel);
-  
-  viperGroup.position.set(5, 0, 5);
-  viperGroup.userData = { name: 'VIPER', type: 'clickable' };
+  const viperGroup = Spacecraft.buildViper();
+  viperGroup.scale.multiplyScalar(2.1);
+  viperGroup.position.set(5, MoonMission.heightAt(5, 5), 5);
+  viperGroup.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  viperGroup.userData.name = 'VIPER';
+  viperGroup.userData.type = 'clickable';
   moonScene.add(viperGroup);
   moonViper = viperGroup;
-  
-  // LRO satellite
-  const lroGroup = new THREE.Group();
-  const satBody = new THREE.BoxGeometry(1.5, 1.5, 2);
-  const satMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, metalness: 0.8, roughness: 0.3 });
-  const satMesh = new THREE.Mesh(satBody, satMat);
-  lroGroup.add(satMesh);
-  
-  const satPanelGeo = new THREE.BoxGeometry(4, 0.1, 1.5);
-  const satPanelMat = new THREE.MeshStandardMaterial({ color: 0x0a1f40, metalness: 0.7, roughness: 0.3 });
-  [-2, 2].forEach(x => {
-    const p = new THREE.Mesh(satPanelGeo, satPanelMat);
-    p.position.x = x;
-    lroGroup.add(p);
-  });
-  
+
+  // LRO overhead
+  const lroGroup = Spacecraft.buildLRO();
+  lroGroup.scale.multiplyScalar(2.5);
   lroGroup.position.set(-20, 30, -40);
   lroGroup.userData = { name: 'LRO', type: 'clickable' };
   moonScene.add(lroGroup);
   moonLRO = lroGroup;
-  
-  // Earth in background
-  const earthGeo = new THREE.SphereGeometry(8, 32, 32);
-  const earthMat = new THREE.MeshBasicMaterial({ color: 0x4a90e2, emissive: 0x4a90e2, emissiveIntensity: 0.3 });
-  moonEarth = new THREE.Mesh(earthGeo, earthMat);
+
+  // Earthrise: the real Earth shader hanging in the black sky
+  moonEarth = PlanetMats.createPlanet({ name: 'Earth', size: 8 });
   moonEarth.position.set(80, 40, -200);
   moonEarth.userData = { name: 'Earth' };
   moonScene.add(moonEarth);
-  
-  
+
   // Add collectible moon rocks (only visible in rover POV)
   const moonRocks = [];
   const rockGeo = new THREE.DodecahedronGeometry(0.8, 0);
-  const rockMat = new THREE.MeshStandardMaterial({ 
-    color: 0x666666,  // DARK GREY
-    roughness: 0.95, 
+  const rockMat = new THREE.MeshStandardMaterial({
+    color: 0x666666,
+    roughness: 0.95,
     metalness: 0.05,
     emissive: 0x333333,
     emissiveIntensity: 0.05
@@ -1168,21 +1091,22 @@ function initMoonSurface() {
     const rock = new THREE.Mesh(rockGeo, rockMat.clone());
     rock.position.x = (Math.random() - 0.5) * 100;
     rock.position.z = (Math.random() - 0.5) * 100;
-    rock.position.y = 0.3;
+    rock.position.y = MoonMission.heightAt(rock.position.x, rock.position.z) + 0.3;
     rock.rotation.x = Math.random() * Math.PI;
     rock.rotation.y = Math.random() * Math.PI;
     rock.rotation.z = Math.random() * Math.PI;
     rock.userData = { collected: false, id: i };
     rock.scale.set(1.5 + Math.random() * 0.5, 1.5 + Math.random() * 0.5, 1.5 + Math.random() * 0.5);
+    rock.castShadow = true;
     rock.visible = false;  // START HIDDEN
     moonScene.add(rock);
     moonRocks.push(rock);
   }
-  
+
   // Store rocks globally for collision detection
   window.moonRocks = moonRocks;
   window.rocksCollected = 0;
-  
+
   // Stars
   const moonStarsGeo = new THREE.BufferGeometry();
   const moonStarsVerts = [];
@@ -1193,10 +1117,10 @@ function initMoonSurface() {
     moonStarsVerts.push(x, y, z);
   }
   moonStarsGeo.setAttribute('position', new THREE.Float32BufferAttribute(moonStarsVerts, 3));
-  const moonStarsMat = new THREE.PointsMaterial({ size: 1.5, color: 0xffffff });
+  const moonStarsMat = new THREE.PointsMaterial({ size: 1.5, color: 0xffffff, transparent: true, opacity: 0.85, depthWrite: false });
   const moonStars = new THREE.Points(moonStarsGeo, moonStarsMat);
   moonScene.add(moonStars);
-  
+
   // Mobile Moon Rotation Logic
   moonCanvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 1) {
@@ -1298,6 +1222,7 @@ function initMoonSurface() {
         roverPOVMode = false;
         viperManualControl = false;
         document.getElementById('moonSurface').classList.remove('active');
+        MoonMission.hideMission();
         
         toggleRoverControls(false);
 
@@ -1557,9 +1482,15 @@ let moonLROAngle = 0;
 let starshipVerticalPos = 0;
 let starshipDirection = 1; // 1 for up, -1 for down
 
+let lastFrameT = 0;
 function animate() {
   requestAnimationFrame(animate);
   const tNow = performance.now() * 0.001;
+  // clamp the frame delta: degenerate clocks (0 or negative) fall back to
+  // a nominal 60fps step, long stalls cap at 50ms so physics stays stable
+  const rawDt = tNow - lastFrameT;
+  const dtFrame = (lastFrameT && rawDt > 0.001) ? Math.min(0.05, rawDt) : 0.016;
+  lastFrameT = tNow;
   SpaceEnv.update(tNow);
   PlanetMats.update(tNow);
 
@@ -1597,31 +1528,12 @@ function animate() {
     // Animate Moon surface objects
     if (isAnimating && !pausedPlanets) {
 
-// --- START NEW ROVER MOVEMENT CODE ---
-// This checks the button state every frame to move the rover
+// Rover driving: velocity + inertia physics, terrain following, chassis
+// tilt, wheel spin, dust and wheel tracks (moon-mission.js)
 if (roverPOVMode && moonViper) {
-    // Adjust speed as needed
-    const moveSpeed = 0.5 * animationSpeed; 
-    const rotSpeed = 0.04;
-
-    if (roverState.forward) {
-        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(moonViper.quaternion);
-        moonViper.position.add(forward.multiplyScalar(moveSpeed));
-        moonViper.position.y = 0; // Keep on ground
-    }
-    if (roverState.backward) {
-        const backward = new THREE.Vector3(0, 0, 1).applyQuaternion(moonViper.quaternion);
-        moonViper.position.add(backward.multiplyScalar(moveSpeed));
-        moonViper.position.y = 0;
-    }
-    if (roverState.left) {
-        moonViper.rotation.y += rotSpeed;
-    }
-    if (roverState.right) {
-        moonViper.rotation.y -= rotSpeed;
-    }
+    const spd = MoonMission.stepRover(moonViper, roverState, roverBoost, animationSpeed, dtFrame);
+    MoonMission.updateHUD(moonViper, spd, window.rocksCollected);
 }
-// --- END NEW ROVER MOVEMENT CODE ---
 
 // VIPER rover - automatic control only if NOT in POV mode
 if (!viperManualControl && !roverPOVMode) {
@@ -1629,8 +1541,10 @@ if (!viperManualControl && !roverPOVMode) {
         const roverRadius = 12;
         moonViper.position.x = Math.cos(moonViperAngle) * roverRadius;
         moonViper.position.z = Math.sin(moonViperAngle) * roverRadius;
+        moonViper.position.y = MoonMission.heightAt(moonViper.position.x, moonViper.position.z);
         moonViper.rotation.y = moonViperAngle + Math.PI / 2;
       }
+      MoonMission.updateDust(dtFrame);
       // Check for rock collection
       if (window.moonRocks) {
         window.moonRocks.forEach(rock => {
@@ -1936,8 +1850,10 @@ moonCanvas.addEventListener('mousemove', e => {
   });
   
   if (moonEarth && moonEarth.material) {
-    moonEarth.material.emissive.setHex(moonObjectColors['Earth']);
-    moonEarth.material.emissiveIntensity = 0.3;
+    if (moonEarth.material.emissive) {
+      moonEarth.material.emissive.setHex(moonObjectColors['Earth']);
+      moonEarth.material.emissiveIntensity = 0.3;
+    }
   }
   
   // Clear publication highlights
@@ -1972,8 +1888,10 @@ moonCanvas.addEventListener('mousemove', e => {
           }
         });
       } else if (targetGroup === moonEarth) {
-        moonEarth.material.emissive.setHex(0xffffff);
-        moonEarth.material.emissiveIntensity = 2.0;
+        if (moonEarth.material.emissive) {
+          moonEarth.material.emissive.setHex(0xffffff);
+          moonEarth.material.emissiveIntensity = 2.0;
+        }
       }
       
       moonCanvas.style.cursor = 'pointer';
@@ -2201,6 +2119,7 @@ canvas.addEventListener('click', e => {
       if (moonEarth && (moonHits[0].object === moonEarth || moonHits[0].object.parent === moonEarth)) {
         moonSurfaceActive = false;
         document.getElementById('moonSurface').classList.remove('active');
+        MoonMission.hideMission();
         
         const earthPub = PUBS.find(p => p.body === 'Earth');
         if (earthPub) {
@@ -2335,6 +2254,7 @@ function zoomToBody(name) {
 
       
       document.getElementById('moonSurface').classList.add('active');
+      MoonMission.showMission(exitMoonMission);
       if (!moonScene) initMoonSurface();
       // Force animations to play in Moon view
       if (pausedPlanets) {
@@ -2398,6 +2318,7 @@ document.getElementById('btnReset').addEventListener('click', () => {
       });
     }
     document.getElementById('moonSurface').classList.remove('active');
+        MoonMission.hideMission();
     
     // Ensure we switch back to standard controls
     toggleRoverControls(false);
@@ -2607,58 +2528,47 @@ window.addEventListener('resize', onWindowResize);
 
 
 
-// Keyboard controls for VIPER rover in Moon view
+function exitMoonMission() {
+  moonSurfaceActive = false;
+  roverPOVMode = false;
+  viperManualControl = false;
+  document.getElementById('moonSurface').classList.remove('active');
+  MoonMission.hideMission();
+  toggleRoverControls(false);
+  if (window.moonRocks) window.moonRocks.forEach(rock => { rock.visible = false; });
+  const earthPub = PUBS.find(p => p.body === 'Earth');
+  if (earthPub) {
+    showDetail(earthPub);
+    highlightPublication('Earth');
+    setTimeout(() => zoomToBody('Earth'), 100);
+  }
+}
+
+// Keyboard controls for VIPER rover in Moon view.
+// Keys set held-state flags consumed by the physics step each frame
+// (velocity + inertia in moon-mission.js) instead of teleporting the rover.
+let roverBoost = false;
+const KEY_TO_DIR = { ArrowUp: 'forward', ArrowDown: 'backward', ArrowLeft: 'left', ArrowRight: 'right' };
+
 document.addEventListener('keydown', e => {
   if (!moonSurfaceActive || !moonViper) return;
-  
-  // Space bar for speed boost
-  const speedBoost = e.key === ' ' ? 2.0 : 1.0;
-  const moveSpeed = 0.3 * animationSpeed * speedBoost;
-  const rotSpeed = 0.08;
-  
-  switch(e.key) {
-    case ' ':
-      e.preventDefault(); // Prevent page scroll
-      break;
-      
-    case 'ArrowUp':
-      e.preventDefault();
-      viperManualControl = true;
-      // Move forward in current direction
-      const forward = new THREE.Vector3(0, 0, -1);
-      forward.applyQuaternion(moonViper.quaternion);
-      moonViper.position.add(forward.multiplyScalar(moveSpeed));
-      moonViper.position.y = 0; // Keep on ground
-      break;
-      
-    case 'ArrowDown':
-      e.preventDefault();
-      viperManualControl = true;
-      // Move backward
-      const backward = new THREE.Vector3(0, 0, 1);
-      backward.applyQuaternion(moonViper.quaternion);
-      moonViper.position.add(backward.multiplyScalar(moveSpeed));
-      moonViper.position.y = 0;
-      break;
-      
-    case 'ArrowLeft':
-      e.preventDefault();
-      viperManualControl = true;
-      // Rotate left
-      moonViper.rotation.y += rotSpeed;
-      break;
-      
-    case 'ArrowRight':
-      e.preventDefault();
-      viperManualControl = true;
-      // Rotate right
-      moonViper.rotation.y -= rotSpeed;
-      break;
+  if (e.key === ' ') {
+    e.preventDefault(); // prevent page scroll
+    roverBoost = true;
+    return;
+  }
+  const dir = KEY_TO_DIR[e.key];
+  if (dir) {
+    e.preventDefault();
+    viperManualControl = true;
+    roverState[dir] = true;
   }
 });
 
-// Reset to automatic control when leaving Moon view or after delay
 document.addEventListener('keyup', e => {
+  if (e.key === ' ') roverBoost = false;
+  const dir = KEY_TO_DIR[e.key];
+  if (dir) roverState[dir] = false;
   if (e.key.startsWith('Arrow') && !roverPOVMode) {
     // Allow automatic control to resume after a delay only if not in POV mode
     setTimeout(() => {
