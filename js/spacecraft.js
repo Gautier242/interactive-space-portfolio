@@ -478,8 +478,146 @@
     return g;
   }
 
+
+  // ============================================================================
+  // Starship HLS — stainless lathe hull with ring-weld texture, ogive nose,
+  // landing-thruster pods, raptor skirt, beefy legs. More faithful to the
+  // lunar lander configuration (no aero flaps, no TPS belly).
+  // ============================================================================
+  function steelHullTexture() {
+    if (texCache.hull) return texCache.hull;
+    var cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 512;
+    var ctx = cv.getContext('2d');
+    // brushed stainless base
+    var g = ctx.createLinearGradient(0, 0, 256, 0);
+    g.addColorStop(0, '#c2c6cb');
+    g.addColorStop(0.35, '#d8dbdf');
+    g.addColorStop(0.65, '#cdd1d5');
+    g.addColorStop(1, '#b9bdc2');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 256, 512);
+    // vertical brushed streaks
+    for (var i = 0; i < 700; i++) {
+      var x = Math.random() * 256, y = Math.random() * 512, h = 12 + Math.random() * 46;
+      ctx.fillStyle = 'rgba(' + (Math.random() < 0.5 ? '255,255,255' : '120,126,132') + ',' + (0.03 + Math.random() * 0.05) + ')';
+      ctx.fillRect(x, y, 1, h);
+    }
+    // horizontal ring welds (the signature look)
+    ctx.strokeStyle = 'rgba(96,102,108,0.55)';
+    ctx.lineWidth = 1.5;
+    for (var yw = 30; yw < 512; yw += 36) {
+      ctx.beginPath(); ctx.moveTo(0, yw); ctx.lineTo(256, yw); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.beginPath(); ctx.moveTo(0, yw + 1.5); ctx.lineTo(256, yw + 1.5); ctx.stroke();
+      ctx.strokeStyle = 'rgba(96,102,108,0.55)';
+    }
+    // subtle vertical panel seams
+    ctx.strokeStyle = 'rgba(110,116,122,0.28)';
+    ctx.lineWidth = 1;
+    for (var xs = 32; xs < 256; xs += 64) {
+      ctx.beginPath(); ctx.moveTo(xs, 0); ctx.lineTo(xs, 512); ctx.stroke();
+    }
+    var tex = new THREE.CanvasTexture(cv);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    texCache.hull = tex;
+    return tex;
+  }
+
+  function buildStarshipHLS() {
+    var g = new THREE.Group();
+    var hullMat = new THREE.MeshStandardMaterial({
+      map: steelHullTexture(),
+      metalness: 0.85,
+      roughness: 0.32
+    });
+    var dark = matDark();
+    var steel = matSteel();
+
+    // hull profile: 1.5-radius barrel flowing into an ogive nose, ~13 tall
+    var pts = [];
+    pts.push(new THREE.Vector2(1.28, 0));
+    pts.push(new THREE.Vector2(1.5, 0.25));
+    pts.push(new THREE.Vector2(1.5, 8.6));
+    for (var i = 1; i <= 10; i++) {
+      var t = i / 10;
+      // ogive: circular-arc falloff to the tip
+      var r = 1.5 * Math.cos(t * Math.PI / 2);
+      pts.push(new THREE.Vector2(Math.max(r, 0.001), 8.6 + t * 4.4));
+    }
+    pts.push(new THREE.Vector2(0, 13));
+    var hull = new THREE.Mesh(new THREE.LatheGeometry(pts, 48), hullMat);
+    g.add(hull);
+
+    // nosecap docking hatch
+    var hatch = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.32, 0.1, 20), dark);
+    hatch.position.y = 12.6;
+    g.add(hatch);
+
+    // crew windows near the nose
+    for (var w = 0; w < 4; w++) {
+      var wa = (w / 4) * Math.PI * 2 + 0.4;
+      var wr = 1.06;
+      var win = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.13, 0.05, 14), dark);
+      win.position.set(Math.cos(wa) * wr, 10.4, Math.sin(wa) * wr);
+      win.rotation.z = Math.PI / 2;
+      win.rotation.y = -wa;
+      g.add(win);
+    }
+
+    // landing-thruster pods: two dark rings of small nozzles high on the hull
+    [8.0, 8.45].forEach(function (py) {
+      for (var t2 = 0; t2 < 6; t2++) {
+        var a = (t2 / 6) * Math.PI * 2 + (py > 8.2 ? 0.26 : 0);
+        var pod = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.12, 0.22, 10), dark);
+        pod.position.set(Math.cos(a) * 1.52, py, Math.sin(a) * 1.52);
+        pod.rotation.z = Math.PI / 2;
+        pod.rotation.y = -a;
+        g.add(pod);
+      }
+    });
+
+    // legs: four stout lattice legs with foot pads
+    for (var l = 0; l < 4; l++) {
+      var la = (l / 4) * Math.PI * 2 + Math.PI / 4;
+      var leg = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.16, 2.6, 10), steel);
+      leg.position.set(Math.cos(la) * 1.85, 0.9, Math.sin(la) * 1.85);
+      leg.rotation.z = Math.cos(la) * 0.5;
+      leg.rotation.x = -Math.sin(la) * 0.5;
+      g.add(leg);
+      var foot = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.5, 0.16, 14), dark);
+      foot.position.set(Math.cos(la) * 2.45, 0.05, Math.sin(la) * 2.45);
+      g.add(foot);
+      var brace = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.2, 8), steel);
+      brace.position.set(Math.cos(la) * 1.55, 2.1, Math.sin(la) * 1.55);
+      brace.rotation.z = Math.cos(la) * 0.28;
+      brace.rotation.x = -Math.sin(la) * 0.28;
+      g.add(brace);
+    }
+
+    // engine section: recessed dark skirt + three visible raptor bells
+    var skirt = new THREE.Mesh(new THREE.CylinderGeometry(1.26, 1.3, 0.5, 32, 1, true), dark);
+    skirt.position.y = 0.1;
+    g.add(skirt);
+    for (var e = 0; e < 3; e++) {
+      var ea = (e / 3) * Math.PI * 2;
+      var bellPts = [];
+      for (var bi = 0; bi <= 6; bi++) {
+        var bt = bi / 6;
+        bellPts.push(new THREE.Vector2(0.14 + bt * bt * 0.22, -bt * 0.55));
+      }
+      var bell = new THREE.Mesh(new THREE.LatheGeometry(bellPts, 18),
+        new THREE.MeshStandardMaterial({ color: 0x3a3d42, metalness: 0.9, roughness: 0.35 }));
+      bell.position.set(Math.cos(ea) * 0.55, 0.35, Math.sin(ea) * 0.55);
+      g.add(bell);
+    }
+
+    return g;
+  }
+
   window.Spacecraft = {
     buildISS: buildISS,
+    buildStarshipHLS: buildStarshipHLS,
     buildHWO: buildHWO,
     buildStarship: buildStarship,
     buildViper: buildViper,

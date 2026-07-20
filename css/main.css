@@ -285,7 +285,7 @@ a:hover {
 }
 .legend {
   position: absolute;
-  top: 16px;
+  top: 58px; /* clears the centered HOW TO EXPLORE button */
   left: 16px;
   right: 16px;
   font-size: 12px;
@@ -1204,7 +1204,7 @@ a:hover {
    ========================================================================== */
 #missionHud {
   position: absolute;
-  top: 16px;
+  top: 64px; /* below the HOW TO EXPLORE button zone */
   right: 16px;
   z-index: 60;
   font-family: ui-monospace, 'SF Mono', Menlo, monospace;
