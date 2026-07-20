@@ -547,15 +547,28 @@ document.addEventListener('DOMContentLoaded', () => {
   if (legend) LEGEND_DEFAULT_HTML = legend.innerHTML;
 });
 
+const ROVER_HELP_HTML = `
+  <div style="text-align:justify; line-height:1.6;">
+    <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:12px; text-align:center;">Driving VIPER</div>
+    <div style="margin-bottom:1px;">• Arrow keys: ↑ forward · ↓ backward · ← → steer. Hold Spacebar for a speed boost.</div>
+    <div style="margin-bottom:1px;">• Collect the 15 rock samples scattered across the regolith. The HUD tracks your progress.</div>
+    <div style="margin-bottom:1px;">• The animation must be playing for VIPER to move. Use the bottom bar: play is on and speed is set to 4x for you; raise or lower it to change the pace.</div>
+    <div style="margin-bottom:1px;">• Drag to orbit the camera around the rover.</div>
+    <div style="margin-bottom:7px;">• EXIT MISSION returns to the Moon view. Clicking Earth in the sky returns to the solar system.</div>
+    <div style="text-align:center; color:var(--accent); font-size:11px; font-weight:bold;">(Click anywhere on this panel to close)</div>
+  </div>`;
+
 function toggleHelp() {
     const legend = document.getElementById('legendText');
     if (isMobileDevice) {
         legend.classList.toggle('visible');
     } else {
-        // opening: always show the whole-animation guide, never stale
-        // rover/moon text left over from a previous mode
-        if (!legend.classList.contains('active') && LEGEND_DEFAULT_HTML) {
-            legend.innerHTML = LEGEND_DEFAULT_HTML;
+        // opening: show driving instructions in rover mode, otherwise the
+        // whole-animation guide; never stale text from a previous mode
+        if (!legend.classList.contains('active')) {
+            legend.innerHTML = (roverPOVMode && moonSurfaceActive)
+              ? ROVER_HELP_HTML
+              : (LEGEND_DEFAULT_HTML || legend.innerHTML);
         }
         legend.classList.toggle('active');
     }
@@ -1547,9 +1560,11 @@ bodyData.forEach(d => {
   }
   
   mesh.userData.name = d.name;
-  if (['Earth', 'Moon', 'Mars', 'HWO'].includes(d.name)) {
-    const rSz = d.name === 'HWO' ? 5 : (d.size * 1.6); // Custom size adjustments
-    const ret = createCornerReticle(Math.max(rSz, 3.5));
+  if (['Earth', 'Moon', 'Mars', 'HWO', 'VIPER'].includes(d.name)) {
+    // VIPER's builder group is scaled 0.36, so compensate to get a small
+    // world-size reticle that marks the rover as clickable on the Moon
+    const rSz = d.name === 'HWO' ? 5 : d.name === 'VIPER' ? 3.2 : Math.max(d.size * 1.6, 3.5);
+    const ret = createCornerReticle(rSz);
     mesh.add(ret);
     mesh.userData.reticle = ret;
   }
@@ -1650,12 +1665,9 @@ function animate() {
           legendEl.innerHTML = '<span class="legend-title">🌕 Moon Surface</span><strong>Click objects</strong> to view details · <strong>Click Earth</strong> to return · <strong>Drag</strong> to rotate · <strong>Pinch</strong> to zoom';
         }
     } else {
-        // LAPTOP ONLY: in rover mode the mission HUD is the single
-        // instrument panel, so close the legend instead of rewriting it.
-        if (roverPOVMode) {
-            legendEl.classList.remove('active');
-            legendEl.classList.remove('visible');
-        }
+        // LAPTOP ONLY: the legend is closed once on entering rover mode
+        // (enterRoverMode); the help button reopens it with driving
+        // instructions, so never force it shut here.
         // If not in roverPOVMode, we do NOTHING here. 
         // This keeps your "How to Explore" HTML visible.
     }
@@ -2283,12 +2295,18 @@ canvas.addEventListener('click', e => {
   const hits = raycaster.intersectObjects(clickables, true);
   
   if (hits.length > 0) {
-    let bodyName = hits[0].object.userData.name;
-    if (!bodyName && hits[0].object.parent && hits[0].object.parent.userData) {
-      bodyName = hits[0].object.parent.userData.name;
-    }
-    if (!bodyName && hits[0].object.parent && hits[0].object.parent.parent && hits[0].object.parent.parent.userData) {
-      bodyName = hits[0].object.parent.parent.userData.name;
+    const resolveName = h => {
+      let o = h.object;
+      while (o && !(o.userData && o.userData.name)) o = o.parent;
+      return o ? o.userData.name : null;
+    };
+    let bodyName = resolveName(hits[0]);
+    // VIPER stands beside Starship on the Moon and is the smallest target;
+    // when it is among the front hits, let it win the tie so a click on the
+    // rover reliably starts the drive mode
+    for (const h of hits) {
+      if (h.distance > hits[0].distance + 3) break;
+      if (resolveName(h) === 'VIPER') { bodyName = 'VIPER'; break; }
     }
     
     if (bodyName) {
@@ -2347,9 +2365,14 @@ if (!isMobileDevice) {
         highlightPublication(targetBody);
         canvas.style.cursor = 'pointer';
         
-        // Show hint for Moon
+        // Show hints for the Moon and the VIPER rover on its surface
         if (bodyName === 'Moon') {
           hoverHint.textContent = 'Click to explore Moon surface view';
+          hoverHint.style.left = e.clientX + 15 + 'px';
+          hoverHint.style.top = e.clientY + 15 + 'px';
+          hoverHint.classList.add('active');
+        } else if (bodyName === 'VIPER') {
+          hoverHint.textContent = 'Click to drive the VIPER rover';
           hoverHint.style.left = e.clientX + 15 + 'px';
           hoverHint.style.top = e.clientY + 15 + 'px';
           hoverHint.classList.add('active');
@@ -2696,6 +2719,10 @@ function enterRoverMode() {
   applySpeedUI(4);
 
   MoonMission.showMission(exitRoverToMoon);
+  if (!isMobileDevice) {
+    const legend = document.getElementById('legendText');
+    if (legend) legend.classList.remove('active');
+  }
   if (isMobileDevice) toggleRoverControls(true);
   if (window.moonRocks) window.moonRocks.forEach(rock => { rock.visible = true; });
 
