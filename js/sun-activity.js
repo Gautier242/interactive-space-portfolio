@@ -43,7 +43,7 @@
     var tx = loader.load('assets/textures/2k_sun.jpg');
     tx.wrapS = THREE.RepeatWrapping;
     photosphereMat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 }, uMap: { value: tx } },
+      uniforms: { uTime: { value: 0 }, uMap: { value: tx }, uHighlight: { value: 0 } },
       vertexShader: [
         'varying vec2 vUv;',
         'varying vec3 vPos;',
@@ -58,44 +58,36 @@
         '}'
       ].join('\n'),
       fragmentShader: [
-        'uniform float uTime; uniform sampler2D uMap;',
+        'uniform float uTime; uniform sampler2D uMap; uniform float uHighlight;',
         'varying vec2 vUv; varying vec3 vPos; varying vec3 vNormalW; varying vec3 vViewDir;',
         NOISE,
         'void main(){',
-        // latitude; differential rotation shears longitude (equator faster)
+        // latitude from the unit position; differential rotation shears longitude
         '  float lat=asin(clamp(vPos.y,-1.0,1.0));',
         '  float diff=uTime*(0.010 + 0.014*(1.0 - abs(sin(lat))));',
         '  vec2 uv=vec2(vUv.x+diff, vUv.y);',
         '  vec3 base=texture2D(uMap,uv).rgb;',
-        // --- turbulent convection: domain-warped multi-scale plasma flow ---
-        // a slow flow field warps the noise so cells roil and shear like gas
-        '  vec3 fp=vPos*4.0;',
-        '  vec3 warp=vec3(fbm(fp+vec3(0.0,0.0,uTime*0.05)), fbm(fp+vec3(5.2,1.3,-uTime*0.045)), fbm(fp+vec3(9.3,-2.1,uTime*0.04)));',
-        '  vec3 wp=vPos + warp*0.28;',
-        '  float super=fbm(wp*3.0+vec3(0.0,0.0,uTime*0.06));',    // supergranules
-        '  float gran=fbm(wp*9.0-vec3(uTime*0.14,0.0,0.0));',     // granules
-        '  float fine=fbm(wp*20.0+vec3(0.0,uTime*0.22,0.0));',    // fine churn
-        '  float cells=0.5+0.55*super+0.4*gran+0.22*fine;',
-        // bright magnetic network in the lanes between cells (ridged)
-        '  float net=pow(clamp(1.0-abs(fbm(wp*7.0)-0.15)*3.0,0.0,1.0),2.0);',
-        // grade: dark red lanes -> orange -> hot white-yellow cell cores
-        '  vec3 deep=vec3(0.55,0.14,0.02);',
-        '  vec3 cool=vec3(0.92,0.34,0.06);',
-        '  vec3 mid=vec3(1.0,0.63,0.16);',
-        '  vec3 hot=vec3(1.0,0.95,0.78);',
-        '  vec3 col=mix(deep,cool,smoothstep(0.2,0.5,cells));',
-        '  col=mix(col,mid,smoothstep(0.5,0.8,cells));',
-        '  col=mix(col,hot,smoothstep(0.85,1.25,cells));',
-        '  col+=vec3(0.5,0.32,0.12)*net*0.5;',                    // glowing network
-        // keep the real texture as large-scale mottling underneath
-        '  col=mix(col, col*(0.55+0.95*base), 0.4);',
+        // churning granulation: two noise octaves flowing at different rates
+        '  float g1=fbm(vPos*7.0+vec3(0.0,0.0,uTime*0.35));',
+        '  float g2=fbm(vPos*16.0-vec3(uTime*0.25,0.0,0.0));',
+        '  float gran=0.6+0.5*g1+0.35*g2;',
+        // grade: cool orange lanes -> hot yellow-white cells
+        '  vec3 cool=vec3(0.85,0.32,0.06);',
+        '  vec3 mid=vec3(1.0,0.62,0.18);',
+        '  vec3 hot=vec3(1.0,0.93,0.72);',
+        '  vec3 col=mix(cool,mid,smoothstep(0.35,0.75,gran));',
+        '  col=mix(col,hot,smoothstep(0.8,1.15,gran));',
+        // blend the real texture in so it keeps believable large-scale mottling
+        '  col=mix(col, col*(0.6+0.9*base), 0.55);',
         // limb darkening -> spherical volume, with a warm reddened edge
         '  float ndv=clamp(dot(normalize(vNormalW),normalize(vViewDir)),0.0,1.0);',
-        '  float limb=0.32+0.68*pow(ndv,0.6);',
+        '  float limb=0.35+0.65*pow(ndv,0.55);',
         '  col*=limb;',
-        '  col+=vec3(0.28,0.07,0.0)*(1.0-ndv);',
+        '  col+=vec3(0.25,0.06,0.0)*(1.0-ndv);',
         // gentle global breathing
-        '  col*=1.0+0.035*sin(uTime*0.7);',
+        '  col*=1.0+0.03*sin(uTime*0.7);',
+        // hover glow: clear white blend so the Sun reads as clickable
+        '  col=mix(col, vec3(1.0), uHighlight*0.62);',
         '  gl_FragColor=vec4(col,1.0);',
         '}'
       ].join('\n')
@@ -217,11 +209,9 @@
     var dir = new THREE.Vector3(s * Math.cos(th), u, s * Math.sin(th));
     m.userData.dir.copy(dir);
     m.position.copy(dir).multiplyScalar(SUN_R * 0.97);
-    // most are modest; ~1 in 4 is a larger, dramatic arcing eruption
-    var big = Math.random() < 0.28;
-    m.userData.baseScale = big ? (13 + Math.random() * 6) : (7 + Math.random() * 4);
+    m.userData.baseScale = 7 + Math.random() * 4;   // ~1/4 the 18-unit radius
     m.userData.life = 0;
-    m.userData.dur = big ? (3.4 + Math.random() * 1.8) : (2.4 + Math.random() * 1.4);
+    m.userData.dur = 2.4 + Math.random() * 1.4;
     m.scale.set(0.001, 0.001, 0.001);
     m.material.opacity = 0;
     m.visible = true;

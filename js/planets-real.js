@@ -86,7 +86,7 @@
     // thin blue atmospheric rim, lit side only
     '  float fres = pow(1.0 - clamp(dot(N, V), 0.0, 1.0), 2.6);',
     '  col += vec3(0.28, 0.47, 0.8) * fres * day * 0.45;',
-    '  col += vec3(0.9, 0.95, 1.0) * uHighlight * 0.35;',
+    '  col = mix(col, vec3(1.0), uHighlight * 0.62);',   // clear white hover glow
     '  gl_FragColor = vec4(col, 1.0);',
     '}'
   ].join('\n');
@@ -127,7 +127,7 @@
     '    col *= mix(1.0, 0.5 + 0.7*relief, day);',   // relief shading on the lit side
     '  }',
     '  col *= uNightFloor + (1.0 - uNightFloor) * day;',
-    '  col += vec3(0.9, 0.95, 1.0) * uHighlight * 0.35;',
+    '  col = mix(col, vec3(1.0), uHighlight * 0.62);',   // clear white hover glow
     '  gl_FragColor = vec4(col, 1.0);',
     '}'
   ].join('\n');
@@ -207,7 +207,7 @@
     '  vec3 L = normalize(-vWorldPos);',
     '  float day = smoothstep(-0.04, 0.22, dot(N, L));',
     '  col *= 0.04 + 0.96 * day;',
-    '  col += vec3(0.9, 0.95, 1.0) * uHighlight * 0.35;',
+    '  col = mix(col, vec3(1.0), uHighlight * 0.62);',   // clear white hover glow
     '  gl_FragColor = vec4(col, 1.0);',
     '}'
   ].join('\n');
