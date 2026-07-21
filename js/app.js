@@ -1416,8 +1416,9 @@ sun.userData.reticle = sunReticle;
 
 scene.add(sun);
 
-// Real photosphere texture with a restrained warm glow (planets-real.js)
-PlanetsReal.applySunTexture(sun);
+// Living sun: churning photosphere, corona, prominences, flares (sun-activity.js)
+SunActivity.init(sun);
+sun.userData.spinSpeed = PlanetsReal.sunSpinSpeed();
 
 // BODY DATA - CUSTOMIZE 3D OBJECTS HERE
 const bodyData = [
@@ -1652,8 +1653,12 @@ function animate() {
   const dtFrame = (lastFrameT && rawDt > 0.001) ? Math.min(0.05, rawDt) : 0.016;
   lastFrameT = tNow;
   PlanetsReal.update(tNow);
-  if (sun.userData.spinSlow && isAnimating && !pausedPlanets) {
-    sun.rotation.y += 0.0006 * animationSpeed;
+  const simPlaying = isAnimating && !pausedPlanets;
+  // Living sun: advance activity at the sim rate, and spin the sun at its
+  // mapped real rotation rate so surface flares co-rotate.
+  SunActivity.update(dtFrame * animationSpeed * 2.0, simPlaying);
+  if (simPlaying) {
+    sun.rotation.y += (sun.userData.spinSpeed || 0.0027) * animationSpeed;
   }
   
   if (moonSurfaceActive) {
@@ -1919,7 +1924,18 @@ if (!viperManualControl && !roverPOVMode) {
       }
 
       if (!b.onSurface && !b.isLagrange) {
-        (b.mesh.userData.spinTarget || b.mesh).rotation.y += 0.002;
+        const spinNode = b.mesh.userData.spinTarget || b.mesh;
+        if (b.mesh.userData.tidalLock && b.isMoon && b.parent && bodies[b.parent]) {
+          // tidally locked: keep the same face toward the parent by pointing
+          // the spin node's rotation at the parent every frame (like our Moon)
+          const parentPos = bodies[b.parent].mesh.position;
+          const dx = parentPos.x - b.mesh.position.x;
+          const dz = parentPos.z - b.mesh.position.z;
+          spinNode.rotation.y = Math.atan2(dx, dz);
+        } else {
+          // real, perceptually-mapped rotation rate (signed for retrograde)
+          spinNode.rotation.y += (b.mesh.userData.spinSpeed || 0.01) * animationSpeed;
+        }
       }
     });
     

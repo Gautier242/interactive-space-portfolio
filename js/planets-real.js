@@ -266,9 +266,43 @@
     cloudLayers.push(clouds);
   }
 
+  // ==========================================================================
+  // Real sidereal rotation periods (hours), signed: negative = retrograde.
+  // Source: NASA Planetary Fact Sheet. Tidally-locked moons are not listed
+  // here — they rotate once per orbit and are handled in app.js.
+  // ==========================================================================
+  var ROTATION_HOURS = {
+    Sun: 609.12,          // ~25.4 day equatorial
+    Mercury: 1407.6,
+    Venus: -5832.5,       // retrograde
+    Earth: 23.9345,
+    Mars: 24.6229,
+    Jupiter: 9.925,
+    Saturn: 10.656,
+    Uranus: -17.24,       // retrograde
+    Neptune: 16.11,
+    Ceres: 9.074,
+    Vesta: 5.342,
+    Pallas: 7.813
+  };
+  var TIDAL_MOONS = ['Moon', 'Io', 'Europa', 'Ganymede', 'Callisto', 'Titan', 'Enceladus', 'Rhea'];
+
+  // Perceptual mapping: real periods span ~580x (Venus vs Jupiter), which would
+  // freeze the slow rotators. Compress with an exponent curve, normalized so
+  // Earth spins at BASE rad/frame at 1x. Correct sign (direction) and ordering
+  // are preserved; the curve only makes the extremes watchable.
+  var SPIN_BASE = 0.010;        // Earth's rad/frame at 1x
+  var SPIN_EXP = 0.40;
+  function spinSpeedFor(name) {
+    var T = ROTATION_HOURS[name];
+    if (!T) return SPIN_BASE;   // unlisted bodies fall back to Earth-ish
+    var mag = SPIN_BASE * Math.pow(23.9345 / Math.abs(T), SPIN_EXP);
+    return T < 0 ? -mag : mag;
+  }
+
   // createPlanet returns a tilt group: outer group carries the real axial
   // tilt, the inner sphere spins. userData.spinTarget lets the existing
-  // rotation code spin the right node.
+  // rotation code spin the right node; userData.spinSpeed / tidalLock drive it.
   function createPlanet(d) {
     var name = d.name;
     var geo = new THREE.SphereGeometry(d.size, 64, 64);
@@ -287,17 +321,26 @@
       }));
     }
 
+    var tidal = TIDAL_MOONS.indexOf(name) !== -1;
+    var spin = spinSpeedFor(name);
+
     var tiltDeg = TILT[name] || 0;
     if (!tiltDeg) {
       mesh.userData.spinTarget = mesh;
+      mesh.userData.spinSpeed = spin;
+      mesh.userData.tidalLock = tidal;
       return mesh;
     }
     var group = new THREE.Group();
     group.rotation.z = tiltDeg * Math.PI / 180;
     group.add(mesh);
     group.userData.spinTarget = mesh;
+    group.userData.spinSpeed = spin;
+    group.userData.tidalLock = tidal;
     return group;
   }
+
+  function sunSpinSpeed() { return spinSpeedFor('Sun'); }
 
   // ==========================================================================
   // Saturn ring: real ring strip mapped radially, planet shadow analytic
@@ -417,6 +460,7 @@
     addRing: addRing,
     applySunTexture: applySunTexture,
     setHighlight: setHighlight,
-    update: update
+    update: update,
+    sunSpinSpeed: sunSpinSpeed
   };
 })();
