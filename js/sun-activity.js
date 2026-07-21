@@ -60,32 +60,17 @@
       fragmentShader: [
         'uniform float uTime; uniform sampler2D uMap; uniform float uHighlight;',
         'varying vec2 vUv; varying vec3 vPos; varying vec3 vNormalW; varying vec3 vViewDir;',
-        NOISE,
         'void main(){',
-        // latitude from the unit position; differential rotation shears longitude
-        '  float lat=asin(clamp(vPos.y,-1.0,1.0));',
-        '  float diff=uTime*(0.010 + 0.014*(1.0 - abs(sin(lat))));',
-        '  vec2 uv=vec2(vUv.x+diff, vUv.y);',
-        '  vec3 base=texture2D(uMap,uv).rgb;',
-        // churning granulation: two noise octaves flowing at different rates
-        '  float g1=fbm(vPos*7.0+vec3(0.0,0.0,uTime*0.35));',
-        '  float g2=fbm(vPos*16.0-vec3(uTime*0.25,0.0,0.0));',
-        '  float gran=0.6+0.5*g1+0.35*g2;',
-        // grade: cool orange lanes -> hot yellow-white cells
-        '  vec3 cool=vec3(0.85,0.32,0.06);',
-        '  vec3 mid=vec3(1.0,0.62,0.18);',
-        '  vec3 hot=vec3(1.0,0.93,0.72);',
-        '  vec3 col=mix(cool,mid,smoothstep(0.35,0.75,gran));',
-        '  col=mix(col,hot,smoothstep(0.8,1.15,gran));',
-        // blend the real texture in so it keeps believable large-scale mottling
-        '  col=mix(col, col*(0.6+0.9*base), 0.55);',
+        // clean look: sample the real NASA photosphere texture directly (the
+        // mesh itself rotates, so no uv scroll needed) and only add lighting.
+        '  vec3 col = texture2D(uMap, vUv).rgb;',
+        // gentle warm lift so it glows like the real photosphere
+        '  col = pow(col, vec3(0.92)) * 1.12;',
         // limb darkening -> spherical volume, with a warm reddened edge
         '  float ndv=clamp(dot(normalize(vNormalW),normalize(vViewDir)),0.0,1.0);',
-        '  float limb=0.35+0.65*pow(ndv,0.55);',
+        '  float limb=0.5+0.5*pow(ndv,0.5);',
         '  col*=limb;',
-        '  col+=vec3(0.25,0.06,0.0)*(1.0-ndv);',
-        // gentle global breathing
-        '  col*=1.0+0.03*sin(uTime*0.7);',
+        '  col+=vec3(0.28,0.08,0.0)*(1.0-ndv);',
         // hover glow: clear white blend so the Sun reads as clickable
         '  col=mix(col, vec3(1.0), uHighlight*0.62);',
         '  gl_FragColor=vec4(col,1.0);',
@@ -269,6 +254,12 @@
     makeCorona(sun);
     makeProminencePool(sun);
     makeFlarePool(sun);
+    // Only the core photosphere sphere should be clickable. The corona
+    // sprites (scale up to 118) are camera-facing and would otherwise
+    // create a huge hit halo that swallows clicks on nearby bodies like
+    // Mercury. Disable raycast on every decorative child (corona,
+    // prominences, flares, chromosphere, reticle).
+    sun.children.forEach(function (c) { c.raycast = function () {}; });
   }
 
   function update(dt, playing) {
