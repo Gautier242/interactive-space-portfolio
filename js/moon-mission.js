@@ -309,7 +309,7 @@
       '<div class="intro-card">' +
       '<div class="intro-eyebrow">SOUTH POLAR REGION · LUNAR SURFACE</div>' +
       '<h3>MISSION: VIPER</h3>' +
-      '<p>Drive VIPER and collect the 15 rock samples scattered across the regolith. Play is switched on and speed is set to 4x for you; use the bottom bar to pause or change the pace. Click EXIT MISSION to return to the Moon view, or click Earth in the sky to go back to the solar system.</p>' +
+      '<p>Drive VIPER and collect the 15 rock samples scattered across the regolith. Play and 4x speed are selected for you automatically; if the rover is not moving, press the play button in the bottom bar and pick a higher speed to go faster. Click EXIT MISSION to return to the Moon view, or click Earth in the sky to go back to the solar system.</p>' +
       controls +
       '<button id="missionStart">BEGIN TRAVERSE</button>' +
       '</div>';

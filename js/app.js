@@ -552,7 +552,7 @@ const ROVER_HELP_HTML = `
     <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:12px; text-align:center;">Driving VIPER</div>
     <div style="margin-bottom:1px;">• Arrow keys: ↑ forward · ↓ backward · ← → steer. Hold Spacebar for a speed boost.</div>
     <div style="margin-bottom:1px;">• Collect the 15 rock samples scattered across the regolith. The HUD tracks your progress.</div>
-    <div style="margin-bottom:1px;">• The animation must be playing for VIPER to move. Use the bottom bar: play is on and speed is set to 4x for you; raise or lower it to change the pace.</div>
+    <div style="margin-bottom:1px;">• Play and 4x speed are selected for you automatically. If VIPER is not moving, press the play button in the bottom bar and pick a higher speed to go faster.</div>
     <div style="margin-bottom:1px;">• Drag to orbit the camera around the rover.</div>
     <div style="margin-bottom:7px;">• EXIT MISSION returns to the Moon view. Clicking Earth in the sky returns to the solar system.</div>
     <div style="text-align:center; color:var(--accent); font-size:11px; font-weight:bold;">(Click anywhere on this panel to close)</div>
@@ -1547,7 +1547,7 @@ bodyData.forEach(d => {
     
   } else if (d.isSpacecraft) {
     mesh = Spacecraft.buildStarshipHLS();
-    mesh.scale.set(0.5, 0.5, 0.5);
+    mesh.scale.set(0.16, 0.16, 0.16);
 
   } else if (d.isRover) {
     mesh = Spacecraft.buildViper();
@@ -1865,8 +1865,10 @@ if (!viperManualControl && !roverPOVMode) {
                 ? parentBody.mesh.geometry.parameters.radius 
                 : 2.5;
               
-              const surfaceAngle = name === 'VIPER' ? b.angle * 0.15 : b.angle * 0.2;
-              const heightOffset = name === 'VIPER' ? 0.13 : 0.4;
+              // fixed 2.2-radian offset keeps Starship well clear of
+              // VIPER on the surface circle so the two never overlap
+              const surfaceAngle = name === 'VIPER' ? b.angle * 0.15 : b.angle * 0.2 + 2.2;
+              const heightOffset = name === 'VIPER' ? 0.13 : 0.05;
               
               const orbitPhase = parentBody.angle || 0;
               const localAngle = surfaceAngle + orbitPhase;
