@@ -2546,54 +2546,53 @@ document.getElementById('btnPause').addEventListener('click', e => {
 const speedBtn = document.getElementById('btnSpeed');
 const speedDropdown = document.getElementById('speedDropdown');
 
-// Toggle dropdown
-speedBtn.addEventListener('click', (e) => {
-  e.preventDefault();
-  e.stopPropagation();
-  const isVisible = speedDropdown.style.display === 'flex';
-  speedDropdown.style.display = isVisible ? 'none' : 'flex';
-  speedDropdown.classList.toggle('active', !isVisible);
-});
+// Single, touch-and-mouse implementation. Visibility is driven purely by the
+// .active class, which BOTH the desktop and mobile stylesheets key off. The
+// old code toggled inline style.display in one handler and .active in a
+// duplicate handler; on mobile they cancelled out so speed taps never
+// registered.
+function setSpeedOpen(open) { speedDropdown.classList.toggle('active', open); }
+function isSpeedOpen() { return speedDropdown.classList.contains('active'); }
 
-// Handle selection
-document.querySelectorAll('#speedDropdown button').forEach(btn => {
-  btn.addEventListener('click', (e) => {
+function chooseSpeed(el) {
+  const speed = parseFloat(el.dataset.speed);
+  if (isNaN(speed)) return;
+  animationSpeed = speed * 0.5; // scale relative to base
+  speedBtn.textContent = speed + 'x';
+  setSpeedOpen(false);
+}
+
+// Fire a handler on tap for both touch and mouse, without the mobile ghost
+// click double-firing it: touchend handles the tap and suppresses the
+// synthetic click that follows.
+function onTap(el, handler) {
+  let touchedAt = 0;
+  el.addEventListener('touchend', (e) => {
+    touchedAt = Date.now();
     e.preventDefault();
     e.stopPropagation();
-    const speed = parseFloat(e.target.dataset.speed);
-    animationSpeed = speed * 0.5; // Scale relative to base
-    speedBtn.textContent = speed + 'x';
-    speedDropdown.style.display = 'none';
-    speedDropdown.classList.remove('active');
-  });
-});
-
-// Close when clicking outside
-document.addEventListener('click', (e) => {
-    if(speedDropdown.style.display === 'flex' && !speedBtn.contains(e.target)) {
-        speedDropdown.style.display = 'none';
-        speedDropdown.classList.remove('active');
-    }
-});
-
-speedBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  speedDropdown.classList.toggle('active');
-});
-
-document.querySelectorAll('#speedDropdown button').forEach(btn => {
-  btn.addEventListener('click', (e) => {
+    handler();
+  }, { passive: false });
+  el.addEventListener('click', (e) => {
+    if (Date.now() - touchedAt < 500) return; // ignore ghost click after touch
     e.stopPropagation();
-    const speed = parseFloat(e.target.dataset.speed);
-    animationSpeed = speed * 0.5;
-    speedBtn.textContent = speed + 'x';
-    speedDropdown.classList.remove('active');
+    handler();
   });
+}
+
+onTap(speedBtn, () => setSpeedOpen(!isSpeedOpen()));
+document.querySelectorAll('#speedDropdown button').forEach(btn => {
+  onTap(btn, () => chooseSpeed(btn));
 });
 
-document.addEventListener('click', () => {
-  speedDropdown.classList.remove('active');
-});
+// Close when interacting outside the button/dropdown (touch and mouse)
+function closeSpeedIfOutside(e) {
+  if (isSpeedOpen() && !speedBtn.contains(e.target) && !speedDropdown.contains(e.target)) {
+    setSpeedOpen(false);
+  }
+}
+document.addEventListener('click', closeSpeedIfOutside);
+document.addEventListener('touchend', closeSpeedIfOutside);
 
 // Mobile: Press-and-hold zoom functionality
 let zoomInterval = null;
