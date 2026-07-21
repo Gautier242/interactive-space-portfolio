@@ -553,7 +553,7 @@ const ROVER_HELP_HTML = `
     <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:12px; text-align:center;">Driving VIPER</div>
     <div style="margin-bottom:1px;">• Arrow keys: ↑ forward · ↓ backward · ← → steer. Hold Spacebar for a speed boost.</div>
     <div style="margin-bottom:1px;">• Collect the 15 rock samples scattered across the regolith. The HUD tracks your progress.</div>
-    <div style="margin-bottom:1px;">• Play and 4x speed are selected for you automatically. If VIPER is not moving, press the play button in the bottom bar and pick a higher speed to go faster.</div>
+    <div style="margin-bottom:1px;">• Play and 6x speed are selected for you automatically. If VIPER is not moving, press the play button in the bottom bar and pick a higher speed to go faster.</div>
     <div style="margin-bottom:1px;">• Drag to orbit the camera around the rover.</div>
     <div style="margin-bottom:7px;">• EXIT MISSION returns to the Moon view. Clicking Earth in the sky returns to the solar system.</div>
     <div style="text-align:center; color:var(--accent); font-size:11px; font-weight:bold;">(Click anywhere on this panel to close)</div>
@@ -1706,8 +1706,10 @@ if (!viperManualControl && !roverPOVMode) {
         moonViper.rotation.y = moonViperAngle + Math.PI / 2;
       }
       MoonMission.updateDust(dtFrame);
-      // Check for rock collection
-      if (window.moonRocks) {
+      // Check for rock collection (only while driving: rocks are hidden and
+      // irrelevant in the overview, and the auto-circling rover must not
+      // trigger the green pickup flash there)
+      if (roverPOVMode && window.moonRocks) {
         window.moonRocks.forEach(rock => {
           if (!rock.userData.collected) {
             const distance = moonViper.position.distanceTo(rock.position);
@@ -2405,6 +2407,11 @@ function zoomToBody(name) {
   }
 
   if (name === 'Moon' ) {
+     // every Moon click plays the scene and re-centers on Starship,
+     // even if the surface view is already active
+     saveSimStateOnce();
+     forcePlayFast();
+     if (moonScene) frameMoonOverview();
      if (!moonSurfaceActive) {
       moonSurfaceActive = true;
       
@@ -2422,10 +2429,7 @@ function zoomToBody(name) {
       
       document.getElementById('moonSurface').classList.add('active');
       if (!moonScene) initMoonSurface();
-      // Whole Moon stay runs at play + 4x; visitor settings come back
-      // when leaving the surface
-      saveSimStateOnce();
-      forcePlayFast();
+      frameMoonOverview();
     }
     return;
   }
@@ -2723,7 +2727,16 @@ function forcePlayFast() {
   pausedPlanets = false;
   isAnimating = true;
   document.getElementById('btnPause').textContent = '⏸';
-  applySpeedUI(4);
+  applySpeedUI(6);
+}
+
+// Overview camera for the lunar surface: centered on Starship, far enough
+// back that VIPER's patrol circle and LRO's passes stay in frame.
+function frameMoonOverview() {
+  if (!moonCamera || !moonStarship) return;
+  const sp = moonStarship.position;
+  moonCamera.position.set(sp.x + 38, sp.y + 17, sp.z + 46);
+  moonCamera.lookAt(sp.x, sp.y + 6, sp.z);
 }
 
 function restoreSimState() {
@@ -2775,9 +2788,8 @@ function leaveRoverMode() {
 
 function exitRoverToMoon() {
   leaveRoverMode();
-  // back to the Moon overview camera, still on the surface
-  moonCamera.position.set(8, 5, 15);
-  moonCamera.lookAt(0, 0, 0);
+  // back to the Starship-centered overview, still on the surface
+  frameMoonOverview();
 }
 
 function exitMoonMission() {
