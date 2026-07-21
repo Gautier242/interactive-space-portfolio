@@ -346,6 +346,7 @@ function renderPublications() {
         // Exit Moon surface view when clicking a publication
         if (moonSurfaceActive) {
           moonSurfaceActive = false;
+        restoreSimState();
           document.getElementById('moonSurface').classList.remove('active');
         MoonMission.hideMission();
         }
@@ -630,6 +631,7 @@ function hideDetail() {
   // Exit Moon surface view when closing detail
   if (moonSurfaceActive) {
     moonSurfaceActive = false;
+        restoreSimState();
     document.getElementById('moonSurface').classList.remove('active');
         MoonMission.hideMission();
   }
@@ -976,6 +978,7 @@ if (isMobileDevice && canvas) {
             
             if (moonEarth && (moonHits[0].object === moonEarth || moonHits[0].object.parent === moonEarth)) {
               moonSurfaceActive = false;
+        restoreSimState();
               document.getElementById('moonSurface').classList.remove('active');
         MoonMission.hideMission();
               const earthPub = PUBS.find(p => p.body === 'Earth');
@@ -1632,8 +1635,8 @@ let roverPOVMode = false;
 let roverCameraOffset = new THREE.Vector3(0, 2, 5);
 let selectedBody = null;
 let pausedPlanets = false;
-let rotateMode = true;
-let panMode = false;
+let rotateMode = false;
+let panMode = true;
 let animationSpeed = 0.5;
 let cameraFollowTarget = null;
 let moonViperAngle = 0;
@@ -2265,6 +2268,7 @@ canvas.addEventListener('click', e => {
       // Check if Earth was clicked - exit Moon view
       if (moonEarth && (moonHits[0].object === moonEarth || moonHits[0].object.parent === moonEarth)) {
         moonSurfaceActive = false;
+        restoreSimState();
         document.getElementById('moonSurface').classList.remove('active');
         MoonMission.hideMission();
         
@@ -2418,11 +2422,10 @@ function zoomToBody(name) {
       
       document.getElementById('moonSurface').classList.add('active');
       if (!moonScene) initMoonSurface();
-      // Force animations to play in Moon view
-      if (pausedPlanets) {
-        pausedPlanets = false;
-        document.getElementById('btnPause').textContent = '⏸';
-      }
+      // Whole Moon stay runs at play + 4x; visitor settings come back
+      // when leaving the surface
+      saveSimStateOnce();
+      forcePlayFast();
     }
     return;
   }
@@ -2470,6 +2473,7 @@ function zoomToBody(name) {
 document.getElementById('btnReset').addEventListener('click', () => {
   if (moonSurfaceActive) {
     moonSurfaceActive = false;
+        restoreSimState();
     roverPOVMode = false;
     viperManualControl = false;
 
@@ -2703,22 +2707,44 @@ function applySpeedUI(mult) {
   if (b) b.textContent = mult + 'x';
 }
 
-function enterRoverMode() {
-  if (!moonSurfaceActive) zoomToBody('Moon');
-  if (roverPOVMode) return;
-  roverPOVMode = true;
-  viperManualControl = true;
-
+// Save the visitor's play/speed settings once (entering the Moon), force
+// play + 4x for the whole surface stay, restore only when leaving the Moon.
+function saveSimStateOnce() {
+  if (savedSimState) return;
   savedSimState = {
     paused: pausedPlanets,
     animating: isAnimating,
     speed: animationSpeed,
     speedLabel: document.getElementById('btnSpeed') ? document.getElementById('btnSpeed').textContent : '1x'
   };
+}
+
+function forcePlayFast() {
   pausedPlanets = false;
   isAnimating = true;
   document.getElementById('btnPause').textContent = '⏸';
   applySpeedUI(4);
+}
+
+function restoreSimState() {
+  if (!savedSimState) return;
+  pausedPlanets = savedSimState.paused;
+  isAnimating = savedSimState.animating;
+  animationSpeed = savedSimState.speed;
+  document.getElementById('btnPause').textContent = savedSimState.paused ? '▶' : '⏸';
+  const b = document.getElementById('btnSpeed');
+  if (b) b.textContent = savedSimState.speedLabel;
+  savedSimState = null;
+}
+
+function enterRoverMode() {
+  if (!moonSurfaceActive) zoomToBody('Moon');
+  if (roverPOVMode) return;
+  roverPOVMode = true;
+  viperManualControl = true;
+
+  saveSimStateOnce();
+  forcePlayFast();
 
   MoonMission.showMission(exitRoverToMoon);
   if (!isMobileDevice) {
@@ -2743,15 +2769,8 @@ function leaveRoverMode() {
   MoonMission.hideMission();
   toggleRoverControls(false);
   if (window.moonRocks) window.moonRocks.forEach(rock => { rock.visible = false; });
-  if (savedSimState) {
-    pausedPlanets = savedSimState.paused;
-    isAnimating = savedSimState.animating;
-    animationSpeed = savedSimState.speed;
-    document.getElementById('btnPause').textContent = savedSimState.paused ? '▶' : '⏸';
-    const b = document.getElementById('btnSpeed');
-    if (b) b.textContent = savedSimState.speedLabel;
-    savedSimState = null;
-  }
+  // play/speed stay forced while on the Moon; restoreSimState() runs on
+  // every path that leaves the surface
 }
 
 function exitRoverToMoon() {
@@ -2764,6 +2783,7 @@ function exitRoverToMoon() {
 function exitMoonMission() {
   leaveRoverMode();
   moonSurfaceActive = false;
+        restoreSimState();
   document.getElementById('moonSurface').classList.remove('active');
   MoonMission.hideMission();
   toggleRoverControls(false);

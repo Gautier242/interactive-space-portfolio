@@ -435,49 +435,108 @@
   // ============================================================================
   // LRO — MLI bus, single offset solar array, parabolic HGA on boom
   // ============================================================================
+  // ============================================================================
+  // LRO — gold MLI bus, nadir instrument deck (LROC NACs, WAC), single
+  // 3-panel solar wing on a yoke, high-gain dish on a long boom, star
+  // trackers and radiator. Proportions follow the real orbiter layout.
+  // ============================================================================
   function buildLRO() {
     var g = new THREE.Group();
     var steel = matSteel();
+    var dark = matDark();
+    var mli = matMLI();
+    var white = matWhite();
 
-    var bus = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.62, 0.42), matMLI());
+    // main bus: tall gold-wrapped box
+    var bus = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.72, 0.44), mli);
     g.add(bus);
 
-    // instrument deck: small cylinders looking "down"
-    [[0.12, 0.36, 0.1], [-0.1, 0.36, -0.08], [0.02, 0.36, -0.14]].forEach(function (p) {
-      var inst = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.14, 10), matDark());
-      inst.position.set(p[0], p[1], p[2]);
-      g.add(inst);
+    // white avionics radiator on the anti-sun face
+    var radiator = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.6, 0.36), white);
+    radiator.position.set(0.24, 0, 0);
+    g.add(radiator);
+
+    // --- nadir instrument deck (pointing "down" toward the Moon) ---
+    // LROC narrow-angle cameras: twin parallel telescopes
+    [-0.08, 0.08].forEach(function (dx) {
+      var nac = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.34, 12), white);
+      nac.position.set(dx, -0.5, 0.08);
+      g.add(nac);
+      var aperture = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.048, 0.02, 12), dark);
+      aperture.position.set(dx, -0.67, 0.08);
+      g.add(aperture);
+    });
+    // wide-angle camera + smaller instruments
+    var wac = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.12, 0.1), dark);
+    wac.position.set(0.12, -0.44, -0.12);
+    g.add(wac);
+    var lola = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.12, 10), dark);
+    lola.position.set(-0.13, -0.44, -0.1);
+    g.add(lola);
+
+    // star trackers: two angled cylinders near the top
+    [0.3, -0.1].forEach(function (dz, i) {
+      var st = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.045, 0.14, 10), dark);
+      st.position.set(-0.14 + i * 0.1, 0.42, dz - 0.1);
+      st.rotation.x = 0.5;
+      st.rotation.z = 0.35;
+      g.add(st);
     });
 
-    // solar array on a yoke boom
-    var boom = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.5, 6), steel);
-    boom.rotation.z = Math.PI / 2;
-    boom.position.set(-0.5, 0.05, 0);
-    g.add(boom);
-    var array = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.015, 0.65), matSolar());
-    array.position.set(-1.15, 0.05, 0);
-    array.rotation.x = 0.25;
-    g.add(array);
-
-    // HGA: shallow parabolic dish via lathe, on the opposite boom
-    var dishPts = [];
-    for (var i = 0; i <= 8; i++) {
-      var r = (i / 8) * 0.22;
-      dishPts.push(new THREE.Vector2(r, r * r * 1.4));
+    // --- solar wing: yoke boom + 3 hinged panels with cell texture ---
+    var yoke = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.34, 8), steel);
+    yoke.rotation.z = Math.PI / 2;
+    yoke.position.set(-0.4, 0.08, 0);
+    g.add(yoke);
+    for (var i = 0; i < 3; i++) {
+      var panel = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.015, 0.62), matSolar());
+      panel.position.set(-0.78 - i * 0.43, 0.08, 0);
+      // slight accordion articulation between hinged sections
+      panel.rotation.z = (i % 2 ? -1 : 1) * 0.05;
+      g.add(panel);
+      if (i < 2) {
+        var hinge = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.6, 8), steel);
+        hinge.rotation.x = Math.PI / 2;
+        hinge.position.set(-0.995 - i * 0.43, 0.08, 0);
+        g.add(hinge);
+      }
     }
-    var dish = new THREE.Mesh(new THREE.LatheGeometry(dishPts, 20),
-      new THREE.MeshStandardMaterial({ color: 0xf0eee9, metalness: 0.3, roughness: 0.45, side: THREE.DoubleSide }));
-    var boom2 = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.55, 6), steel);
-    boom2.rotation.z = Math.PI / 2;
-    boom2.position.set(0.5, -0.1, 0);
+
+    // --- high-gain antenna: long two-segment boom + parabolic dish ---
+    var boom1 = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.5, 8), steel);
+    boom1.rotation.z = Math.PI / 2;
+    boom1.position.set(0.48, 0.22, 0);
+    g.add(boom1);
+    var elbow = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), steel);
+    elbow.position.set(0.73, 0.22, 0);
+    g.add(elbow);
+    var boom2 = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.4, 8), steel);
+    boom2.position.set(0.73, 0.42, 0);
     g.add(boom2);
-    dish.position.set(0.85, -0.1, 0);
-    dish.rotation.z = -Math.PI / 2;
+
+    var dishPts = [];
+    for (var d = 0; d <= 10; d++) {
+      var r = (d / 10) * 0.24;
+      dishPts.push(new THREE.Vector2(r, r * r * 1.5));
+    }
+    var dish = new THREE.Mesh(new THREE.LatheGeometry(dishPts, 24),
+      new THREE.MeshStandardMaterial({ color: 0xf0eee9, metalness: 0.3, roughness: 0.4, side: THREE.DoubleSide }));
+    dish.position.set(0.73, 0.62, 0);
     g.add(dish);
+    // feed horn on tripod
+    var feed = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.02, 0.1, 8), dark);
+    feed.position.set(0.73, 0.72, 0);
+    g.add(feed);
+
+    // omni antennas
+    [-0.18, 0.18].forEach(function (dz) {
+      var omni = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.22, 6), steel);
+      omni.position.set(0, 0.46, dz);
+      g.add(omni);
+    });
 
     return g;
   }
-
 
   // ============================================================================
   // Starship HLS — stainless lathe hull with ring-weld texture, ogive nose,
