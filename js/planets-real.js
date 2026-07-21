@@ -99,20 +99,41 @@
     'uniform sampler2D map;',
     'uniform float uHighlight;',
     'uniform float uNightFloor;',
+    'uniform float uBump;',
     'varying vec2 vUv;',
     'varying vec3 vNormalW;',
     'varying vec3 vWorldPos;',
+    'float lum(vec3 c){ return dot(c, vec3(0.299,0.587,0.114)); }',
     'void main() {',
     '  vec3 N = normalize(vNormalW);',
     '  vec3 L = normalize(-vWorldPos);',
-    '  float ndl = dot(N, L);',
-    '  float day = smoothstep(-0.04, 0.22, ndl);',
     '  vec3 col = texture2D(map, vUv).rgb;',
+    // day/night from the true sphere normal so the terminator stays clean
+    '  float ndlG = dot(N, L);',
+    '  float day = smoothstep(-0.04, 0.22, ndlG);',
+    // --- surface relief: treat texture brightness as height, derive a bumped
+    // normal, and shade slopes so craters/mountains cast shadows toward the sun
+    '  if (uBump > 0.0) {',
+    '    vec2 e = vec2(0.0012, 0.0012);',
+    '    float hC = lum(col);',
+    '    float hR = lum(texture2D(map, vUv + vec2(e.x, 0.0)).rgb);',
+    '    float hU = lum(texture2D(map, vUv + vec2(0.0, e.y)).rgb);',
+    '    vec3 T = cross(vec3(0.0,1.0,0.0), N);',
+    '    T = length(T) < 0.01 ? vec3(1.0,0.0,0.0) : normalize(T);',
+    '    vec3 B = normalize(cross(N, T));',
+    '    vec3 nT = normalize(vec3(-(hR-hC)*uBump, -(hU-hC)*uBump, 1.0));',
+    '    vec3 Nb = normalize(T*nT.x + B*nT.y + N*nT.z);',
+    '    float relief = clamp(dot(Nb, L), 0.0, 1.0);',
+    '    col *= mix(1.0, 0.5 + 0.7*relief, day);',   // relief shading on the lit side
+    '  }',
     '  col *= uNightFloor + (1.0 - uNightFloor) * day;',
     '  col += vec3(0.9, 0.95, 1.0) * uHighlight * 0.35;',
     '  gl_FragColor = vec4(col, 1.0);',
     '}'
   ].join('\n');
+
+  // per-body relief strength: strong on airless cratered worlds, none on gas
+  var BUMP = { Moon: 4.0, Mercury: 3.5, Mars: 2.4 };
 
   // ==========================================================================
   // Procedural material for small moons/asteroids (no public imagery):
@@ -228,7 +249,8 @@
       uniforms: {
         map: { value: tex(MAPS[name]) },
         uHighlight: { value: 0 },
-        uNightFloor: { value: nightFloor }
+        uNightFloor: { value: nightFloor },
+        uBump: { value: BUMP[name] || 0 }
       },
       vertexShader: EARTH_VERT,
       fragmentShader: PLANET_FRAG
