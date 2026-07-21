@@ -946,9 +946,9 @@ a:hover {
   display: inline-block;
 }
 
-/* Speed button visible on mobile when expanded */
+/* Speed button visible on mobile (speed selection x2/x4/x6 restored) */
 .mobile-device #btnSpeed {
-  display: none;
+  display: inline-block;
 }
 
 /* Mobile Publications Section - Always takes remaining space */

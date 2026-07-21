@@ -2671,14 +2671,17 @@ if (isMobileDevice) {
   });
 }
 
-// Desktop: Single click
-btnZoomIn.addEventListener('click', () => {
-  if (!isMobileDevice) performZoom(1);
-});
-
-document.getElementById('btnZoomOut').addEventListener('click', () => {
-  if (!isMobileDevice) performZoom(-1);
-});
+// Desktop: press-and-hold to keep zooming. startZoom() zooms once
+// immediately on mousedown, so a quick click still zooms exactly one step;
+// holding repeats every 50ms until release. mouseleave stops a held zoom
+// if the cursor slides off the button.
+if (!isMobileDevice) {
+  [[btnZoomIn, 1], [btnZoomOut, -1]].forEach(([btn, dir]) => {
+    btn.addEventListener('mousedown', (e) => { e.preventDefault(); startZoom(dir); });
+    btn.addEventListener('mouseup', stopZoom);
+    btn.addEventListener('mouseleave', stopZoom);
+  });
+}
 
 document.getElementById('btnRotate').addEventListener('click', e => {
   rotateMode = true;
