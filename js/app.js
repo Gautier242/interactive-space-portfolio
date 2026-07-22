@@ -2002,8 +2002,11 @@ const moonObjectColors = {
 // Moon surface hover detection
 moonCanvas.addEventListener('mousemove', e => {
   if (!moonSurfaceActive) return;
-  // if (moonSurfaceActive) return;
-  
+  // Touch devices fire a single synthetic mousemove on tap with no follow-up
+  // to clear it, which left the tapped object (e.g. VIPER) stuck bright white
+  // while driving. Hover highlighting is a desktop-only affordance.
+  if (isMobileDevice) return;
+
   if (isDragging) return;  // Use isDragging instead of dragging
   
   const rect = moonCanvas.getBoundingClientRect();
@@ -2602,7 +2605,24 @@ function onTap(el, handler) {
   });
 }
 
-onTap(speedBtn, () => setSpeedOpen(!isSpeedOpen()));
+// On mobile the pop-up dropdown proved unreliable (clipped by the controls
+// bar and .left panel however it was positioned), so the speed button simply
+// cycles through the steps on each tap: 0.25 -> 0.5 -> 1 -> 2 -> 4 -> 6 -> ...
+// Desktop keeps the dropdown.
+const SPEED_STEPS = [0.25, 0.5, 1, 2, 4, 6];
+function cycleSpeed() {
+  const cur = parseFloat(speedBtn.textContent) || 1;
+  let idx = SPEED_STEPS.indexOf(cur);
+  idx = (idx + 1) % SPEED_STEPS.length;
+  const mult = SPEED_STEPS[idx];
+  animationSpeed = mult * 0.5;
+  speedBtn.textContent = mult + 'x';
+}
+
+onTap(speedBtn, () => {
+  if (isMobileDevice) { cycleSpeed(); return; }
+  setSpeedOpen(!isSpeedOpen());
+});
 document.querySelectorAll('#speedDropdown button').forEach(btn => {
   onTap(btn, () => chooseSpeed(btn));
 });
@@ -2795,6 +2815,11 @@ function enterRoverMode() {
   if (roverPOVMode) return;
   roverPOVMode = true;
   viperManualControl = true;
+
+  // Clear any selection glow left on the rover so it drives with its real
+  // textured materials, not stuck bright white (belt-and-braces with the
+  // mobile mousemove guard).
+  if (moonViper) eachEmissiveMaterial(moonViper, restoreEmissive);
 
   saveSimStateOnce();
   forcePlayFast();

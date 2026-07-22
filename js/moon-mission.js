@@ -295,6 +295,7 @@
     exitBtn.id = 'missionExit';
     exitBtn.textContent = 'EXIT MISSION ⏎';
     exitBtn.addEventListener('click', onExit);
+    exitBtn.addEventListener('touchend', function (e) { e.preventDefault(); onExit(); });
     document.getElementById('leftPanel').appendChild(exitBtn);
   }
 
@@ -314,9 +315,10 @@
       '<button id="missionStart">BEGIN TRAVERSE</button>' +
       '</div>';
     document.getElementById('leftPanel').appendChild(introEl);
-    document.getElementById('missionStart').addEventListener('click', function () {
-      introEl.classList.remove('visible');
-    });
+    var startBtn = document.getElementById('missionStart');
+    function dismissIntro(e) { if (e) e.preventDefault(); introEl.classList.remove('visible'); }
+    startBtn.addEventListener('click', dismissIntro);
+    startBtn.addEventListener('touchend', dismissIntro);
   }
 
   function showMission(onExit) {

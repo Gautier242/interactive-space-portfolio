@@ -1386,3 +1386,27 @@ a:hover {
   /* controls back to their normal always-visible state in the left panel */
   .mobile-device .left .controls { bottom: 8px; }
 }
+
+/* ==========================================================================
+   MOBILE: the VIPER mission intro overlay is appended inside .left, which on
+   mobile is only ~20vh tall with overflow:hidden — the card and its BEGIN
+   TRAVERSE button got clipped and were unreachable. Promote the overlay to a
+   full-screen fixed layer and cap the card so the whole thing (button
+   included) is always visible and scrollable if needed.
+   ========================================================================== */
+.mobile-device #missionIntro {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  padding: 16px;
+}
+.mobile-device .intro-card {
+  max-width: 90vw;
+  max-height: 84vh;
+  overflow-y: auto;
+  padding: 18px 18px;
+}
+.mobile-device .intro-card h3 { font-size: 18px; }
+.mobile-device .intro-card p { font-size: 12.5px; line-height: 1.5; margin-bottom: 12px; }
+.mobile-device .intro-keys { font-size: 11px; margin-bottom: 14px; }
+.mobile-device #missionStart { padding: 13px 24px; font-size: 14px; }
