@@ -924,6 +924,12 @@ a:hover {
   display: flex;
 }
 
+/* keep the fixed-positioned dropdown within the screen on small viewports */
+.mobile-device .speed-dropdown {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
 .mobile-device .speed-dropdown button {
   background: rgba(30,60,100,.6);
   min-width: 60px;
@@ -1316,3 +1322,67 @@ a:hover {
 .mobile-device #missionHud { top: 10px; right: 10px; min-width: 124px; padding: 8px 10px; }
 .mobile-device #missionHud .hud-row { font-size: 10.5px; line-height: 1.7; }
 .mobile-device #missionExit { bottom: 76px; right: 10px; }
+
+/* ==========================================================================
+   MOBILE LANDSCAPE: switch from the stacked portrait layout to a desktop-like
+   side-by-side view (animation left, publications right). Scoped to
+   .mobile-device so real desktops (always landscape) are never affected.
+   Body becomes a flex column (header + app) so the app fills the exact
+   remaining height with no magic numbers.
+   ========================================================================== */
+@media (orientation: landscape) {
+  .mobile-device body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .mobile-device .header { flex: 0 0 auto; }
+
+  .mobile-device .app {
+    flex: 1 1 auto;
+    flex-direction: row;
+    height: auto;
+    min-height: 0;
+  }
+
+  /* Animation on the left */
+  .mobile-device .left {
+    order: 1;
+    flex: 0 0 42%;
+    width: 42%;
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* Publications on the right, internal scroll (page itself doesn't scroll) */
+  .mobile-device .right {
+    order: 2;
+    flex: 1 1 auto;
+    height: 100%;
+    max-height: none;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .mobile-device .section-title { flex: 0 0 auto; }
+  .mobile-device .pubs-scroll {
+    flex: 1 1 auto;
+    max-height: none;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  /* thin divider between the panels, matching desktop (no drag needed) */
+  .mobile-device .resizer {
+    display: block;
+    flex: 0 0 2px;
+    width: 2px;
+    background: rgba(158, 201, 255, 0.25);
+    cursor: default;
+  }
+
+  /* controls back to their normal always-visible state in the left panel */
+  .mobile-device .left .controls { bottom: 8px; }
+}

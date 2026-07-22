@@ -2551,7 +2551,29 @@ const speedDropdown = document.getElementById('speedDropdown');
 // old code toggled inline style.display in one handler and .active in a
 // duplicate handler; on mobile they cancelled out so speed taps never
 // registered.
-function setSpeedOpen(open) { speedDropdown.classList.toggle('active', open); }
+function setSpeedOpen(open) {
+  // On mobile the controls bar and the .left panel both clip overflow, so an
+  // absolutely-positioned dropdown gets cut off and its options aren't
+  // tappable. Position it fixed (relative to the viewport) above the speed
+  // button when opening, which escapes every ancestor's clipping.
+  speedDropdown.classList.toggle('active', open);
+  if (open && isMobileDevice) {
+    const r = speedBtn.getBoundingClientRect();
+    speedDropdown.style.position = 'fixed';
+    speedDropdown.style.transform = 'none';
+    speedDropdown.style.right = 'auto';
+    speedDropdown.style.bottom = 'auto';
+    // measure the now-visible dropdown, then place it and clamp fully inside
+    // the viewport so it is never clipped or off-screen in any orientation
+    const dw = speedDropdown.offsetWidth, dh = speedDropdown.offsetHeight;
+    let left = r.left + r.width / 2 - dw / 2;
+    let top = (window.innerHeight - r.bottom > dh + 16) ? (r.bottom + 8) : (r.top - dh - 8);
+    left = Math.max(6, Math.min(left, window.innerWidth - dw - 6));
+    top = Math.max(6, Math.min(top, window.innerHeight - dh - 6));
+    speedDropdown.style.left = left + 'px';
+    speedDropdown.style.top = top + 'px';
+  }
+}
 function isSpeedOpen() { return speedDropdown.classList.contains('active'); }
 
 function chooseSpeed(el) {
