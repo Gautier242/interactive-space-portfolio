@@ -161,7 +161,11 @@ const PUBS = [
     authors: "<strong>G. Bardi</strong>, T. Lu, M. Archer, J. Wang", 
     // venue: "AGU 2024",
     links: [{t: "Accepted for oral presentation - link to abstract", u: "https://agu.confex.com/agu/agu24/meetingapp.cgi/Paper/1655008"}],
-    img: "images/swot.webp"
+    img: "images/swot-1000.webp",
+    // 84-frame animated WebP, 3 MB. Only the detail view is big enough to read
+    // the slides, so the list gets the still first frame via img/srcset above
+    // and the animation loads on click.
+    imgAnimated: "images/swot.webp"
   },
   { 
     id: "rover", 
@@ -470,9 +474,11 @@ function showDetail(item) {
   
   // sizes/srcset before src, so the browser picks the variant on the first pass
   // rather than fetching the 1000w fallback and then correcting itself.
+  // imgAnimated wins here when present: it is too heavy for the list, but this
+  // is the only view large enough to read it.
   detailImg.sizes = '(max-width: 800px) 75vw, 500px';
-  detailImg.srcset = window.imgSrcset(item.img);
-  detailImg.src = item.img;
+  detailImg.srcset = item.imgAnimated ? '' : window.imgSrcset(item.img);
+  detailImg.src = item.imgAnimated || item.img;
   detailImg.onerror = function() {
     this.onerror = null;
     this.srcset = '';
