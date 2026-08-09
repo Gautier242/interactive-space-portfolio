@@ -1,0 +1,102 @@
+/* TUTORIAL v2 — one compact pill, a ghost cursor, no paragraphs. */
+
+.t2-layer {
+  position: absolute; inset: 0; z-index: 60; pointer-events: none;
+  opacity: 0; transition: opacity .25s ease;
+}
+.t2-layer.on { opacity: 1; }
+
+/* ---- the pill: bottom-centre, above the control bar ------------------- */
+.t2-pill {
+  position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px 8px 12px; border-radius: 999px;
+  background: rgba(10, 18, 34, .95);
+  border: 1px solid rgba(158, 201, 255, .3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+  backdrop-filter: blur(10px);
+  white-space: nowrap; pointer-events: auto;
+}
+.t2-icon { width: 18px; height: 18px; color: #ffd27f; flex: 0 0 auto; }
+.t2-label {
+  font: 600 12.5px/1 Inter, system-ui, sans-serif;
+  letter-spacing: -.005em; color: #eaf2fd;
+}
+.t2-dots { display: flex; gap: 4px; margin-left: 2px; }
+.t2-dots i {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(158, 201, 255, .3); transition: background .2s, width .2s;
+}
+.t2-dots i.on { background: #9ec9ff; width: 11px; border-radius: 2px; }
+.t2-skip {
+  font: 600 10px/1 Inter, sans-serif; letter-spacing: .05em;
+  color: #8ba0c0; background: none; border: 0; cursor: pointer;
+  padding: 4px 4px 4px 6px; border-left: 1px solid rgba(158, 201, 255, .18);
+}
+.t2-skip:hover { color: #e7eefc; }
+.t2-skip:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
+
+/* ---- ghost cursor ------------------------------------------------------ */
+.t2-ghost {
+  position: absolute; left: 0; top: 0; opacity: 0;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .6));
+  transition: opacity .2s linear;
+}
+.t2-ghost.t2-press { animation: t2press .42s ease; }
+@keyframes t2press {
+  0%, 100% { scale: 1; }
+  40%      { scale: .8; }
+}
+
+/* ---- scroll-wheel glyph ----------------------------------------------- */
+.t2-wheel {
+  position: absolute; left: 0; top: 0; opacity: 0;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .6));
+  transition: opacity .2s linear;
+}
+.t2-wheel.on { opacity: 1; }
+.t2-wheel-dot { animation: t2scroll 1.5s ease-in-out infinite; }
+@keyframes t2scroll {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(7px); }
+}
+
+/* ---- halo that marks the target --------------------------------------- */
+.t2-halo {
+  position: absolute; left: 0; top: 0;
+  width: 42px; height: 42px; margin: -21px 0 0 -21px;
+  border-radius: 50%; border: 1.5px solid #ffd27f;
+  opacity: 0; transition: opacity .2s linear;
+}
+.t2-halo.on { opacity: 1; animation: t2halo 1.6s ease-out infinite; }
+.t2-halo.t2-halo-wide {
+  width: var(--hw, 200px); height: var(--hh, 44px);
+  margin: calc(var(--hh, 44px) / -2) 0 0 calc(var(--hw, 200px) / -2);
+  border-radius: 10px; animation: none; opacity: .9;
+}
+@keyframes t2halo {
+  0%   { transform: scale(.72); opacity: .9; }
+  75%  { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* ---- replay affordance ------------------------------------------------ */
+.t2-replay {
+  position: absolute; top: 12px; left: 12px; z-index: 61;
+  width: 28px; height: 28px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #a8c0e0; background: rgba(10, 18, 34, .82);
+  border: 1px solid rgba(158, 201, 255, .24);
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .3s, color .15s, border-color .15s, background .15s;
+}
+.t2-replay svg { width: 17px; height: 17px; }
+.t2-replay.show { opacity: 1; pointer-events: auto; }
+.t2-replay:hover {
+  color: #fff; border-color: #9ec9ff; background: rgba(158, 201, 255, .16);
+}
+.t2-replay:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .t2-halo.on, .t2-wheel-dot, .t2-ghost.t2-press { animation: none; }
+}

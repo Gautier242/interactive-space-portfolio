@@ -1,0 +1,130 @@
+/* INTERACTIVE TOUR — small, anchored, self-dismissing. */
+
+.tour-layer {
+  position: absolute; inset: 0; z-index: 60;
+  pointer-events: none; opacity: 0;
+  transition: opacity .25s ease;
+}
+.tour-layer.on { opacity: 1; }
+
+/* ---- bubble ----------------------------------------------------------- */
+.tour-bubble {
+  position: absolute; left: 0; top: 0;
+  transform: translate(-50%, -50%) scale(.96);
+  opacity: 0;
+  /* Fixed width, not max-width: an absolutely positioned box shrink-to-fits
+     against the distance from `left` to the container edge, and that is
+     computed BEFORE translate(-50%) moves it back. Near the right edge a
+     max-width bubble collapses into a narrow column of single words. */
+  width: 218px; padding: 11px 13px 9px;
+  border-radius: 9px;
+  background: rgba(12, 21, 40, .96);
+  border: 1px solid rgba(158, 201, 255, .28);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+  backdrop-filter: blur(10px);
+  pointer-events: auto;
+  transition: opacity .28s ease, transform .28s cubic-bezier(.2, .9, .3, 1),
+              left .3s ease, top .3s ease;
+}
+.tour-bubble.in { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+
+.tour-text {
+  font: 500 12.5px/1.5 Inter, system-ui, sans-serif;
+  color: #e7eefc; letter-spacing: -.005em;
+}
+.tour-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; margin-top: 9px;
+}
+.tour-dots { display: flex; gap: 4px; }
+.tour-dots i {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(158, 201, 255, .28); transition: background .2s, width .2s;
+}
+.tour-dots i.on { background: #9ec9ff; width: 11px; border-radius: 2px; }
+.tour-skip {
+  font: 600 10px/1 Inter, sans-serif; letter-spacing: .06em;
+  color: #8ba0c0; background: none; border: 0; cursor: pointer;
+  padding: 3px 2px;
+}
+.tour-skip:hover { color: #e7eefc; }
+.tour-skip:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
+
+/* arrow tracks the anchor horizontally via --arrow-x */
+.tour-arrow {
+  position: absolute; width: 9px; height: 9px;
+  background: rgba(12, 21, 40, .96);
+  border: 1px solid rgba(158, 201, 255, .28);
+  transform: rotate(45deg);
+}
+.tour-bubble[data-place="above"] .tour-arrow {
+  left: var(--arrow-x, 50%); bottom: -5.5px; margin-left: -4.5px;
+  border-top: 0; border-left: 0;
+}
+.tour-bubble[data-place="below"] .tour-arrow {
+  left: var(--arrow-x, 50%); top: -5.5px; margin-left: -4.5px;
+  border-bottom: 0; border-right: 0;
+}
+.tour-bubble[data-place="left"] .tour-arrow {
+  right: -5.5px; top: 50%; margin-top: -4.5px;
+  border-bottom: 0; border-left: 0;
+}
+.tour-bubble[data-place="none"] .tour-arrow { display: none; }
+
+/* ---- ping that marks the thing being described ------------------------ */
+.tour-ping { position: absolute; left: 0; top: 0; overflow: visible; }
+.tour-ping-core {
+  fill: none; stroke: #ffd27f; stroke-width: 1.4; opacity: .9;
+}
+.tour-ping-wave {
+  fill: none; stroke: #ffd27f; stroke-width: 1.2;
+  transform-origin: 23px 23px;
+  animation: tourPing 2s ease-out infinite;
+}
+@keyframes tourPing {
+  0%   { transform: scale(.7); opacity: .75; }
+  70%  { transform: scale(2.1); opacity: 0; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+
+/* ---- drag demonstration ----------------------------------------------- */
+.tour-drag {
+  position: absolute; left: 50%; top: 62%;
+  width: 108px; height: 22px; margin-left: -54px;
+  opacity: 0; transition: opacity .3s;
+}
+.tour-drag.on { opacity: 1; }
+.tour-drag span {
+  position: absolute; top: 4px; left: 0;
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 1.4px solid #cfe2ff; background: rgba(158, 201, 255, .22);
+  animation: tourDrag 2.6s ease-in-out infinite;
+}
+@keyframes tourDrag {
+  0%, 8%    { transform: translateX(0); opacity: 0; }
+  16%       { opacity: 1; }
+  76%       { transform: translateX(95px); opacity: 1; }
+  92%, 100% { transform: translateX(95px); opacity: 0; }
+}
+
+/* ---- replay affordance ------------------------------------------------ */
+.tour-replay {
+  position: absolute; top: 12px; left: 12px; z-index: 61;
+  width: 26px; height: 26px; border-radius: 50%;
+  font: 600 13px/1 Inter, system-ui, sans-serif;
+  color: #a8c0e0; background: rgba(10, 18, 34, .8);
+  border: 1px solid rgba(158, 201, 255, .24);
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .3s, color .15s, border-color .15s, background .15s;
+}
+.tour-replay.show { opacity: 1; pointer-events: auto; }
+.tour-replay:hover {
+  color: #fff; border-color: #9ec9ff; background: rgba(158, 201, 255, .16);
+}
+.tour-replay:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-bubble { transition: opacity .2s ease; }
+  .tour-ping-wave, .tour-drag span { animation: none; }
+  .tour-drag span { opacity: .8; }
+}

@@ -1,0 +1,56 @@
+/* INSTRUMENT — QUIET VARIANT
+   One small corner readout instead of a full top bar; labels sit at low
+   contrast until pointed at. The scene stays the subject. */
+
+.lite-hud {
+  position: absolute; inset: 0; pointer-events: none; z-index: 40;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+.lite-labels { position: absolute; inset: 0; }
+
+/* ---- labels: name only, dimmed, until focused ------------------------- */
+.lite-tag {
+  position: absolute; top: 0; left: 0; display: none;
+  padding-left: 11px; white-space: nowrap;
+  opacity: .42;
+  transition: opacity .16s linear;
+  will-change: transform;
+}
+.lite-tag.has-pubs { opacity: .62; }
+.lite-tag.on { opacity: 1; }
+
+.lite-dot {
+  position: absolute; left: 0; top: 50%;
+  width: 4px; height: 4px; margin-top: -2px; border-radius: 50%;
+  background: rgba(200, 220, 250, .75);
+}
+.lite-tag.has-pubs .lite-dot { background: #ffd27f; }
+.lite-tag.on .lite-dot { box-shadow: 0 0 0 3px rgba(158, 201, 255, .18); }
+
+.lite-nm {
+  font-size: 9.5px; font-weight: 600; letter-spacing: .14em;
+  color: #c3d6f0;
+}
+.lite-tag.has-pubs .lite-nm { color: #ffd88f; }
+.lite-tag.on .lite-nm { color: #fff; }
+
+/* the detail line exists only for the focused body */
+.lite-sub {
+  display: block; font-size: 9px; letter-spacing: .04em;
+  color: #90a6c6; margin-top: 2px; max-width: 240px;
+  overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ---- corner readout --------------------------------------------------- */
+.lite-corner {
+  position: absolute; left: 12px; bottom: 74px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 9px; letter-spacing: .12em; color: #6d84a6;
+}
+.lite-sep { width: 1px; height: 9px; background: rgba(158, 201, 255, .22); }
+.lite-scale { color: #8ba0c0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lite-tag { transition: none; }
+}

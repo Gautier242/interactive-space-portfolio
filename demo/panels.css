@@ -1,0 +1,592 @@
+/* ============================================================================
+   RIGHT-PANEL SKINS — five complete visual identities over the SAME markup.
+   app.js is untouched; every skin is scoped under [data-skin="…"] on <html>.
+
+   Card DOM (from js/app.js:326):
+     .institution-group > .institution-title
+                        > .pub-card[data-body] > .pub-image > img
+                                               > .pub-content > .pub-header
+                                                                  > .pub-title
+                                                                  > .pub-inst
+                                                                  > .pub-subinst
+                                                              > .pub-desc
+                                                              > .pub-meta
+                                                              > .pub-links > a
+   ========================================================================= */
+
+/* Per-body accent, shared by every skin. Colours are pulled from how each
+   body actually appears in the 3D scene, so panel and render agree. */
+[data-skin] .pub-card { --acc: #9ec9ff; --acc-dim: rgba(158,201,255,.15); }
+[data-skin] .pub-card[data-body="Earth"]    { --acc:#5aa2f0; --acc-dim:rgba(90,162,240,.16); }
+[data-skin] .pub-card[data-body="ISS"]      { --acc:#9fc4e8; --acc-dim:rgba(159,196,232,.16); }
+[data-skin] .pub-card[data-body="Mars"]     { --acc:#e0705a; --acc-dim:rgba(224,112,90,.16); }
+[data-skin] .pub-card[data-body="Moon"]     { --acc:#c8cdd6; --acc-dim:rgba(200,205,214,.14); }
+[data-skin] .pub-card[data-body="VIPER"]    { --acc:#f0c05a; --acc-dim:rgba(240,192,90,.16); }
+[data-skin] .pub-card[data-body="LRO"]      { --acc:#b9c6d8; --acc-dim:rgba(185,198,216,.14); }
+[data-skin] .pub-card[data-body="Starship"] { --acc:#dfe4ea; --acc-dim:rgba(223,228,234,.14); }
+[data-skin] .pub-card[data-body="HWO"]      { --acc:#ffd27f; --acc-dim:rgba(255,210,127,.16); }
+[data-skin] .pub-card[data-body="Sun"]      { --acc:#ffb347; --acc-dim:rgba(255,179,71,.16); }
+
+/* Shared resets so each skin starts from a clean slate rather than fighting
+   main.css. The inline width on .pub-image is set by updateImageSizes(), so
+   it needs !important to override. */
+[data-skin] .pub-card {
+  background: none; border: 0; border-radius: 0; box-shadow: none;
+  margin: 0; /* main.css adds 14px; each skin owns its own rhythm */
+  transition: background .18s ease, border-color .18s ease, transform .18s ease;
+}
+/* main.css floats .pub-image left at max-width:45% with min-height:188px and
+   object-fit:contain. Every skin below controls its own image placement, so
+   the float, the caps and the letterboxing all have to go first — otherwise
+   each skin silently inherits the stock two-column card. */
+[data-skin] .pub-image {
+  float: none !important;
+  width: auto !important;
+  max-width: none !important;
+  min-height: 0 !important;
+  height: auto;
+  margin: 0 !important;
+  border: 0; border-radius: 0; background: #0a1220;
+  display: block; font-size: 0;
+}
+[data-skin] .pub-image img {
+  display: block; width: 100%; height: 100%;
+  object-fit: cover !important;
+}
+[data-skin] .pub-card::after { display: none; }
+
+/* main.css draws a rule above .pub-links and shrinks .pub-meta to 1px — a
+   suppression hack that renders as an illegible smear rather than hiding.
+   Each skin owns its own separators, so clear both. */
+[data-skin] .pub-links { border-top: 0 !important; padding-top: 0 !important; }
+[data-skin] .pub-meta { display: none; }
+/* main.css sets every card font-size with !important (lines 36-41) to drive
+   its text-size stepper. An !important declaration only loses to another
+   !important one of higher specificity, so each skin restates its sizes in
+   the escalation block at the foot of this file. Do not "simplify" that
+   block away — without it every skin silently renders at 15px. */
+
+/* The decorative neural-network canvas competes with every one of these
+   layouts. Off by default; Orbital re-enables it faintly because it reads
+   as starfield there rather than as noise. */
+[data-skin] .right .neural-bg { display: none; }
+[data-skin="orbital"] .right .neural-bg { display: block; opacity: .25; }
+
+/* main.css justifies the descriptions, which opens rivers of whitespace in
+   a narrow column. Ragged-right is correct at this measure. */
+[data-skin] .pub-desc, [data-skin] .pub-desc * { text-align: left !important; }
+
+/* The text-size stepper is chrome, not content — make it recede. */
+[data-skin] .section-title .text-size-controls { gap: 5px !important; }
+[data-skin] .text-size-label {
+  font: 600 8px/1 ui-monospace, Menlo, monospace !important;
+  letter-spacing: .16em !important; color: #5f7593 !important;
+}
+[data-skin] .section-title .text-size-controls button {
+  width: 22px; height: 22px; border-radius: 3px;
+  background: transparent; border: 1px solid rgba(158,201,255,.2);
+  color: #8ba0c0; font-size: 12px; line-height: 1; cursor: pointer;
+}
+[data-skin] .section-title .text-size-controls button:hover {
+  border-color: #9ec9ff; color: #e7eefc;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-skin] .pub-card, [data-skin] .pub-image img { transition: none !important; }
+}
+
+/* ============================================================================
+   1 · DOSSIER — NASA technical report. Numbered, tabular, hairline rules.
+   ========================================================================= */
+[data-skin="dossier"] .right { background: #060b14; }
+[data-skin="dossier"] .section-title {
+  font: 700 10px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .28em; text-transform: uppercase; color: #7d93b4;
+  padding: 14px 18px; border-bottom: 1px solid rgba(158,201,255,.14);
+  background: linear-gradient(180deg, rgba(158,201,255,.05), transparent);
+}
+[data-skin="dossier"] .institution-group { counter-reset: none; }
+[data-skin="dossier"] .institution-title {
+  display: flex; align-items: center; gap: 10px;
+  font: 700 9px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .24em; text-transform: uppercase; color: #ffd27f;
+  padding: 22px 18px 8px; background: none; border: 0;
+}
+[data-skin="dossier"] .institution-title::after {
+  content: ""; flex: 1; height: 1px; background: rgba(255,210,127,.28);
+}
+[data-skin="dossier"] .pubs-scroll { counter-reset: dossier; padding: 0 0 40px; }
+[data-skin="dossier"] .pub-card {
+  counter-increment: dossier;
+  display: grid; grid-template-columns: 30px 68px 1fr; gap: 14px; align-items: start;
+  padding: 16px 18px; border-top: 1px solid rgba(158,201,255,.09);
+}
+[data-skin="dossier"] .pub-card:hover { background: rgba(158,201,255,.045); }
+[data-skin="dossier"] .pub-card::before {
+  content: counter(dossier, decimal-leading-zero);
+  font: 700 11px/1.2 ui-monospace, Menlo, monospace;
+  color: var(--acc); opacity: .8; padding-top: 2px;
+}
+[data-skin="dossier"] .pub-image {
+  width: 68px !important; height: 68px; overflow: hidden;
+  border: 1px solid rgba(158,201,255,.18);
+}
+/* duotone chip that resolves to full colour on hover — a quiet reward */
+[data-skin="dossier"] .pub-image img {
+  filter: grayscale(1) contrast(1.05) brightness(.82) sepia(.35) hue-rotate(175deg) saturate(2.2);
+  transition: filter .25s ease;
+}
+[data-skin="dossier"] .pub-card:hover .pub-image img { filter: none; }
+[data-skin="dossier"] .pub-title {
+  font: 600 14px/1.35 Inter, system-ui, sans-serif; color: #e2ecfb;
+  letter-spacing: -.005em; margin-bottom: 5px;
+}
+[data-skin="dossier"] .pub-inst {
+  font: 500 9px/1.4 ui-monospace, Menlo, monospace;
+  letter-spacing: .18em; text-transform: uppercase; color: #7d93b4;
+}
+[data-skin="dossier"] .pub-subinst {
+  font: 400 10px/1.5 Inter, sans-serif; color: #64789a; font-style: italic; margin-top: 2px;
+}
+[data-skin="dossier"] .pub-desc {
+  font: 400 12.5px/1.6 Inter, sans-serif; color: #93a8c6; margin-top: 8px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+[data-skin="dossier"] .pub-links { margin-top: 9px; display: flex; gap: 14px; }
+[data-skin="dossier"] .pub-links a {
+  font: 600 10px/1 ui-monospace, Menlo, monospace; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--acc); text-decoration: none;
+}
+[data-skin="dossier"] .pub-links a::after { content: " ↗"; opacity: .6; }
+[data-skin="dossier"] .pub-links a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* ============================================================================
+   2 · JOURNAL — academic press. Serif, airy, near-monochrome.
+   ========================================================================= */
+[data-skin="journal"] .right { background: #070d18; }
+[data-skin="journal"] .section-title {
+  font: 400 13px/1 "Iowan Old Style", Georgia, "Times New Roman", serif;
+  letter-spacing: .2em; text-transform: uppercase; color: #b9c9e2;
+  padding: 20px 34px; text-align: center;
+  border-bottom: 1px solid rgba(200,220,255,.12);
+}
+[data-skin="journal"] .institution-title {
+  display: flex; align-items: center; gap: 14px; justify-content: center;
+  font: 400 10px/1 Inter, sans-serif; letter-spacing: .3em;
+  text-transform: uppercase; color: #8a9dba;
+  padding: 40px 34px 10px; background: none; border: 0;
+}
+[data-skin="journal"] .institution-title::before,
+[data-skin="journal"] .institution-title::after {
+  content: ""; flex: 1; max-width: 70px; height: 1px; background: rgba(200,220,255,.2);
+}
+[data-skin="journal"] .pubs-scroll { padding: 0 0 56px; }
+[data-skin="journal"] .pub-card {
+  display: block; padding: 26px 34px 30px;
+  border-bottom: 1px solid rgba(200,220,255,.09);
+}
+[data-skin="journal"] .pub-card:hover { background: rgba(200,220,255,.028); }
+/* A 16:9 banner at this column width runs ~500px tall and swallows the
+   entry. A wider crop, capped, keeps it a plate rather than a poster. */
+[data-skin="journal"] .pub-image {
+  width: 100% !important; aspect-ratio: 2.4/1; max-height: 260px;
+  overflow: hidden; margin: 0 0 22px !important;
+  border: 1px solid rgba(200,220,255,.14);
+}
+[data-skin="journal"] .pub-image img { filter: saturate(.88) contrast(1.03); }
+[data-skin="journal"] .pub-title {
+  font: 400 22px/1.35 "Iowan Old Style", Georgia, serif; color: #edf3fc;
+  letter-spacing: -.01em; margin-bottom: 10px;
+}
+[data-skin="journal"] .pub-inst {
+  font: 500 9.5px/1.4 Inter, sans-serif; letter-spacing: .22em;
+  text-transform: uppercase; color: #8a9dba;
+}
+[data-skin="journal"] .pub-subinst {
+  font: 400 13px/1.5 "Iowan Old Style", Georgia, serif;
+  color: #7f92b0; font-style: italic; margin-top: 4px;
+}
+[data-skin="journal"] .pub-desc {
+  font: 400 15px/1.75 "Iowan Old Style", Georgia, serif; color: #c2d0e6;
+  margin-top: 16px; hyphens: auto;
+}
+[data-skin="journal"] .pub-links { margin-top: 18px; display: flex; gap: 22px; }
+[data-skin="journal"] .pub-links a {
+  font: 400 13px/1 "Iowan Old Style", Georgia, serif; color: #a7d1ff;
+  text-decoration: underline; text-underline-offset: 4px;
+  text-decoration-thickness: 1px; text-decoration-color: rgba(167,209,255,.4);
+}
+[data-skin="journal"] .pub-links a:hover { text-decoration-color: #a7d1ff; }
+
+/* ============================================================================
+   3 · LOG — instrument readout. Monospace rows, expand on hover.
+   Pairs with the Instrument treatment on the 3D side.
+   ========================================================================= */
+[data-skin="log"] .right { background: #04080f; }
+[data-skin="log"] .section-title {
+  font: 700 10px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .22em; text-transform: uppercase; color: #6f88ab;
+  padding: 12px 16px; border-bottom: 1px solid rgba(158,201,255,.14);
+}
+[data-skin="log"] .institution-title {
+  display: flex; align-items: center; gap: 8px;
+  font: 700 9px/1 ui-monospace, Menlo, monospace; letter-spacing: .2em;
+  text-transform: uppercase; color: #5d7398;
+  padding: 18px 16px 6px; background: none; border: 0;
+}
+[data-skin="log"] .institution-title::before { content: "──"; opacity: .5; }
+[data-skin="log"] .institution-title::after {
+  content: ""; flex: 1; border-top: 1px dashed rgba(158,201,255,.2);
+}
+[data-skin="log"] .pubs-scroll { counter-reset: log; padding: 0 0 40px; }
+[data-skin="log"] .pub-card {
+  counter-increment: log;
+  display: grid; grid-template-columns: 26px 34px 1fr; gap: 10px; align-items: start;
+  padding: 7px 16px; border-left: 2px solid transparent;
+  font-family: ui-monospace, Menlo, monospace;
+}
+[data-skin="log"] .pub-card::before {
+  content: counter(log, decimal-leading-zero);
+  font: 400 10px/1.6 ui-monospace, Menlo, monospace; color: #4e6685;
+}
+[data-skin="log"] .pub-card:hover {
+  background: rgba(158,201,255,.06); border-left-color: var(--acc);
+}
+[data-skin="log"] .pub-image {
+  width: 34px !important; height: 34px; overflow: hidden;
+  border: 1px solid rgba(158,201,255,.2); opacity: .55; transition: opacity .2s;
+}
+[data-skin="log"] .pub-card:hover .pub-image { opacity: 1; }
+[data-skin="log"] .pub-title {
+  font: 400 12px/1.5 ui-monospace, Menlo, monospace; color: #d4e3f7;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+[data-skin="log"] .pub-card:hover .pub-title { white-space: normal; color: #fff; }
+[data-skin="log"] .pub-inst {
+  font: 400 8.5px/1.5 ui-monospace, Menlo, monospace; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--acc); opacity: .75;
+}
+[data-skin="log"] .pub-subinst { display: none; }
+[data-skin="log"] .pub-desc {
+  font: 400 11px/1.6 ui-monospace, Menlo, monospace; color: #7e95b6;
+  margin-top: 4px; max-height: 0; overflow: hidden;
+  transition: max-height .28s ease, margin .28s ease;
+}
+[data-skin="log"] .pub-card:hover .pub-desc { max-height: 340px; margin-top: 6px; }
+[data-skin="log"] .pub-links { margin-top: 0; max-height: 0; overflow: hidden; transition: max-height .28s ease, margin .28s ease; }
+[data-skin="log"] .pub-card:hover .pub-links { max-height: 60px; margin-top: 7px; }
+[data-skin="log"] .pub-links a {
+  font: 700 9.5px/1 ui-monospace, Menlo, monospace; letter-spacing: .1em;
+  text-transform: uppercase; color: var(--acc); text-decoration: none; margin-right: 14px;
+}
+[data-skin="log"] .pub-links a::before { content: "▸ "; }
+
+/* ============================================================================
+   4 · EDITORIAL — magazine. Full-bleed image, title on the scrim.
+   ========================================================================= */
+[data-skin="editorial"] .right { background: #080e1a; }
+[data-skin="editorial"] .section-title {
+  font: 800 20px/1.1 Inter, system-ui, sans-serif; letter-spacing: -.02em;
+  text-transform: none; color: #f0f5fd; padding: 24px 22px 18px; border: 0;
+}
+[data-skin="editorial"] .institution-title {
+  font: 700 10px/1 Inter, sans-serif; letter-spacing: .18em;
+  text-transform: uppercase; color: #8ba0c0;
+  padding: 26px 22px 12px; background: none; border: 0;
+}
+[data-skin="editorial"] .pubs-scroll { padding: 0 22px 48px; }
+[data-skin="editorial"] .pub-card {
+  display: block; margin-bottom: 20px; border-radius: 12px; overflow: hidden;
+  background: #0d1526; border: 1px solid rgba(158,201,255,.1);
+  box-shadow: 0 1px 2px rgba(0,0,0,.5);
+}
+[data-skin="editorial"] .pub-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--acc-dim);
+  box-shadow: 0 12px 28px rgba(0,0,0,.55);
+}
+[data-skin="editorial"] .pub-image {
+  position: relative; width: 100% !important;
+  aspect-ratio: 16/10; max-height: 300px; overflow: hidden;
+}
+[data-skin="editorial"] .pub-image img { transition: transform .4s ease; }
+[data-skin="editorial"] .pub-card:hover .pub-image img { transform: scale(1.04); }
+/* scrim so the overlaid title stays readable on any photo */
+[data-skin="editorial"] .pub-image::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg,
+    rgba(8,14,26,.05) 0%, rgba(8,14,26,.30) 42%,
+    rgba(11,18,32,.86) 78%, rgba(13,21,38,1) 100%);
+}
+[data-skin="editorial"] .pub-content { position: relative; padding: 0 18px 18px; margin-top: -84px; z-index: 1; }
+/* The markup puts .pub-title before .pub-inst; the pill belongs on top, so
+   reorder visually rather than asking app.js to change its DOM. */
+[data-skin="editorial"] .pub-header { display: flex; flex-direction: column; margin-bottom: 12px; }
+[data-skin="editorial"] .pub-header .pub-inst { order: -1; align-self: flex-start; }
+[data-skin="editorial"] .pub-inst {
+  display: inline-block; font: 700 9px/1 Inter, sans-serif; letter-spacing: .14em;
+  text-transform: uppercase; color: #0a1220; background: var(--acc);
+  padding: 4px 8px; border-radius: 3px; margin-bottom: 9px;
+}
+[data-skin="editorial"] .pub-title {
+  font: 700 19px/1.25 Inter, system-ui, sans-serif; letter-spacing: -.02em; color: #fff;
+  text-shadow: 0 2px 12px rgba(0,0,0,.6);
+}
+[data-skin="editorial"] .pub-subinst {
+  font: 400 11.5px/1.5 Inter, sans-serif; color: #93a8c6; margin-top: 6px;
+}
+[data-skin="editorial"] .pub-desc {
+  font: 400 14px/1.65 Inter, sans-serif; color: #b3c4de;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+[data-skin="editorial"] .pub-links { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+[data-skin="editorial"] .pub-links a {
+  font: 600 11.5px/1 Inter, sans-serif; color: #d7e6fb; text-decoration: none;
+  padding: 8px 13px; border-radius: 999px; border: 1px solid rgba(158,201,255,.22);
+}
+[data-skin="editorial"] .pub-links a:hover { background: var(--acc-dim); border-color: var(--acc); }
+
+/* ============================================================================
+   5 · ORBITAL — the artistic one. Images become planets; entries hang off an
+   orbit track; every accent inherits the linked body's colour.
+   ========================================================================= */
+[data-skin="orbital"] .right {
+  background:
+    radial-gradient(120% 60% at 80% 0%, rgba(90,162,240,.09), transparent 60%),
+    radial-gradient(80% 50% at 0% 100%, rgba(255,179,71,.06), transparent 60%),
+    #05090f;
+}
+[data-skin="orbital"] .section-title {
+  font: 200 26px/1.15 Inter, system-ui, sans-serif; letter-spacing: -.03em;
+  text-transform: none; color: #eaf2fd; padding: 30px 26px 8px; border: 0;
+}
+[data-skin="orbital"] .section-title::after {
+  content: ""; display: block; width: 40px; height: 1px;
+  background: linear-gradient(90deg, #ffd27f, transparent); margin-top: 14px;
+}
+[data-skin="orbital"] .institution-title {
+  font: 400 9px/1 Inter, sans-serif; letter-spacing: .38em;
+  text-transform: uppercase; color: #6d84a6;
+  padding: 40px 26px 4px; background: none; border: 0;
+}
+/* the orbit track: one hairline down the gutter, with a node per entry */
+[data-skin="orbital"] .pubs-scroll { padding: 0 26px 60px; }
+[data-skin="orbital"] .institution-group { position: relative; }
+[data-skin="orbital"] .institution-group::before {
+  content: ""; position: absolute; left: 43px; top: 34px; bottom: 10px; width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(158,201,255,.22) 12%, rgba(158,201,255,.22) 88%, transparent);
+}
+[data-skin="orbital"] .pub-card {
+  position: relative; display: grid; grid-template-columns: 88px 1fr;
+  gap: 22px; align-items: start; padding: 26px 0;
+}
+/* node dot sitting on the track, coloured by the linked body */
+[data-skin="orbital"] .pub-card::before {
+  content: ""; position: absolute; left: 40px; top: 58px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--acc); box-shadow: 0 0 0 4px #05090f, 0 0 14px var(--acc);
+  z-index: 2;
+}
+/* the image, masked into a planet */
+[data-skin="orbital"] .pub-image {
+  position: relative; width: 88px !important; height: 88px;
+  border-radius: 50%; overflow: hidden; z-index: 1;
+  box-shadow: 0 0 0 1px var(--acc-dim), 0 0 30px -4px var(--acc);
+  transition: box-shadow .35s ease, transform .35s ease;
+}
+[data-skin="orbital"] .pub-image img {
+  filter: saturate(1.15) contrast(1.08) brightness(.92);
+  transition: transform .5s ease;
+}
+/* a terminator, so the disc reads as a lit sphere rather than a flat circle */
+[data-skin="orbital"] .pub-image::after {
+  content: ""; position: absolute; inset: 0; border-radius: 50%;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.22), transparent 45%),
+              linear-gradient(115deg, transparent 42%, rgba(3,6,12,.72) 92%);
+}
+[data-skin="orbital"] .pub-card:hover .pub-image {
+  transform: scale(1.06);
+  box-shadow: 0 0 0 1px var(--acc), 0 0 44px -2px var(--acc);
+}
+[data-skin="orbital"] .pub-card:hover .pub-image img { transform: scale(1.1); }
+[data-skin="orbital"] .pub-content { padding-top: 4px; }
+[data-skin="orbital"] .pub-inst {
+  font: 500 8.5px/1 Inter, sans-serif; letter-spacing: .3em;
+  text-transform: uppercase; color: var(--acc); margin-bottom: 10px;
+}
+[data-skin="orbital"] .pub-title {
+  font: 200 23px/1.3 Inter, system-ui, sans-serif; letter-spacing: -.02em; color: #f2f7fe;
+}
+[data-skin="orbital"] .pub-subinst {
+  font: 300 11.5px/1.5 Inter, sans-serif; color: #718aab; margin-top: 8px; letter-spacing: .02em;
+}
+[data-skin="orbital"] .pub-desc {
+  font: 300 14px/1.8 Inter, sans-serif; color: #a9bcd8; margin-top: 14px;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+[data-skin="orbital"] .pub-links { margin-top: 16px; display: flex; gap: 20px; }
+[data-skin="orbital"] .pub-links a {
+  position: relative; font: 400 12px/1 Inter, sans-serif; letter-spacing: .06em;
+  color: var(--acc); text-decoration: none; padding-bottom: 4px;
+}
+[data-skin="orbital"] .pub-links a::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+  background: currentColor; opacity: .35; transition: opacity .2s;
+}
+[data-skin="orbital"] .pub-links a:hover::after { opacity: 1; }
+
+/* ============================================================================
+   6 · REFINED — the original's DNA, executed properly.
+   Keeps what actually works about the stock panel: a LARGE figure shown in
+   full (contain, never cropped — these are diagrams and plots, and cropping
+   destroys the content) beside readable body text. What changes is the
+   craft: type hierarchy, spacing rhythm, a calmer border treatment, and a
+   click-to-enlarge so a dense figure can actually be read.
+   ========================================================================= */
+[data-skin="refined"] .right { background: #070d18; }
+[data-skin="refined"] .section-title {
+  font: 700 15px/1 Inter, system-ui, sans-serif; letter-spacing: -.01em;
+  text-transform: none; color: #eaf2fd;
+  padding: 18px 22px; border-bottom: 1px solid rgba(158,201,255,.12);
+}
+[data-skin="refined"] .institution-title {
+  display: flex; align-items: center; gap: 10px;
+  font: 700 9.5px/1 Inter, sans-serif; letter-spacing: .2em;
+  text-transform: uppercase; color: #ffd27f;
+  padding: 28px 22px 12px; background: none; border: 0;
+}
+[data-skin="refined"] .institution-title::after {
+  content: ""; flex: 1; height: 1px; background: rgba(255,210,127,.22);
+}
+[data-skin="refined"] .pubs-scroll { padding: 0 22px 44px; }
+
+[data-skin="refined"] .pub-card {
+  display: block; padding: 20px; margin-bottom: 16px !important;
+  border-radius: 10px; background: rgba(158,201,255,.035);
+  border: 1px solid rgba(158,201,255,.1);
+}
+[data-skin="refined"] .pub-card:hover {
+  background: rgba(158,201,255,.06);
+  border-color: rgba(158,201,255,.32);
+}
+
+/* The figure: floated large, shown WHOLE, on a surface that reads as a
+   plate rather than a crop. */
+/* No fixed aspect ratio: a 4:3 plate letterboxes wide figures with dead
+   bands. Letting each figure keep its own proportions shows it whole, at
+   maximum size, with no wasted area — which is what a figure is for. */
+[data-skin="refined"] .pub-image {
+  float: left !important;
+  width: 300px !important; max-width: 42% !important;
+  height: auto !important; min-height: 0 !important;
+  margin: 3px 20px 14px 0 !important;
+  border-radius: 7px; overflow: hidden;
+  background: #0a1526;
+  border: 1px solid rgba(158,201,255,.16);
+  display: block; cursor: zoom-in; position: relative;
+}
+[data-skin="refined"] .pub-image img {
+  width: 100%; height: auto !important;
+  max-height: 340px;
+  object-fit: contain !important;   /* never crop a figure */
+  transition: transform .3s ease;
+}
+[data-skin="refined"] .pub-card:hover .pub-image img { transform: scale(1.02); }
+/* affordance that the figure opens larger */
+[data-skin="refined"] .pub-image::after {
+  content: "⤢"; position: absolute; right: 7px; bottom: 5px;
+  font: 400 13px/1 system-ui, sans-serif; color: #cfe2ff;
+  background: rgba(6,13,26,.8); border: 1px solid rgba(158,201,255,.28);
+  border-radius: 4px; padding: 2px 6px; opacity: 0; transition: opacity .2s;
+}
+[data-skin="refined"] .pub-card:hover .pub-image::after { opacity: 1; }
+
+[data-skin="refined"] .pub-header { margin-bottom: 10px; }
+[data-skin="refined"] .pub-title {
+  font: 650 17px/1.35 Inter, system-ui, sans-serif;
+  letter-spacing: -.012em; color: #f2f7fe; margin-bottom: 7px;
+}
+[data-skin="refined"] .pub-inst {
+  font: 700 9.5px/1.4 Inter, sans-serif; letter-spacing: .16em;
+  text-transform: uppercase; color: var(--acc);
+}
+[data-skin="refined"] .pub-subinst {
+  font: 400 12px/1.5 Inter, sans-serif; color: #8b9fbe; margin-top: 3px;
+}
+[data-skin="refined"] .pub-desc {
+  font: 400 14.5px/1.7 Inter, sans-serif; color: #c3d2e8; margin-top: 12px;
+}
+[data-skin="refined"] .pub-links {
+  margin-top: 14px; display: flex; gap: 9px; flex-wrap: wrap; clear: both;
+}
+[data-skin="refined"] .pub-links a {
+  font: 600 12px/1 Inter, sans-serif; color: #cfe2ff; text-decoration: none;
+  padding: 8px 13px; border-radius: 6px;
+  border: 1px solid rgba(158,201,255,.24); background: rgba(158,201,255,.05);
+  transition: background .15s, border-color .15s;
+}
+[data-skin="refined"] .pub-links a:hover {
+  background: var(--acc-dim); border-color: var(--acc); color: #fff;
+}
+
+/* ---- lightbox, shared (only the refined skin opens it) ---------------- */
+.fig-lightbox {
+  position: fixed; inset: 0; z-index: 6000; display: none;
+  align-items: center; justify-content: center; padding: 40px;
+  background: rgba(3,7,14,.94); backdrop-filter: blur(6px); cursor: zoom-out;
+}
+.fig-lightbox.open { display: flex; }
+.fig-lightbox img {
+  max-width: 100%; max-height: 100%; object-fit: contain;
+  border-radius: 8px; box-shadow: 0 24px 70px rgba(0,0,0,.7);
+}
+.fig-lightbox .fig-close {
+  position: absolute; top: 18px; right: 22px;
+  font: 400 26px/1 system-ui, sans-serif; color: #cfe2ff;
+  background: none; border: 0; cursor: pointer; padding: 8px;
+}
+.fig-lightbox .fig-cap {
+  position: absolute; left: 0; right: 0; bottom: 18px; text-align: center;
+  font: 500 13px/1.5 Inter, sans-serif; color: #9db4d4; padding: 0 40px;
+}
+
+/* ============================================================================
+   FONT-SIZE ESCALATION
+   main.css declares these sizes !important. Restating them here at higher
+   specificity is the only way a skin's typography survives. Keep in sync
+   with each skin's `font:` shorthand above.
+   ========================================================================= */
+[data-skin="dossier"] .pub-title    { font-size: 14px !important; }
+[data-skin="dossier"] .pub-inst     { font-size: 9px !important; }
+[data-skin="dossier"] .pub-subinst  { font-size: 10px !important; }
+[data-skin="dossier"] .pub-desc     { font-size: 12.5px !important; }
+[data-skin="dossier"] .pub-links a  { font-size: 10px !important; }
+
+[data-skin="journal"] .pub-title    { font-size: 22px !important; }
+[data-skin="journal"] .pub-inst     { font-size: 9.5px !important; }
+[data-skin="journal"] .pub-subinst  { font-size: 13px !important; }
+[data-skin="journal"] .pub-desc     { font-size: 15px !important; }
+[data-skin="journal"] .pub-links a  { font-size: 13px !important; }
+
+[data-skin="log"] .pub-title        { font-size: 12px !important; }
+[data-skin="log"] .pub-inst         { font-size: 8.5px !important; }
+[data-skin="log"] .pub-desc         { font-size: 11px !important; }
+[data-skin="log"] .pub-links a      { font-size: 9.5px !important; }
+
+[data-skin="editorial"] .pub-title   { font-size: 19px !important; }
+[data-skin="editorial"] .pub-inst    { font-size: 9px !important; }
+[data-skin="editorial"] .pub-subinst { font-size: 11.5px !important; }
+[data-skin="editorial"] .pub-desc    { font-size: 14px !important; }
+[data-skin="editorial"] .pub-links a { font-size: 11.5px !important; }
+
+[data-skin="refined"] .pub-title    { font-size: 17px !important; }
+[data-skin="refined"] .pub-inst     { font-size: 9.5px !important; }
+[data-skin="refined"] .pub-subinst  { font-size: 12px !important; }
+[data-skin="refined"] .pub-desc     { font-size: 14.5px !important; }
+[data-skin="refined"] .pub-links a  { font-size: 12px !important; }
+
+[data-skin="orbital"] .pub-title    { font-size: 23px !important; }
+[data-skin="orbital"] .pub-inst     { font-size: 8.5px !important; }
+[data-skin="orbital"] .pub-subinst  { font-size: 11.5px !important; }
+[data-skin="orbital"] .pub-desc     { font-size: 14px !important; }
+[data-skin="orbital"] .pub-links a  { font-size: 12px !important; }

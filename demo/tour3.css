@@ -1,0 +1,232 @@
+/* TUTORIAL — shared chrome for all four modes. */
+
+.t3-layer {
+  position: absolute; inset: 0; z-index: 60; pointer-events: none;
+  opacity: 0; transition: opacity .25s ease;
+}
+.t3-layer.on { opacity: 1; }
+
+/* ---- pill: bottom-centre, above the control bar ----------------------- */
+.t3-pill {
+  position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 9px;
+  padding: 7px 7px 7px 12px; border-radius: 999px;
+  background: rgba(9, 16, 30, .95);
+  border: 1px solid rgba(158, 201, 255, .3);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .55);
+  backdrop-filter: blur(10px);
+  white-space: nowrap; pointer-events: auto;
+}
+.t3-icon { width: 17px; height: 17px; color: #ffd27f; flex: 0 0 auto; }
+.t3-label {
+  font: 600 12.5px/1 Inter, system-ui, sans-serif;
+  letter-spacing: -.005em; color: #eaf2fd;
+}
+.t3-dots { display: flex; gap: 4px; margin-left: 1px; }
+.t3-dots i {
+  width: 4px; height: 4px; border-radius: 50%;
+  background: rgba(158, 201, 255, .3); transition: background .2s, width .2s;
+}
+.t3-dots i.on { background: #9ec9ff; width: 11px; border-radius: 2px; }
+
+/* Next is the primary move-along; Skip stays quiet beside it. */
+.t3-next {
+  display: flex; align-items: center; gap: 3px;
+  font: 600 11px/1 Inter, sans-serif; letter-spacing: .01em;
+  color: #cfe2ff; cursor: pointer;
+  background: rgba(158, 201, 255, .12);
+  border: 1px solid rgba(158, 201, 255, .26);
+  border-radius: 999px; padding: 6px 9px 6px 11px;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.t3-next svg { width: 11px; height: 11px; }
+.t3-next:hover {
+  background: rgba(158, 201, 255, .22); border-color: #9ec9ff; color: #fff;
+}
+.t3-skip {
+  font: 600 10px/1 Inter, sans-serif; letter-spacing: .05em;
+  color: #7f96b8; background: none; border: 0; cursor: pointer;
+  padding: 4px 6px 4px 4px;
+}
+.t3-skip:hover { color: #e7eefc; }
+.t3-next:focus-visible, .t3-skip:focus-visible {
+  outline: 2px solid #9ec9ff; outline-offset: 2px;
+}
+
+/* ---- ghost cursor / wheel / halo -------------------------------------- */
+.t3-ghost, .t3-wheel {
+  position: absolute; left: 0; top: 0; opacity: 0;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .6));
+  transition: opacity .2s linear;
+}
+.t3-wheel.on { opacity: 1; }
+.t3-ghost.t3-press { animation: t3press .42s ease; }
+@keyframes t3press { 0%, 100% { scale: 1; } 40% { scale: .8; } }
+.t3-wheel-dot { animation: t3scroll 1.5s ease-in-out infinite; }
+@keyframes t3scroll { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
+
+.t3-halo {
+  position: absolute; left: 0; top: 0;
+  width: 42px; height: 42px; margin: -21px 0 0 -21px;
+  border-radius: 50%; border: 1.5px solid #ffd27f;
+  opacity: 0; transition: opacity .2s linear;
+}
+.t3-halo.on { opacity: 1; animation: t3halo 1.6s ease-out infinite; }
+.t3-halo.t3-halo-wide {
+  width: var(--hw, 200px); height: var(--hh, 44px);
+  margin: calc(var(--hh, 44px) / -2) 0 0 calc(var(--hw, 200px) / -2);
+  border-radius: 10px; animation: none; opacity: .9;
+}
+@keyframes t3halo {
+  0%   { transform: scale(.72); opacity: .9; }
+  75%  { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* ---- cinematic caption ------------------------------------------------ */
+.t3-caption {
+  position: absolute; left: 50%; bottom: 122px; transform: translateX(-50%);
+  max-width: 78%; text-align: center;
+  font: 400 13px/1.5 Inter, system-ui, sans-serif; color: #cfe2ff;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
+  opacity: 0; transition: opacity .4s ease;
+}
+.t3-caption.on { opacity: 1; }
+
+/* ---- hotspots -------------------------------------------------------- */
+.t3-spots { position: absolute; inset: 0; opacity: 0; transition: opacity .3s; }
+.t3-spots.on { opacity: 1; }
+.t3-spot {
+  position: absolute; left: 0; top: 0;
+  display: flex; align-items: center; gap: 0;
+  transform: translate(-50%, -50%);
+  background: none; border: 0; padding: 0; cursor: pointer;
+  pointer-events: auto;
+}
+.t3-spot-n {
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto;
+  font: 700 12px/1 Inter, system-ui, sans-serif;
+  color: #14100a; background: #ffd27f;
+  box-shadow: 0 0 0 4px rgba(255, 210, 127, .2), 0 3px 10px rgba(0, 0, 0, .5);
+  animation: t3pulse 2s ease-out infinite;
+}
+@keyframes t3pulse {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(255, 210, 127, .2), 0 3px 10px rgba(0,0,0,.5); }
+  50%      { box-shadow: 0 0 0 10px rgba(255, 210, 127, 0), 0 3px 10px rgba(0,0,0,.5); }
+}
+.t3-spot-tip {
+  max-width: 0; overflow: hidden; white-space: nowrap;
+  font: 500 12px/1.3 Inter, system-ui, sans-serif; color: #eaf2fd;
+  transition: max-width .3s ease, padding .3s ease, margin .3s ease;
+  padding: 7px 0; border-radius: 0 7px 7px 0;
+  background: rgba(9, 16, 30, .96);
+  border: 1px solid rgba(158, 201, 255, .28); border-left: 0;
+  opacity: 0;
+}
+.t3-spot:hover .t3-spot-tip, .t3-spot:focus-visible .t3-spot-tip {
+  max-width: 280px; padding: 7px 13px; margin-left: -4px; opacity: 1;
+}
+/* near the right edge the tip opens leftwards instead of off the panel */
+.t3-spot.flip { flex-direction: row-reverse; }
+.t3-spot.flip .t3-spot-tip {
+  border-radius: 7px 0 0 7px;
+  border-left: 1px solid rgba(158, 201, 255, .28); border-right: 0;
+  text-align: right;
+}
+.t3-spot.flip:hover .t3-spot-tip, .t3-spot.flip:focus-visible .t3-spot-tip {
+  margin-left: 0; margin-right: -4px;
+}
+.t3-spot:focus-visible .t3-spot-n { outline: 2px solid #9ec9ff; outline-offset: 3px; }
+
+/* ---- help affordance: labelled, so it reads as help ------------------- */
+.t3-replay {
+  position: absolute; top: 12px; left: 12px; z-index: 61;
+  display: flex; align-items: center; gap: 6px;
+  height: 30px; padding: 0 11px 0 9px; border-radius: 999px;
+  font: 600 11.5px/1 Inter, system-ui, sans-serif; letter-spacing: -.005em;
+  color: #cfe2ff; background: rgba(9, 16, 30, .88);
+  border: 1px solid rgba(158, 201, 255, .3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .4);
+  backdrop-filter: blur(8px);
+  cursor: pointer; opacity: 0; pointer-events: none;
+  transition: opacity .3s, color .15s, border-color .15s, background .15s;
+}
+.t3-replay svg { width: 16px; height: 16px; flex: 0 0 auto; color: #ffd27f; }
+.t3-replay.show { opacity: 1; pointer-events: auto; }
+.t3-replay:hover {
+  color: #fff; border-color: #9ec9ff; background: rgba(158, 201, 255, .18);
+}
+.t3-replay:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
+
+/* hotspots mode has no sequence, so hide the step affordances */
+.t3-layer[data-mode="hotspots"] .t3-dots,
+.t3-layer[data-mode="hotspots"] .t3-next { display: none; }
+
+/* The original help banner and its legend panel are retired. Hiding them
+   from JS raced with app.js, which re-opens the legend on load — so it
+   flashed up on every visit. CSS cannot lose that race. */
+.help-toggle-btn, #legendText { display: none !important; }
+
+/* While the demo drives its own cursor, hide the real one — two pointers on
+   screen is confusing. Restored the instant the visitor moves the mouse. */
+body.t3-hide-cursor, body.t3-hide-cursor * { cursor: none !important; }
+
+/* Tour controls must stay clickable over the moon canvas. */
+.t3-pill, .t3-next, .t3-skip { pointer-events: auto; }
+
+/* ...but ONLY while their tour is running. The main tour and the rover tour
+   put their pills at the same spot, and the main one sits later in the DOM.
+   At opacity 0 it is invisible but still hit-testable, so it swallowed every
+   click meant for the rover's Next/Skip — they looked completely dead.
+   Opacity does not disable pointer events; this does. */
+.t3-layer:not(.on),
+.t3-layer:not(.on) * { pointer-events: none !important; }
+
+/* Quiet arrival hint for rover mode — says what you can do and gets out of
+   the way, instead of launching a tutorial nobody asked for. */
+.rov-hint {
+  position: absolute; left: 50%; top: 54px; transform: translateX(-50%) translateY(-6px);
+  display: flex; align-items: baseline; gap: 9px;
+  padding: 8px 14px; border-radius: 999px; white-space: nowrap;
+  background: rgba(9, 16, 30, .88);
+  border: 1px solid rgba(158, 201, 255, .24);
+  backdrop-filter: blur(8px);
+  pointer-events: none; opacity: 0; z-index: 62;
+  transition: opacity .35s ease, transform .35s ease;
+}
+.rov-hint.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+.rov-hint b {
+  font: 700 12px/1 Inter, system-ui, sans-serif; letter-spacing: .01em; color: #ffd88f;
+}
+.rov-hint span {
+  font: 500 11.5px/1 Inter, system-ui, sans-serif; color: #b6c8e2;
+}
+
+/* Second cursor, at document level: the in-panel ghost cannot reach the
+   publication's close button in the right-hand panel. */
+.t3-ghost-fixed {
+  position: fixed; left: 0; top: 0; z-index: 6000;
+  pointer-events: none; opacity: 0;
+  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .6));
+  transition: opacity .2s linear;
+}
+.t3-ghost-fixed.t3-press { animation: t3press .38s ease; }
+
+/* ---- toolbar tooltip -------------------------------------------------- */
+.tb-tip {
+  position: absolute; left: 0; top: 0; z-index: 70;
+  padding: 5px 9px; border-radius: 5px; white-space: nowrap;
+  font: 600 11px/1 Inter, system-ui, sans-serif; color: #eaf2fd;
+  background: rgba(9, 16, 30, .96);
+  border: 1px solid rgba(158, 201, 255, .3);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .5);
+  pointer-events: none; opacity: 0;
+  transition: opacity .12s linear;
+}
+.tb-tip.on { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .t3-halo.on, .t3-wheel-dot, .t3-ghost.t3-press, .t3-spot-n { animation: none; }
+  .tb-tip { transition: none; }
+}

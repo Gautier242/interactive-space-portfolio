@@ -1,0 +1,196 @@
+/* VARIANT A — INSTRUMENT: HUD chrome + one consistent control language. */
+
+.inst-hud {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 40;
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  color: #b9cbe6;
+}
+
+/* ---- top bar -------------------------------------------------------- */
+.inst-topbar {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px 14px;
+  background: linear-gradient(180deg, rgba(6, 13, 26, 0.92), rgba(6, 13, 26, 0));
+  border-bottom: 1px solid rgba(158, 201, 255, 0.1);
+}
+/* The readout carries live data and must never clip; the title is decorative
+   and yields first when the panel is narrow. */
+.inst-title {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  color: #dce8fa;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 0 1 auto;
+}
+.inst-readout {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.inst-k {
+  color: #62789a;
+  letter-spacing: 0.12em;
+}
+.inst-v {
+  color: #9ec9ff;
+  letter-spacing: 0.04em;
+  margin-right: 10px;
+}
+.inst-v:last-child { margin-right: 0; }
+
+/* ---- body labels ---------------------------------------------------- */
+.inst-labels { position: absolute; inset: 0; }
+.inst-tag {
+  position: absolute;
+  top: 0; left: 0;
+  display: none;
+  padding-left: 13px;
+  white-space: nowrap;
+  transition: opacity 0.18s linear;
+  will-change: transform;
+}
+/* the tick is the anchor: it sits exactly on the body */
+.inst-tick {
+  position: absolute;
+  left: 0; top: 50%;
+  width: 9px; height: 1px;
+  margin-top: -0.5px;
+  background: rgba(158, 201, 255, 0.5);
+}
+.inst-tick::before {
+  content: "";
+  position: absolute;
+  left: -3px; top: -2px;
+  width: 5px; height: 5px;
+  border: 1px solid rgba(158, 201, 255, 0.7);
+  border-radius: 50%;
+}
+.inst-nm {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #d7e6fb;
+}
+.inst-sub {
+  display: block;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  color: #7f95b8;
+  margin-top: 1px;
+}
+.inst-tag.has-pubs .inst-tick,
+.inst-tag.has-pubs .inst-tick::before { background: rgba(255, 210, 127, 0.75); border-color: rgba(255, 210, 127, 0.85); }
+.inst-tag.has-pubs .inst-tick::before { background: transparent; }
+.inst-tag.has-pubs .inst-nm { color: #ffd88f; }
+.inst-badge {
+  display: inline-block;
+  margin-top: 3px;
+  padding: 1px 5px;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: #1a1206;
+  background: #ffd27f;
+  border-radius: 2px;
+}
+
+/* ---- scale bar + focus readout -------------------------------------- */
+.inst-scale {
+  position: absolute;
+  left: 14px; bottom: 78px;
+}
+.inst-scalebar {
+  position: relative;
+  width: 120px; height: 1px;
+  background: rgba(158, 201, 255, 0.45);
+}
+.inst-scalebar::before,
+.inst-scalebar::after,
+.inst-scalebar i {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  width: 1px; height: 5px;
+  background: rgba(158, 201, 255, 0.45);
+}
+.inst-scalebar::before { left: 0; }
+.inst-scalebar::after { right: 0; }
+.inst-scalebar i { left: 50%; height: 3px; }
+.inst-scaleval {
+  margin-top: 5px;
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  color: #7f95b8;
+}
+.inst-focus {
+  position: absolute;
+  right: 14px; bottom: 78px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #ffd88f;
+  opacity: 0;
+  transition: opacity 0.2s linear;
+}
+
+/* ---- one control language: square, bordered, monospace -------------- */
+.controls {
+  background: rgba(8, 16, 32, 0.82) !important;
+  border: 1px solid rgba(158, 201, 255, 0.16) !important;
+  border-radius: 4px !important;
+  backdrop-filter: blur(10px);
+  padding: 6px !important;
+  gap: 4px !important;
+}
+.controls button {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.1em !important;
+  text-transform: uppercase;
+  min-width: 34px !important;
+  height: 30px !important;
+  border-radius: 3px !important;
+  background: transparent !important;
+  border: 1px solid rgba(158, 201, 255, 0.14) !important;
+  color: #a8c0e0 !important;
+  transition: background 0.14s, border-color 0.14s, color 0.14s;
+}
+.controls button:hover {
+  background: rgba(158, 201, 255, 0.09) !important;
+  border-color: rgba(158, 201, 255, 0.4) !important;
+  color: #e7eefc !important;
+}
+.controls button.active {
+  background: rgba(158, 201, 255, 0.16) !important;
+  border-color: #9ec9ff !important;
+  color: #eaf3ff !important;
+}
+.controls button:focus-visible {
+  outline: 2px solid #9ec9ff;
+  outline-offset: 2px;
+}
+
+/* the HUD owns the top strip, so the tips button moves clear of it */
+.help-toggle-btn { top: 46px !important; }
+.legend { top: 84px !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .inst-tag { transition: none; }
+}

@@ -2724,10 +2724,15 @@ if (!isMobileDevice) {
   });
 }
 
+// currentTarget, not target: this button wraps an <svg>, so a click usually
+// lands on the svg/path and e.target is that child — the .active class went
+// onto the SVG instead of the button, which is why the highlight only
+// appeared on a later click. btnPan is a text glyph, so it never showed the
+// bug.
 document.getElementById('btnRotate').addEventListener('click', e => {
   rotateMode = true;
   panMode = false;
-  e.target.classList.add('active');
+  e.currentTarget.classList.add('active');
   document.getElementById('btnPan').classList.remove('active');
   // Removed automatic view rotation - view should not move when selecting button
 });
@@ -2735,7 +2740,7 @@ document.getElementById('btnRotate').addEventListener('click', e => {
 document.getElementById('btnPan').addEventListener('click', e => {
   panMode = true;
   rotateMode = false;
-  e.target.classList.add('active');
+  e.currentTarget.classList.add('active');
   document.getElementById('btnRotate').classList.remove('active');
 });
 

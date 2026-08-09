@@ -1,0 +1,92 @@
+/* OBJECT READOUT — instrument tag attached to the object, not a panel. */
+
+.obj-layer {
+  position: absolute; inset: 0; pointer-events: none; z-index: 45;
+  font-family: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- the tag ---------------------------------------------------------- */
+/* The tick/circle is gone. A marker anchored at the label's left edge sat
+   down-right of the object and read as pointing at nothing; the label
+   following the object is a clearer association than a disconnected dot. */
+.obj-tag {
+  position: absolute; left: 0; top: 0;
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 2px;
+  padding: 0; background: none; border: 0;   /* a label, not a panel */
+  white-space: nowrap;
+  opacity: 0; transition: opacity .13s linear;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, .9), 0 0 10px rgba(0, 0, 0, .7);
+}
+/* Deliberately below full strength: this is annotation over a render, and
+   at full opacity it competed with the scene it describes. */
+.obj-layer.on .obj-tag { opacity: .82; }
+.obj-layer.on .obj-tag.off-screen { opacity: 0; }
+.obj-layer.no-info .obj-tag { display: none; }
+
+.obj-nm {
+  font-size: 11.5px; font-weight: 700; letter-spacing: .17em;
+  color: #b9cbe6;                      /* muted by default */
+}
+.obj-sub {
+  font-size: 9.5px; letter-spacing: .07em; color: #8ba0c0;
+}
+/* Gold is reserved for bodies that actually carry published work, so the
+   colour means something rather than decorating every label. */
+.obj-tag.has-pubs .obj-nm { color: #ffd88f; }
+
+.obj-badge {
+  margin-top: 2px;
+  padding: 2px 6px; border: 0; border-radius: 2px;
+  font: 700 8.5px/1.35 ui-monospace, Menlo, monospace; letter-spacing: .13em;
+  color: #14100a; background: rgba(255, 210, 127, .9);
+  cursor: pointer; pointer-events: auto;
+  text-shadow: none;
+  transition: background .15s;
+}
+.obj-badge:hover { background: #ffe4ad; }
+.obj-badge:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
+
+/* ---- persistent corner readout ---------------------------------------- */
+.obj-corner {
+  position: absolute; left: 12px; bottom: 74px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: 9px; letter-spacing: .12em; color: #6d84a6;
+}
+.obj-sep { width: 1px; height: 9px; background: rgba(158, 201, 255, .22); }
+
+/* ---- info toggle ------------------------------------------------------ */
+.obj-toggle {
+  position: absolute; top: 12px; right: 12px; z-index: 62;
+  display: flex; align-items: center; gap: 7px;
+  height: 28px; padding: 0 10px 0 8px; border-radius: 999px;
+  font: 600 11px/1 Inter, system-ui, sans-serif;
+  color: #cfe2ff; background: rgba(9, 16, 30, .88);
+  border: 1px solid rgba(158, 201, 255, .3);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .4);
+  backdrop-filter: blur(8px);
+  cursor: pointer;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.obj-toggle:hover { color: #fff; border-color: #9ec9ff; background: rgba(158, 201, 255, .18); }
+.obj-toggle:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
+.obj-toggle.off { color: #7f96b8; border-color: rgba(158, 201, 255, .16); }
+
+.obj-sw {
+  position: relative; display: block; flex: 0 0 auto;
+  width: 26px; height: 14px; border-radius: 999px;
+  background: #ffd27f; transition: background .18s ease;
+}
+.obj-sw i {
+  position: absolute; top: 2px; left: 14px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: #0a1220; transition: left .18s cubic-bezier(.3,.8,.3,1);
+}
+.obj-toggle.off .obj-sw { background: rgba(158, 201, 255, .28); }
+.obj-toggle.off .obj-sw i { left: 2px; background: #7f96b8; }
+.obj-sw-lab { white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .obj-tag { transition: none; }
+}

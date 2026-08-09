@@ -1,0 +1,56 @@
+/* AI motif lives in the HEADER band only. The right panel gets no
+   background at all.
+
+   NOTE: an earlier version of this file carried
+       .right > *:not(#rightNeural) { position: relative; z-index: 1; }
+   which silently overrode .detail-view's `position: absolute; z-index: 100`.
+   The detail panel then laid out as a relative block 93px down the column
+   instead of covering the panel, leaving the list's institution heading
+   sliced in half above it. Do not reintroduce a blanket rule over
+   `.right > *` — .detail-view depends on its own positioning. */
+
+#rightNeural { display: none !important; }
+
+#headerNeural {
+  position: absolute; inset: 0;
+  opacity: 1 !important;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+/* keep the header's real content above the motif */
+.header > *:not(#headerNeural) { position: relative; z-index: 1; }
+
+/* switcher chrome */
+.nn-bar {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  z-index: 5000; display: flex; align-items: center; gap: 5px;
+  padding: 7px 9px; border-radius: 8px;
+  background: rgba(10, 16, 30, .93);
+  border: 1px solid rgba(255, 210, 127, .22);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .6);
+  backdrop-filter: blur(12px);
+  max-width: calc(100vw - 24px); flex-wrap: wrap; justify-content: center;
+}
+.nn-lab {
+  font: 700 8.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .2em; color: #a8894e; padding: 0 6px 0 2px;
+}
+.nn-bar button {
+  font: 600 12px/1 Inter, system-ui, sans-serif;
+  padding: 7px 12px; border-radius: 5px; cursor: pointer;
+  background: transparent; border: 1px solid transparent; color: #9db4d4;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.nn-bar button:hover { background: rgba(255, 210, 127, .1); color: #e7eefc; }
+.nn-bar button.on {
+  background: rgba(255, 210, 127, .16);
+  border-color: rgba(255, 210, 127, .5); color: #fff;
+}
+.nn-bar button:focus-visible { outline: 2px solid #ffd27f; outline-offset: 2px; }
+.nn-note {
+  font: 400 11px/1 Inter, sans-serif; color: #62789a;
+  padding-left: 8px; border-left: 1px solid rgba(255, 210, 127, .18);
+  margin-left: 4px; max-width: 320px;
+}
+@media (max-width: 820px) { .nn-note { display: none; } }

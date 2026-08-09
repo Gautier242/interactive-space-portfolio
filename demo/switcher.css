@@ -1,0 +1,36 @@
+/* The switcher chrome itself — deliberately neutral so it never reads as
+   part of any skin it is showing. */
+.skin-bar {
+  position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%);
+  z-index: 5000; display: flex; align-items: center; gap: 5px;
+  padding: 7px 9px; border-radius: 8px;
+  background: rgba(10, 16, 30, .93);
+  border: 1px solid rgba(158, 201, 255, .18);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, .6);
+  backdrop-filter: blur(12px);
+  font: 500 12px/1 Inter, system-ui, sans-serif;
+  max-width: calc(100vw - 24px); flex-wrap: wrap; justify-content: center;
+}
+.skin-lab {
+  font: 700 8.5px/1 ui-monospace, Menlo, monospace;
+  letter-spacing: .2em; color: #6e85a8; padding: 0 6px 0 2px;
+}
+.skin-bar button {
+  font: 600 12px/1 Inter, system-ui, sans-serif;
+  padding: 7px 12px; border-radius: 5px; cursor: pointer;
+  background: transparent; border: 1px solid transparent; color: #9db4d4;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.skin-bar button:hover { background: rgba(158, 201, 255, .1); color: #e7eefc; }
+.skin-bar button.on {
+  background: rgba(158, 201, 255, .17);
+  border-color: rgba(158, 201, 255, .5);
+  color: #fff;
+}
+.skin-bar button:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
+.skin-note {
+  font: 400 11px/1 Inter, sans-serif; color: #62789a;
+  padding-left: 8px; border-left: 1px solid rgba(158, 201, 255, .16);
+  margin-left: 4px; max-width: 300px;
+}
+@media (max-width: 760px) { .skin-note { display: none; } }
