@@ -148,11 +148,19 @@
   copy.renderToScreen = true;
   composer.addPass(copy);
 
+  // Bloom runs five mip levels of separable blur. Profiled at 1.80 ms/frame,
+  // 45% of the whole render loop — the largest single per-frame cost in the
+  // app, bigger than every demo/ tick loop put together. It is a blur, so most
+  // of that resolution is thrown away by the blur itself. ?bloom=0.5 renders
+  // the blur chain at half resolution to compare. Default 1 = shipped look,
+  // unchanged.
+  const BLOOM_SCALE = parseFloat(new URLSearchParams(location.search).get('bloom')) || 1;
   function sizeComposer() {
     const el = document.getElementById('leftPanel');
     const w = el.clientWidth, h = el.clientHeight;
     composer.setSize(w, h);
-    bloom.setSize(w, h);
+    bloom.setSize(Math.max(1, Math.round(w * BLOOM_SCALE)),
+                  Math.max(1, Math.round(h * BLOOM_SCALE)));
   }
   sizeComposer();
   window.addEventListener('resize', sizeComposer);
