@@ -13,8 +13,16 @@ the project attached to it. Some bodies open their own worlds (Moon surface,
 VIPER rover you can drive).
 
 - Repo: `github.com/Gautier242/interactive-space-portfolio`, branch `main`
-- Live version = `index.html` at `c560cce`
 - Local: `python3 -m http.server 4321` from the repo root
+- **Deploy is confirmed**: GitHub Pages serves from `main` at the repo root
+  (no CNAME, no `docs/`, no Actions workflow) to
+  `https://gautier242.github.io/interactive-space-portfolio/`. Verified by
+  SHA-256 of the live `index.html` and `demo/tour3.js` matching local, not by
+  the gh CLI, whose token is invalid. To re-check after a push:
+
+```
+diff <(curl -s https://gautier242.github.io/interactive-space-portfolio/) index.html
+```
 
 **Serve with no-store while iterating.** Chrome cached JS aggressively during
 this work and silently served stale files for several rounds — I reported
@@ -144,16 +152,57 @@ for (const t of ['pointerdown','mousedown','pointerup','mouseup','click'])
 
 ## Open work, roughly in priority order
 
-**1. First paint is 15 MB / 11.9 s.** Flagged at the very start of this pass
-and still untouched — the single biggest problem with the site. ~9.4 MB is
-publication thumbnails shipped at full resolution. Resize them, serve WebP,
-lazy-load below the fold. This pass added ~1.1 MB of models (idle-loaded, off
-the critical path) and ~250 KB of code, so it did not help.
+**1. Page weight — DONE, 15.55 MB → 5.68 MB.** Measured on localhost at
+DPR 2 with `performance.getEntriesByType('resource')`.
 
-**2. Frame rate drifted down.** Early builds measured 60 fps; the final one
-measures ~34 in a clean tab. The per-frame additions (tag projection, reticle
-distance tests, camera follow, LOD) accumulated. Nobody has profiled which
-one dominates. Do that before adding more per-frame work.
+| | before | after |
+|---|---|---|
+| `images/` | 13.08 MB | 0.11 MB |
+| `assets/textures/` | 6.18 MB | 3.12 MB |
+| total | 15.55 MB | 5.68 MB |
+
+Publication figures ship at 400/640/1000 px WebP behind a `srcset`; `sizes`
+starts with `auto` because the divider is draggable so the rendered width is
+not knowable from media queries. `swot.webp` was an 84-frame animated WebP
+(3031 KB) loading for a 198 px thumbnail — the list now gets a still first
+frame and the animation loads on click via the new `imgAnimated` field.
+Planet textures are WebP at an unchanged 2048×1024; **do not halve them**,
+`planets-real.js:114-124` derives crater relief from texture luminance at a
+UV offset tuned for 2048 px.
+
+What is left, if anyone cares: textures 3.12 MB, models 1.08 MB, js 1.06 MB.
+
+**2. Frame rate — profiled. It is the bloom pass, not the tick loops.**
+`demo/_profile.js` + `profile.html` wrap rAF before the overlays register and
+attribute main-thread time by registration site. Over 8 s at ~53 fps:
+
+```
+app.js:1668  (main render loop)   209.63 ms/s   84%
+all 11 demo/ tick loops            33.36 ms/s   13%
+  reticles.js  12.85 | hover-info  6.06 | 4 idle watchers  4.94
+```
+
+Every suspect on the old list is noise. The cost is inside the render call,
+in the bloom `cinematic.js` installs — it has no tick loop, which is why it
+was never suspected. Same instrument with bloom off: 3.977 → 2.173 ms/frame.
+Bloom is **1.80 ms/frame, 45% of the render loop**, more than double all the
+tick loops combined.
+
+`UnrealBloomPass` ran its five mip levels of separable blur at full panel
+resolution. `?bloom=<scale>` scales the blur chain; default 1 is byte-for-byte
+the shipped behaviour. Back to back: `?bloom=1` 3.382 ms/45.9 fps,
+`?bloom=0.5` 2.971 ms/59.7 fps. **The visual cost of 0.5 is unjudged** — it
+needs a real GPU, headless is a software rasteriser.
+
+Measurement warning: fps in headless decays *within* one page session (53 →
+40 over 20 s). Trust the ms/s attribution, which is measured inside the same
+frames; do not trust fps deltas between pages.
+
+**2b. `2k_earth_specular_map.jpg` is not a JPEG.** It is a saved Solar System
+Scope HTML page with a `.jpg` name, so it has never decoded. `specMask` in
+the Earth shader therefore samples nothing and the ocean sun-glint
+(`planets-real.js:82-85`) has always been dead. Fixing it changes how Earth
+looks, so it needs a decision first. It also 404s in spirit twice per load.
 
 **3. Starship HLS is still procedural.** No public-domain model exists — it's
 a SpaceX vehicle, and NASA publishes none. Options: improve the procedural
