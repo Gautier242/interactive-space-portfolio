@@ -32,14 +32,14 @@
   };
 
   var MAPS = {
-    Mercury: '2k_mercury.jpg',
-    Venus: '2k_venus_atmosphere.jpg',
-    Moon: '2k_moon.jpg',
-    Mars: '2k_mars.jpg',
-    Jupiter: '2k_jupiter.jpg',
-    Saturn: '2k_saturn.jpg',
-    Uranus: '2k_uranus.jpg',
-    Neptune: '2k_neptune.jpg'
+    Mercury: '2k_mercury.webp',
+    Venus: '2k_venus_atmosphere.webp',
+    Moon: '2k_moon.webp',
+    Mars: '2k_mars.webp',
+    Jupiter: '2k_jupiter.webp',
+    Saturn: '2k_saturn.webp',
+    Uranus: '2k_uranus.webp',
+    Neptune: '2k_neptune.webp'
   };
 
   // ==========================================================================
@@ -231,8 +231,8 @@
   function makeEarthMaterial() {
     return new THREE.ShaderMaterial({
       uniforms: {
-        dayMap: { value: tex('2k_earth_daymap.jpg') },
-        nightMap: { value: tex('2k_earth_nightmap.jpg') },
+        dayMap: { value: tex('2k_earth_daymap.webp') },
+        nightMap: { value: tex('2k_earth_nightmap.webp') },
         specMap: { value: tex('2k_earth_specular_map.jpg') },
         uHighlight: { value: 0 }
       },
@@ -277,7 +277,7 @@
     var clouds = new THREE.Mesh(
       new THREE.SphereGeometry(radius * 1.012, 48, 48),
       new THREE.MeshLambertMaterial({
-        map: tex('2k_earth_clouds.jpg'),
+        map: tex('2k_earth_clouds.webp'),
         transparent: true,
         blending: THREE.AdditiveBlending,
         depthWrite: false
@@ -433,7 +433,7 @@
   // ==========================================================================
   function applySunTexture(sun) {
     sun.material.dispose();
-    sun.material = new THREE.MeshBasicMaterial({ map: tex('2k_sun.jpg') });
+    sun.material = new THREE.MeshBasicMaterial({ map: tex('2k_sun.webp') });
     sun.userData.spinSlow = true;
 
     var cv = document.createElement('canvas');

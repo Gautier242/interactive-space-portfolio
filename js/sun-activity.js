@@ -40,7 +40,7 @@
   // Photosphere: base texture + granulation + differential rotation + limb dark
   // --------------------------------------------------------------------------
   function makePhotosphere() {
-    var tx = loader.load('assets/textures/2k_sun.jpg');
+    var tx = loader.load('assets/textures/2k_sun.webp');
     tx.wrapS = THREE.RepeatWrapping;
     photosphereMat = new THREE.ShaderMaterial({
       uniforms: { uTime: { value: 0 }, uMap: { value: tx }, uHighlight: { value: 0 } },
