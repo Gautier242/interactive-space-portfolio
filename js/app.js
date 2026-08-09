@@ -8,6 +8,13 @@ window.PLACEHOLDER_IMG = 'data:image/svg+xml;utf8,' + encodeURIComponent(
   '<text x="200" y="196" text-anchor="middle" fill="#9fb1cc" font-family="monospace" font-size="12" letter-spacing="2">IMAGE UNAVAILABLE</text>' +
   '</svg>');
 
+// Publication figures ship at 400/640/1000 px wide. Build the srcset from the
+// 1000w path so the data table only has to name one file. Anything else (the
+// headshot, the placeholder) gets an empty srcset and is left alone.
+window.imgSrcset = p => /-1000\.webp$/.test(p || '')
+  ? [400, 640, 1000].map(w => `${p.replace('-1000.webp', `-${w}.webp`)} ${w}w`).join(', ')
+  : '';
+
 // Mobile device detection
 const isMobileDevice = document.documentElement.classList.contains('mobile-device');
 
@@ -139,7 +146,7 @@ const PUBS = [
     extendedDesc: "This work focused on developing a data cleansing, signal processing, and machine learning pipeline to analyze and automatically cluster the large dataset collected by a novel instrument deployed on the International Space Station (ISS).<br>The instrument was designed and developed during Dr. Juliana Cherston’s PhD thesis [1] and consists of custom-made piezoelectric fibers woven into the spacecraft’s outer insulation layer. These fibers aim to detect micrometeorite impacts on the ISS exterior, eventually providing a pathway toward real-time structural health monitoring in orbit.<br><br>During its deployment the system recorded more than 100,000 signal triggers, which by far exceeded what could be analyzed manually. Based on my first analysis I developed a pipeline combining signal processing and unsupervised machine learning techniques to automatically cluster and classify these signals, identifying those most likely corresponding to genuine micrometeorite impacts.<br>For this likely-cause identification ground-truth data for genuine micrometeorite impacts were established through controlled high-velocity impact testing using terrestrial facilities such as the Laser-Induced Particle Impact Test (LIPIT) at MIT and the Van de Graaff accelerator at LASP. These experiments generated calibrated piezoelectric response signals corresponding to known particle sizes, velocities, and impact angles. The resulting signatures on all fibers were used to define the expected response characteristics of true impacts, providing a physical basis for validating and interpreting the machine learning clustering results from ISS data."+
     "<br><br><a href='https://dspace.mit.edu/handle/1721.1/152029?show=full' target='_blank' style='color: #9ec9ff; font-weight: bold;'>Additional literature</a>: J. Cherston; The Well-Dressed Spacecraft: Textiles for Cosmic Dust Metrology, (September 2022).",
     links: [{t: "Lab page", u: "https://www.media.mit.edu/groups/responsive-environments/overview/"}],
-    img: "images/mit-iss.jpg"
+    img: "images/mit-iss-1000.webp"
   },
   { 
     id: "swot", 
@@ -167,7 +174,7 @@ const PUBS = [
     authors: "<strong>G. Bardi</strong>, T. Lu, E. Chow",
     venue: "International Astronautical Congress 2024", 
     links: [{t: "Link to full paper ", u: "https://www.researchgate.net/publication/388579787_Digital_Twin_and_Physics_Informed_Machine_Learning_for_Rover_Motion_Simulation"}],
-    img: "images/rover.png"
+    img: "images/rover-1000.webp"
   },
   { 
     id: "lunarfm", 
@@ -180,7 +187,7 @@ const PUBS = [
     authors: "G. Bardi*, J. Gawlikowski*, M. Girona-Mata*, S. Goski*, S.Kaczmarek, R. Ramos", 
     venue: "Publication in progress",
     links: [{t: "Link to website and technical presentation", u: "https://lunarlab.ai/"}],
-    img: "images/lunarlab2.png"
+    img: "images/lunarlab2-1000.webp"
   },
   { 
     id: "esa", 
@@ -193,7 +200,7 @@ const PUBS = [
     authors: "<strong>G. Bardi</strong>, I. Drozdovsky",  
     venue: "Confidential manuscript at European Astronaut Centre (ESA), 2022", 
     links: [],
-    img: "images/esa.png"
+    img: "images/esa-1000.webp"
   },
   { 
     id: "isu", 
@@ -206,7 +213,7 @@ const PUBS = [
     authors: "A. Abdin*, <strong>G. Bardi*</strong>, S. Monat*, et al. - *equal contribution ", 
     venue: "International Astronautical Congress 2021",
     links: [{t: "Project full report, executive summary and paper", u: "https://starship1.onuniverse.com/"}],
-    img: "images/ISU-starship.png"
+    img: "images/ISU-starship-1000.webp"
   },
   
   { 
@@ -220,7 +227,7 @@ const PUBS = [
     authors: "V. Da Poian, U. Rebbapragada, <strong>G. Bardi</strong>, et al.", 
     venue: "AGU 2024", 
     links: [{t: "Link to AGU abstract", u: "https://www.nasa.gov/"}],
-    img: "images/hwo.png"
+    img: "images/hwo-1000.webp"
   },
   { 
     id: "megsai", 
@@ -233,7 +240,7 @@ const PUBS = [
     authors: "<strong>G. Bardi</strong>, B. Isola, R. Jarolim, et al.", 
     venue: "AGU 2024 · FDL 2024",
     links: [{t: "Accepted for oral presentation - link to abstract", u: "https://fdl.ai/"}],
-    img: "images/megsai.png"
+    img: "images/megsai-1000.webp"
   },
   { 
     id: "sunerfs", 
@@ -246,7 +253,7 @@ const PUBS = [
     authors: "B. Isola, <strong>G. Bardi</strong>, R. Jarolim, et al.", 
     venue: "AGU 2024 · FDL 2024",
     links: [{t: "Accepted for interactive presentation - link to abstract", u: "https://fdl.ai/"}],
-    img: "images/SUNERF.png"
+    img: "images/SUNERF-1000.webp"
   }
 ];
 
@@ -325,7 +332,7 @@ function renderPublications() {
       
       card.innerHTML = `
         <div class="pub-image">
-          <img src="${pub.img}" alt="${pub.title}" loading="lazy" onerror="this.onerror=null;this.src=window.PLACEHOLDER_IMG"/>
+          <img src="${pub.img}" srcset="${window.imgSrcset(pub.img)}" sizes="auto, (max-width: 900px) 150px, (max-width: 1200px) 200px, 250px" alt="${pub.title}" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src=window.PLACEHOLDER_IMG"/>
         </div>
         <div class="pub-content">
           <div class="pub-header">
@@ -461,9 +468,14 @@ function showDetail(item) {
     detailImageContainer.classList.remove('about-image');
   }
   
+  // sizes/srcset before src, so the browser picks the variant on the first pass
+  // rather than fetching the 1000w fallback and then correcting itself.
+  detailImg.sizes = '(max-width: 800px) 75vw, 500px';
+  detailImg.srcset = window.imgSrcset(item.img);
   detailImg.src = item.img;
   detailImg.onerror = function() {
     this.onerror = null;
+    this.srcset = '';
     this.src = window.PLACEHOLDER_IMG;
   };
   
