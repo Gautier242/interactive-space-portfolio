@@ -120,6 +120,9 @@ That is exactly the bug it hid: an inactive tour layer at `opacity: 0` was
 still hit-testable and swallowed every click. Use `document.elementFromPoint`
 and dispatch to whatever is actually there.
 
+**3. Measuring mid-animation.** Several "failures" were samples taken while a
+camera flight was still running. Sample repeatedly until stable.
+
 **3b. Headless Chrome freezes CSS transitions under `--virtual-time-budget`.**
 A divider drag looked completely broken: the handler ran, the inline
 `flex: 0 0 65.3%` was set, and the element stayed at its old 35% width no
@@ -128,9 +131,6 @@ transition's *start* value. `.left` has `transition: flex .3s`, and virtual
 time does not drive the animation clock. Set `el.style.transition = 'none'`
 in the probe before measuring anything that transitions. Same family as the
 rAF trap below.
-
-**3. Measuring mid-animation.** Several "failures" were samples taken while a
-camera flight was still running. Sample repeatedly until stable.
 
 **4. `animate()` in `tour3.js` owns one shared rAF slot.** A later call
 cancels an earlier one and its completion callback never fires. Schedule
