@@ -433,10 +433,10 @@
       ms: 4200, run: demoOpenEarth },   // 1.1s travel + 0.7s + detail opens
     { icon: 'exit',  label: 'Close it to come back to the map',
       ms: 3000, run: demoCloseDetail }, // 1.0s travel + 0.6s close/reset
-    { icon: 'drag',  label: 'Drag to look around',     ms: 3000, run: demoDrag },  // 2.4s drag
-    { icon: 'zoom',  label: 'Scroll to zoom',          ms: 3200, run: demoZoom },  // in, then out at 1.9s
+    { icon: 'drag',  label: 'Drag to look around',     ms: 3000, run: demoDrag, puppet: true },  // 2.4s drag
+    { icon: 'zoom',  label: 'Scroll to zoom',          ms: 3200, run: demoZoom, puppet: true },  // in, then out at 1.9s
     // sum of the toolbar sub-steps (15.2s) plus a beat
-    { icon: 'ctrl',  label: 'The toolbar',             ms: 15800, run: demoToolbar },
+    { icon: 'ctrl',  label: 'The toolbar',             ms: 15800, run: demoToolbar, puppet: true },
   ];
 
   // ---- MODE: cinematic --------------------------------------------------
@@ -507,15 +507,42 @@
     timer = setTimeout(() => show(i + 1), 900);
   }
 
+  // On touch there is no mouse, no scroll wheel and no hover. The steps that
+  // puppet the canvas dispatch MouseEvents (see canvasDrag/press below), which
+  // the mobile touch handlers in app.js never receive — so on a phone those
+  // steps animate nothing. Reword the copy and drop the puppeted steps rather
+  // than narrate gestures that are not happening.
+  const TOUCH = matchMedia('(pointer: coarse)').matches ||
+                document.documentElement.classList.contains('mobile-device');
+  const TOUCH_WORDS = [
+    [/\bClick\b/g, 'Tap'], [/\bclick\b/g, 'tap'],
+    [/\bDrag\b/g, 'Drag one finger'],
+    [/\bScroll to zoom\b/g, 'Pinch to zoom'],
+    [/\bscroll to zoom\b/g, 'pinch to zoom'],
+    [/\bScroll\b/g, 'Pinch'], [/\bscroll\b/g, 'pinch']
+  ];
+  function touchify(steps) {
+    if (!TOUCH) return steps;
+    return steps
+      .filter(st => !st.puppet)
+      .map(st => {
+        const copy = Object.assign({}, st);
+        if (typeof copy.label === 'string') {
+          TOUCH_WORDS.forEach(([re, to]) => { copy.label = copy.label.replace(re, to); });
+        }
+        return copy;
+      });
+  }
+
   function stepsFor(mode) {
-    return mode === 'cinematic' ? CINE : mode === 'practice' ? PRACTICE : GUIDED;
+    return touchify(mode === 'cinematic' ? CINE : mode === 'practice' ? PRACTICE : GUIDED);
   }
 
   // ---- MODE: hotspots ---------------------------------------------------
   const SPOTS = [
     { n: 1, label: 'Click marked objects to open a project',
       at: () => { const m = markedBody(); return m ? xyOf(m) : [panel.clientWidth * .6, panel.clientHeight * .35]; } },
-    { n: 2, label: 'Drag to look around · scroll to zoom',
+    { n: 2, label: 'Drag one finger to look around · pinch to zoom',
       at: () => [panel.clientWidth * 0.5, panel.clientHeight * 0.62] },
     { n: 3, label: 'Play, pause and change speed here',
       at: () => { const c = centreOf('.controls'); return c ? [c[0], c[1] - c[3] / 2 - 22] : null; } },
@@ -674,7 +701,10 @@
 
   let seen = false;
   try { seen = !!localStorage.getItem(KEY); } catch (_) {}
-  if (seen) replay.classList.add('show');
+  // Never auto-start on touch. The tour drives the real controls, and on a
+  // phone it opened over a 40vh map the moment the page loaded, before the
+  // visitor had oriented at all. It stays one tap away instead.
+  if (seen || TOUCH) replay.classList.add('show');
   else setTimeout(start, 1600);
 
   window.restartTour = start;
