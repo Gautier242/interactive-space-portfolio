@@ -542,9 +542,15 @@ function showDetail(item) {
   }
   detailLinks.innerHTML = linksHTML;
   
-  // Shrink left panel to 30% when showing detail
+  // Shrink left panel to 30% when showing detail.
+  // Desktop only. `flex: 0 0 30%` means 30% of the WIDTH in the desktop row
+  // layout, but mobile stacks the panels in a column, where flex-basis is the
+  // HEIGHT — resolved against an auto-height parent it falls back to the
+  // content size, i.e. whatever pixel height renderer.setSize last wrote onto
+  // the canvas. After a full-screen map that is 100vh, so opening a
+  // publication left the map filling the screen with no way back.
   const leftPanel = document.getElementById('leftPanel');
-  if (leftPanel) {
+  if (leftPanel && !isMobileDevice) {
     leftPanel.style.flex = '0 0 30%';
     updateImageSizes(70);
     // Call resize multiple times during transition to prevent black band
@@ -639,7 +645,7 @@ function hideDetail() {
   } else {
     // Desktop: Restore left panel to 45% when closing detail
     const leftPanel = document.getElementById('leftPanel');
-    if (leftPanel) {
+    if (leftPanel && !isMobileDevice) {
       leftPanel.style.flex = '0 0 35%';
       updateImageSizes(55);
       // Call resize multiple times during transition to prevent black band

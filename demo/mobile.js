@@ -98,7 +98,11 @@
     // Closing used to leave the map full-height: app.js writes inline heights
     // on the panel when a publication opens or closes, and those survived the
     // class going away. Clear them so the stylesheet decides again.
-    if (!full) { left.style.height = ''; left.style.minHeight = ''; }
+    if (!full) {
+      // app.js writes inline sizing on this panel for the desktop row layout;
+      // anything left behind keeps the map full-height after the class goes.
+      left.style.height = ''; left.style.minHeight = ''; left.style.flex = '';
+    }
     reflow();
   }
 
@@ -116,13 +120,18 @@
   }
   onTap(expand, function () { setFull(!full); });
 
+  function isRover() {
+    try { return !!roverPOVMode; } catch (_) { return false; }
+  }
+
   // ---- 5. tools: the control bar is hidden until asked for ---------------
   var tools = document.createElement('button');
   tools.type = 'button';
   tools.className = 'm-btn m-tools';
-  tools.innerHTML = svg('<circle cx="12" cy="12" r="2.6"/>' +
-    '<path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>');
+  tools.innerHTML = svg('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/>' +
+    '<circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>');
   tools.setAttribute('aria-label', 'Show map controls');
+  tools.setAttribute('title', 'Map controls');
   tools.setAttribute('aria-expanded', 'false');
   left.appendChild(tools);
 
@@ -175,7 +184,33 @@
     '</div>';
   document.body.appendChild(sheet);
 
-  function setSheet(on) { document.documentElement.classList.toggle('m-sheet-on', !!on); }
+  var MAP_HELP = sheet.querySelector('.m-sheet-card').innerHTML;
+  var ROVER_HELP =
+      '<div class="m-sheet-h">Driving VIPER</div>' +
+      '<div class="m-sheet-sec">The rover</div>' +
+      '<ul>' +
+        '<li><b>&#8593; &#8595;</b> drive forwards and backwards.</li>' +
+        '<li><b>&#8592; &#8594;</b> steer left and right.</li>' +
+        '<li><b>Hold</b> a button to keep moving; let go to stop.</li>' +
+        '<li><b>Drag one finger</b> on the view to look around while you drive.</li>' +
+        '<li>The buttons are in the control bar &#8212; tap the sliders icon if it is closed.</li>' +
+      '</ul>' +
+      '<div class="m-sheet-sec">Leaving</div>' +
+      '<ul>' +
+        '<li>Tap <b>End traverse</b> to return to the Moon overview.</li>' +
+        '<li>From there, tap <b>Earth</b> in the sky to come back to the map.</li>' +
+      '</ul>' +
+      '<button type="button" class="m-sheet-x">Got it</button>';
+
+  function setSheet(on) {
+    if (on) {
+      // The tour explains a mouse-driven solar system; while you are driving
+      // on the Moon that is the wrong help entirely.
+      sheet.querySelector('.m-sheet-card').innerHTML = isRover() ? ROVER_HELP : MAP_HELP;
+      onTap(sheet.querySelector('.m-sheet-x'), function () { setSheet(false); });
+    }
+    document.documentElement.classList.toggle('m-sheet-on', !!on);
+  }
   onTap(help, function () { setSheet(true); });
   onTap(sheet.querySelector('.m-sheet-x'), function () { setSheet(false); });
   sheet.addEventListener('click', function (e) { if (e.target === sheet) setSheet(false); });
@@ -183,6 +218,73 @@
   // Centring on the Sun is done in framing.js (it zeroes its thirds-line
   // offset on mobile). Doing it here instead fought framing's idle drift,
   // which re-applies its own pose every frame.
+
+  // ---- 7. trade space between the map and the text -----------------------
+  // Three stops, driven by a slim bar between the two panels. Shrinking the
+  // map re-aims at whatever is focused and pulls back a little, so the object
+  // you were looking at stays centred and in frame instead of sliding out.
+  var STOPS = ['m-map', 'm-split', 'm-text'];   // 58vh / 40vh / 22vh
+  var stop = 1;
+
+  var split = document.createElement('div');
+  split.className = 'm-split';
+  split.innerHTML =
+    '<button type="button" class="m-split-b" data-d="-1" aria-label="Show more map">' +
+      svg('<path d="M6 14l6-6 6 6"/>') + '</button>' +
+    '<span class="m-split-grip"></span>' +
+    '<button type="button" class="m-split-b" data-d="1" aria-label="Show more text">' +
+      svg('<path d="M6 10l6 6 6-6"/>') + '</button>';
+  left.parentNode.insertBefore(split, dock.nextSibling);
+
+  function setSplit(next) {
+    next = Math.max(0, Math.min(STOPS.length - 1, next));
+    if (next === stop) return;
+    var shrinking = next > stop;
+    stop = next;
+    for (var i = 0; i < STOPS.length; i++) {
+      document.documentElement.classList.toggle(STOPS[i], i === stop);
+    }
+    split.querySelectorAll('.m-split-b').forEach(function (b) {
+      var d = +b.dataset.d;
+      b.disabled = (d < 0 && stop === 0) || (d > 0 && stop === STOPS.length - 1);
+    });
+    // zoomBy pivots on the followed body when there is one and re-aims at it,
+    // so this both keeps the subject centred and adds a little context.
+    if (window.__cam && window.__cam.zoomBy) window.__cam.zoomBy(shrinking ? 1.16 : 0.86);
+    reflow();
+  }
+  split.addEventListener('click', function (e) {
+    var b = e.target.closest('.m-split-b');
+    if (b && !b.disabled) setSplit(stop + (+b.dataset.d));
+  });
+  setSplit(1); stop = 1;
+  document.documentElement.classList.add('m-split');
+
+  // ---- 8. react to what the app does -------------------------------------
+  var detail = document.getElementById('detailView');
+  if (detail) {
+    var wasOpen = false;
+    new MutationObserver(function () {
+      var open = detail.classList.contains('active');
+      if (open === wasOpen) return;
+      wasOpen = open;
+      // A publication opening while the map is full screen used to render
+      // underneath it (the map is position:fixed at z-index 400), so tapping
+      // a body in full screen looked like nothing happened.
+      if (open && full) setFull(false);
+      if (open) setSplit(2);          // give the text the room
+      else setSplit(1);
+    }).observe(detail, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  // VIPER's driving buttons live in the control bar, which is now behind the
+  // gear — entering rover mode with them hidden left no way to drive.
+  var rov = document.getElementById('roverControls');
+  if (rov) {
+    new MutationObserver(function () {
+      if (rov.style.display && rov.style.display !== 'none') setTools(true);
+    }).observe(rov, { attributes: true, attributeFilter: ['style'] });
+  }
 
   window.addEventListener('orientationchange', reflow);
   document.addEventListener('mission:enter', function () { if (full) setFull(false); });

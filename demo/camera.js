@@ -26,6 +26,7 @@
 
   const V = () => new THREE.Vector3();
   const _a = V(), _b = V(), _c = V();
+  const UPV = V().set(0, 1, 0);
 
   // ---- what are we looking at? -----------------------------------------
   let follow = null;          // { name, mesh, offset:Vector3 }
@@ -199,6 +200,36 @@
     return best;                                    // nothing clear; keep the lit pose
   }
 
+  // ---- key light --------------------------------------------------------
+  // The scene is lit by one point light at the Sun, which is correct and is
+  // exactly why the ISS opened as a black silhouette against Earth's night
+  // side: swinging to an unblocked angle does not help if that angle is unlit.
+  //
+  // A directional fill is parented to the camera, so it always shines along
+  // the view direction with no per-frame work and no distance falloff (a
+  // PointLight with decay would be worth nothing 1000 units out). It is only
+  // on while a body is focused, so the rest of the system keeps its real
+  // terminator.
+  const keyLight = new THREE.DirectionalLight(0xcfe0ff, 0);
+  keyLight.position.set(0.45, 0.8, 1);        // over the viewer's shoulder
+  keyLight.target.position.set(0, 0, -1);     // ...pointing where we look
+  camera.add(keyLight);
+  camera.add(keyLight.target);
+  // the camera is not in the graph in this app, so it needs updating itself
+  if (!camera.parent) scene.add(camera);
+  const KEY_ON = 0.85;
+  function setKey(on) { keyLight.intensity = on ? KEY_ON : 0; }
+
+  // Tie it to "a publication is open", not to `follow` — follow persists until
+  // Reset, and a headlight left on permanently washes out every planet's
+  // terminator, which is the look the map is for.
+  const detailEl = document.getElementById('detailView');
+  if (detailEl) {
+    new MutationObserver(() => {
+      if (!detailEl.classList.contains('active')) setKey(false);
+    }).observe(detailEl, { attributes: true, attributeFilter: ['class'] });
+  }
+
   let flying = null;
   function flyTo(name, opts) {
     const mesh = meshFor(name);
@@ -209,6 +240,7 @@
     const ms = (opts && opts.ms) || 900;
     flying = true;
     follow = { name, mesh, offset: V().subVectors(pos, target) };
+    setKey(true);
 
     // Face-framed bodies spin, so remember where to sit in THEIR frame.
     if (FACE[name]) {
@@ -260,7 +292,7 @@
 
   // ---- reset clears the lock -------------------------------------------
   const reset = document.getElementById('btnReset');
-  if (reset) reset.addEventListener('click', () => { follow = null; flying = null; }, true);
+  if (reset) reset.addEventListener('click', () => { follow = null; flying = null; setKey(false); }, true);
 
   // After the hero view lands, the visitor owns the camera. The follow lock
   // re-applies camera.position every frame, which silently fights pan and
@@ -285,7 +317,8 @@
   window.__cam = {
     flyTo,
     zoomBy,
-    clear() { follow = null; },
+    clear() { follow = null; setKey(false); },
+    get keyLight() { return keyLight; },
     get following() { return follow && follow.name; },
   };
 })();

@@ -61,7 +61,37 @@
 }
 .mobile-device .left {
   height: 40vh !important;
-  min-height: 240px !important;
+  min-height: 200px !important;
+}
+/* three stops for the map/text trade, set by the bar between the panels */
+.mobile-device.m-map  .left { height: 58vh !important; }
+.mobile-device.m-text .left { height: 22vh !important; min-height: 150px !important; }
+
+/* ---- the map/text split bar -------------------------------------------- */
+.m-split {
+  order: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 2px 0 3px;
+  background: rgba(9, 16, 30, .55);
+  border-top: 1px solid rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.m-split-b {
+  display: flex; align-items: center; justify-content: center;
+  width: 46px; height: 26px;
+  background: none; border: 0; padding: 0;
+  color: var(--accent);
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.m-split-b svg { width: 17px; height: 17px; display: block; }
+.m-split-b:disabled { opacity: .25; }
+.m-split-grip {
+  width: 34px; height: 3px; border-radius: 2px;
+  background: rgba(158, 201, 255, .3);
 }
 
 /* The controls move OUT of .left into this dock so they stop covering the
