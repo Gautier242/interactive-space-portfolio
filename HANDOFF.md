@@ -120,6 +120,15 @@ That is exactly the bug it hid: an inactive tour layer at `opacity: 0` was
 still hit-testable and swallowed every click. Use `document.elementFromPoint`
 and dispatch to whatever is actually there.
 
+**3b. Headless Chrome freezes CSS transitions under `--virtual-time-budget`.**
+A divider drag looked completely broken: the handler ran, the inline
+`flex: 0 0 65.3%` was set, and the element stayed at its old 35% width no
+matter how long the probe waited — `getComputedStyle` kept returning the
+transition's *start* value. `.left` has `transition: flex .3s`, and virtual
+time does not drive the animation clock. Set `el.style.transition = 'none'`
+in the probe before measuring anything that transitions. Same family as the
+rAF trap below.
+
 **3. Measuring mid-animation.** Several "failures" were samples taken while a
 camera flight was still running. Sample repeatedly until stable.
 
@@ -149,6 +158,31 @@ for (const t of ['pointerdown','mousedown','pointerup','mouseup','click'])
 ```
 
 ---
+
+## Mobile (reworked 2026-09-05)
+
+Mobile is `.mobile-device`, a **one-shot user-agent sniff** in `index.html`.
+A phone asking for "Desktop site" fails that sniff and gets the desktop
+layout with **none** of the mobile rules — that is not a bug to fix by
+widening the sniff, it is what the visitor asked for. Anything that must be
+true for *any finger on glass* belongs behind `(pointer: coarse)` /
+`matchMedia('(pointer: coarse)')`, which survives the spoofed user-agent.
+
+- `demo/mobile.css` + `demo/mobile.js` hold the mobile layout. Deleting the
+  two tags in `index.html` reverts it.
+- The controls live in a `.m-dock` **below** the map, moved there by
+  `mobile.js`. `.left` keeps its own box so `onWindowResize()` still measures
+  the right thing.
+- Map is 40vh; `.m-expand` toggles `html.m-full` for a fullscreen map.
+- **Font sizes**: `main.css:36-47` sets every list/detail size as
+  `calc(Npx * var(--list-font-scale)) !important`. A plain `font-size` for
+  those elements is silently ignored — match the form or it will not apply.
+- Three buttons wanted the same corner of the map (`.obj-toggle`,
+  `.instructions-toggle`, `.t3-replay`). Tips is hidden on mobile; check for
+  collisions before adding a fourth.
+- The tour does not auto-start on touch and drops the steps that puppet the
+  canvas with synthetic `MouseEvent`s — those never reach the touch handlers,
+  so they animated nothing while the caption claimed otherwise.
 
 ## Open work, roughly in priority order
 
