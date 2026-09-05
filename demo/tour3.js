@@ -701,11 +701,12 @@
 
   let seen = false;
   try { seen = !!localStorage.getItem(KEY); } catch (_) {}
-  // Never auto-start on touch. The tour drives the real controls, and on a
-  // phone it opened over a 40vh map the moment the page loaded, before the
-  // visitor had oriented at all. It stays one tap away instead.
-  if (seen || TOUCH) replay.classList.add('show');
-  else setTimeout(start, 1600);
+  // Never auto-start, on any device. The tour takes over the screen and drives
+  // the real controls; arriving visitors were getting it before they had
+  // looked at anything. It runs only when asked, from "How to explore".
+  // (`seen` is still read so an older stored flag does not hide the button.)
+  void seen;
+  replay.classList.add('show');
 
   window.restartTour = start;
   window.tourShowStep = i => { clearTimeout(timer); running = true;

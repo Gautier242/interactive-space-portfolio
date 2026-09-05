@@ -57,6 +57,15 @@
     e.preventDefault();
     e.stopPropagation();          // suppress app.js's own wheel handler
 
+    zoomBy(e.deltaY > 0 ? 1.18 : 0.84);
+  }, { capture: true, passive: false });
+
+  // One zoom for every input. The wheel used to own this maths inline; touch
+  // then grew a second, wrong copy in app.js that pivoted on
+  // getCurrentViewTarget() — a point 100 units IN FRONT of the camera, not a
+  // centre to orbit — which threw the camera backwards on every pinch frame.
+  // step > 1 pulls back, step < 1 moves closer.
+  function zoomBy(step) {
     // Pivot: the followed body if there is one, else a point ahead of the
     // camera at its current viewing distance.
     let pivot, minDist;
@@ -70,16 +79,13 @@
       pivot = _a.copy(camera.position).add(_b.multiplyScalar(camera.position.length() * 0.35));
       minDist = 6;
     }
-
-    const step = e.deltaY > 0 ? 1.18 : 0.84;
     _c.subVectors(camera.position, pivot);
     let len = _c.length() * step;
     len = Math.max(minDist, Math.min(3000, len));
     camera.position.copy(pivot).add(_c.normalize().multiplyScalar(len));
     camera.lookAt(pivot);
-
     if (follow) follow.offset.subVectors(camera.position, pivot);
-  }, { capture: true, passive: false });
+  }
 
   // ---- true follow ------------------------------------------------------
   const _q = new THREE.Quaternion();
@@ -155,7 +161,42 @@
       .addScaledVector(up, 0.30)
       .normalize();
 
-    return { target, pos: target.clone().addScaledVector(dir, dist) };
+    return { target, pos: unblocked(target, dir, dist, mesh) };
+  }
+
+  // Sun-side framing still leaves the ISS behind Earth about as often as not:
+  // being lit says nothing about what sits between us and it. Swing the
+  // camera around the target until the sight line is clear, keeping the first
+  // angle that works so the pose stays as close to the lit one as possible.
+  function occluder(from, target, selfMesh) {
+    if (typeof bodies === 'undefined') return null;
+    const seg = V().subVectors(target, from);
+    const segLen = seg.length();
+    if (segLen < 1e-6) return null;
+    seg.divideScalar(segLen);
+    for (const key in bodies) {
+      const m = bodies[key] && bodies[key].mesh;
+      if (!m || m === selfMesh) continue;
+      const c = m.getWorldPosition(V());
+      const t = V().subVectors(c, from).dot(seg);
+      if (t <= 0 || t >= segLen) continue;          // not between us and it
+      const perp = V().copy(from).addScaledVector(seg, t).distanceTo(c);
+      if (perp < radiusOf(m) * 1.25) return key;
+    }
+    return null;
+  }
+
+  function unblocked(target, dir, dist, selfMesh) {
+    const up = V().set(0, 1, 0);
+    let best = target.clone().addScaledVector(dir, dist);
+    if (!occluder(best, target, selfMesh)) return best;
+    const tries = [30, -30, 60, -60, 90, -90, 130, -130, 180];
+    for (const deg of tries) {
+      const d2 = dir.clone().applyAxisAngle(up, deg * Math.PI / 180).normalize();
+      const pos = target.clone().addScaledVector(d2, dist);
+      if (!occluder(pos, target, selfMesh)) return pos;
+    }
+    return best;                                    // nothing clear; keep the lit pose
   }
 
   let flying = null;
@@ -243,6 +284,7 @@
 
   window.__cam = {
     flyTo,
+    zoomBy,
     clear() { follow = null; },
     get following() { return follow && follow.name; },
   };

@@ -64,26 +64,36 @@
   min-height: 240px !important;
 }
 
-/* the controls move OUT of .left into this dock, so they stop covering the
+/* The controls move OUT of .left into this dock so they stop covering the
    map. .left keeps its full box, so renderer.setSize (app.js onWindowResize,
-   which reads leftPanel.clientWidth/Height) needs no change at all. */
+   which reads leftPanel.clientWidth/Height) needs no change at all.
+
+   The dock is hidden until the gear is tapped: a permanent slab of buttons
+   under the map was the single ugliest thing on the phone layout. */
 .m-dock {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 4px;
-  padding: 6px 8px;
-  background: rgba(10, 20, 40, .92);
-  border-top: 1px solid rgba(255,255,255,.08);
-  border-bottom: 1px solid rgba(255,255,255,.08);
-  order: 2;            /* directly under .left, which is order:2 -> see JS */
+  padding: 0 8px;
+  order: 2;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  max-height: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: max-height .22s ease, opacity .18s ease, padding .22s ease;
 }
 .m-dock::-webkit-scrollbar { display: none; }
+.mobile-device.m-tools-on .m-dock {
+  max-height: 60px;
+  opacity: 1;
+  pointer-events: auto;
+  padding: 6px 8px;
+}
 
-/* inside the dock the control bar is a plain row, not an overlay */
+/* inside the dock the control bar is a plain row, not a floating overlay */
 .mobile-device .m-dock .controls {
   position: static;
   transform: none;
@@ -93,15 +103,29 @@
   border: none;
   box-shadow: none;
   padding: 0;
-  gap: 4px;
+  gap: 5px;
   max-width: none;
   backdrop-filter: none;
 }
+/* transparent, outlined, blended into the map rather than a solid slab */
 .mobile-device .m-dock .controls button {
   min-width: 38px;
-  min-height: 38px;
-  font-size: 13px;
-  padding: 6px 9px;
+  min-height: 34px;
+  font-size: 12px;
+  padding: 5px 9px;
+  background: rgba(12, 22, 42, .55);
+  border: 1px solid rgba(158, 201, 255, .22);
+  color: #cfe2ff;
+  backdrop-filter: blur(8px);
+}
+/* the pause/play button read as orange, which looked like a warning */
+.mobile-device .m-dock #btnPause,
+.mobile-device .m-dock #btnPause:hover { color: #ffffff; }
+/* the active tool keeps a hint of accent without the solid blue fill */
+.mobile-device .m-dock .controls button.active {
+  background: rgba(158, 201, 255, .20);
+  border-color: rgba(158, 201, 255, .55);
+  color: #ffffff;
 }
 
 /* ---- 3. the buttons that were stacked in the same corner ---------------- */
@@ -109,33 +133,43 @@
      .obj-toggle          (hover-info.css:61)  top:12 right:12
      .instructions-toggle (main.css:855)       top:12 right:12   <- exact overlap
      .t3-replay           (tour3.css:144)      top:12 left:12
-   Two help affordances is one too many on a phone, and the tips button only
-   opens the static legend the tour already demonstrates. Tour keeps the left
-   corner, object info keeps the right, tips is hidden here (desktop keeps it). */
-.mobile-device .instructions-toggle { display: none; }
-.mobile-device .t3-replay { top: 8px; left: 8px; height: 32px; }
-.mobile-device .obj-toggle {
-  top: 8px;
-  right: 8px;
-}
+   On a phone the tour is replaced by a text sheet (.m-help), so tour3's own
+   button and the tips button are both hidden here; desktop keeps them. */
+.mobile-device .instructions-toggle,
+.mobile-device .t3-replay { display: none !important; }
 
-/* ---- 4. expand the map to fullscreen ----------------------------------- */
-.m-expand {
+/* Object info drives a hover tag and there is no hover on a phone; the corner
+   readout is a date and an "AU" figure with nothing to anchor them to. */
+.mobile-device.m-noinfo .obj-toggle,
+.mobile-device.m-noinfo .obj-corner { display: none !important; }
+
+/* ---- 4. the floating map buttons --------------------------------------- */
+.m-btn {
   position: absolute;
-  right: 8px;
-  bottom: 8px;
   z-index: 30;
-  width: 38px; height: 38px;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(30, 60, 100, .75);
-  border: 1px solid rgba(158, 201, 255, .45);
-  border-radius: 9px;
-  color: var(--accent);
+  gap: 6px;
+  min-width: 36px; height: 36px;
+  padding: 0 9px;
+  background: rgba(9, 16, 30, .55);
+  border: 1px solid rgba(158, 201, 255, .26);
+  border-radius: 10px;
+  color: #cfe2ff;
+  font: 600 11.5px/1 Inter, system-ui, sans-serif;
   backdrop-filter: blur(10px);
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
 }
-.m-expand svg { width: 17px; height: 17px; display: block; }
+.m-btn svg { width: 17px; height: 17px; display: block; flex: 0 0 auto; }
+.m-btn:active { background: rgba(158, 201, 255, .18); }
+.m-help   { top: 8px; left: 8px; }
+.m-tools  { right: 52px; bottom: 8px; }
+.m-expand { right: 8px; bottom: 8px; }
+.mobile-device.m-tools-on .m-tools {
+  background: rgba(158, 201, 255, .20);
+  border-color: rgba(158, 201, 255, .55);
+  color: #fff;
+}
 
 .mobile-device.m-full .left {
   position: fixed;
@@ -145,21 +179,56 @@
   z-index: 400;
   margin: 0;
 }
-/* in fullscreen the dock floats back over the map, where there is now room */
 .mobile-device.m-full .m-dock {
   position: fixed;
   left: 50%;
-  bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 401;
   width: auto;
   max-width: 96vw;
-  border: 1px solid rgba(255,255,255,.14);
   border-radius: 12px;
-  backdrop-filter: blur(10px);
 }
-.mobile-device.m-full .m-expand { position: fixed; z-index: 402; bottom: 62px; }
+.mobile-device.m-full .m-btn { position: fixed; z-index: 402; }
+.mobile-device.m-full .m-expand { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+.mobile-device.m-full .m-tools  { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
 .mobile-device.m-full body { overflow: hidden; }
+
+/* ---- 4b. the "how to explore" sheet ------------------------------------ */
+.m-sheet {
+  position: fixed; inset: 0; z-index: 500;
+  display: none;
+  align-items: flex-end;
+  background: rgba(4, 9, 18, .62);
+  backdrop-filter: blur(3px);
+}
+.mobile-device.m-sheet-on .m-sheet { display: flex; }
+.m-sheet-card {
+  width: 100%;
+  max-height: 82vh;
+  overflow-y: auto;
+  background: #0c1728;
+  border-top: 1px solid rgba(158, 201, 255, .28);
+  border-radius: 16px 16px 0 0;
+  padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  color: var(--ink);
+}
+.m-sheet-h { font: 700 15px/1.2 Inter, system-ui, sans-serif; margin-bottom: 4px; }
+.m-sheet-sec {
+  font: 600 9.5px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+  letter-spacing: .14em; text-transform: uppercase;
+  color: var(--accent); margin: 14px 0 6px;
+}
+.m-sheet-card ul { margin: 0; padding-left: 18px; }
+.m-sheet-card li { font-size: 13px; line-height: 1.5; margin-bottom: 5px; }
+.m-sheet-card b { color: #cfe2ff; }
+.m-sheet-x {
+  margin-top: 16px; width: 100%; min-height: 42px;
+  background: rgba(158, 201, 255, .16);
+  border: 1px solid rgba(158, 201, 255, .45);
+  border-radius: 10px; color: #cfe2ff;
+  font: 600 13px/1 Inter, system-ui, sans-serif;
+}
 
 /* ---- 5. publication list: figure + institution + title ------------------ */
 .mobile-device .pub-desc,

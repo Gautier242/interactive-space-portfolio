@@ -468,7 +468,7 @@ function showDetail(item) {
   // Pause animation and center on related object
   if (item.body && item.id !== 'about') {
     pausedPlanets = true;
-    document.getElementById('btnPause').textContent = '▶';
+    document.getElementById('btnPause').textContent = '▶︎';
     zoomToBody(item.body);
   }
   
@@ -612,7 +612,7 @@ function hideDetail() {
   // Resume animation when closing detail
   if (pausedPlanets) {
     pausedPlanets = false;
-    document.getElementById('btnPause').textContent = '⏸';
+    document.getElementById('btnPause').textContent = '⏸︎';
   }
   
   // Mobile: Ensure animation stays at fixed reduced size when closing detail
@@ -853,31 +853,19 @@ if (isMobileDevice && canvas) {
     }
   });
   
-  // Pinch-to-zoom
-  let initialDistance = 0;
-  let initialCameraDistance = 0;
+  // Pinch-to-zoom: incremental, so it needs only the previous finger spread.
+  let pinchPrev = 0;
   
+  // A pinch is measured frame to frame, so the only state is the last spread.
+  // Clearing it whenever the gesture is not exactly two fingers stops the
+  // first move after a finger lands or lifts from reading as a huge jump.
   canvas.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 2) {
-      e.preventDefault();
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      initialDistance = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      initialCameraDistance = camera.position.length();
-    } else {
-      // Reset when not two fingers
-      initialDistance = 0;
-    }
+    if (e.touches.length === 2) e.preventDefault();
+    pinchPrev = 0;
   }, { passive: false });
-  
-  canvas.addEventListener('touchend', (e) => {
-    if (e.touches.length < 2) {
-      initialDistance = 0;
-    }
-  }, { passive: false });
+
+  canvas.addEventListener('touchend', () => { pinchPrev = 0; }, { passive: false });
+  canvas.addEventListener('touchcancel', () => { pinchPrev = 0; }, { passive: false });
   
   // Touch interactions: rotate/pan (1 finger if button selected) or tap for object selection
   let lastTouchX = 0, lastTouchY = 0;
@@ -889,22 +877,23 @@ if (isMobileDevice && canvas) {
   
   canvas.addEventListener('touchmove', (e) => {
     if (e.touches.length === 2) {
-      // Pinch to zoom. initialDistance/initialCameraDistance are set by the
-      // touchstart handler above, which has always run — this branch used to
-      // return without reading them, so that measurement went nowhere.
+      // Pinch to zoom, delegated to camera.js's zoomBy so touch and wheel
+      // share one pivot. The previous version pivoted on
+      // getCurrentViewTarget(), which is a point 100 units IN FRONT of the
+      // camera rather than a centre to orbit, so each frame flung the camera
+      // backwards - it only ever appeared to zoom out, very fast.
       e.preventDefault();
-      if (!initialDistance) return;
       const d = Math.hypot(
         e.touches[1].clientX - e.touches[0].clientX,
         e.touches[1].clientY - e.touches[0].clientY
       );
       if (!d) return;
-      // fingers apart => scale > 1 => camera closer
-      const target = getCurrentViewTarget();
-      const dir = new THREE.Vector3().subVectors(camera.position, target);
-      const want = THREE.MathUtils.clamp(
-        initialCameraDistance * (initialDistance / d), 50, 2000);
-      camera.position.copy(target).add(dir.setLength(want));
+      if (!pinchPrev) { pinchPrev = d; return; }
+      // fingers apart -> ratio < 1 -> closer. Clamped per frame so a jumpy
+      // touch reading cannot throw the camera across the system.
+      const step = Math.min(1.2, Math.max(0.83, pinchPrev / d));
+      pinchPrev = d;
+      if (window.__cam && window.__cam.zoomBy) window.__cam.zoomBy(step);
       return;
     } else if (e.touches.length === 1) {
       // One finger: Rotate or Pan (if button is selected)
@@ -1083,7 +1072,7 @@ if (isMobileDevice && canvas) {
       }
     }
     hasMoved = false;
-    initialDistance = 0;
+    pinchPrev = 0;
   }, { passive: false });
 }
 
@@ -2587,12 +2576,12 @@ document.getElementById('btnReset').addEventListener('click', () => {
     card.classList.remove('highlighted');
   });
   
-  document.getElementById('btnPause').textContent = '⏸';
+  document.getElementById('btnPause').textContent = '⏸︎';
 });
 
 document.getElementById('btnPause').addEventListener('click', e => {
   pausedPlanets = !pausedPlanets;
-  e.target.textContent = pausedPlanets ? '▶' : '⏸';
+  e.target.textContent = pausedPlanets ? '▶︎' : '⏸︎';
 });
 
 const speedBtn = document.getElementById('btnSpeed');
@@ -2840,7 +2829,7 @@ function saveSimStateOnce() {
 function forcePlayFast() {
   pausedPlanets = false;
   isAnimating = true;
-  document.getElementById('btnPause').textContent = '⏸';
+  document.getElementById('btnPause').textContent = '⏸︎';
   applySpeedUI(6);
 }
 
@@ -2858,7 +2847,7 @@ function restoreSimState() {
   pausedPlanets = savedSimState.paused;
   isAnimating = savedSimState.animating;
   animationSpeed = savedSimState.speed;
-  document.getElementById('btnPause').textContent = savedSimState.paused ? '▶' : '⏸';
+  document.getElementById('btnPause').textContent = savedSimState.paused ? '▶︎' : '⏸︎';
   const b = document.getElementById('btnSpeed');
   if (b) b.textContent = savedSimState.speedLabel;
   savedSimState = null;

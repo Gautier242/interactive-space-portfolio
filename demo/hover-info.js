@@ -79,6 +79,7 @@
   }
   toggle.addEventListener('click', e => {
     e.stopPropagation();
+    autoOff = false;               // an explicit choice outranks the auto state
     infoOn = !infoOn;
     try { localStorage.setItem('objInfo', infoOn ? 'on' : 'off'); } catch (_) {}
     if (!infoOn) close();
@@ -305,16 +306,32 @@
     syncToggle();
   }
 
-  let wasFocused = false;
+  // Auto-suppression while the view is "focused" (Moon surface, camera
+  // following a body, detail panel open). This used to be able to switch the
+  // readout off for good: camera.js only clears `follow` on Reset, so after
+  // the first publication click `__cam.following` stayed truthy and every
+  // frame re-asserted setInfo(false). Object info looked permanently dead.
+  //
+  // Two changes. The auto state is now tracked separately from the visitor's
+  // own choice, so restoring only ever undoes an automatic suppression; and
+  // an explicit toggle wins until the context actually changes again.
+  let wasFocused = false, autoOff = false;
   (function contextTick() {
     requestAnimationFrame(contextTick);
     const focused =
       (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) ||
-      (window.__cam && window.__cam.following) ||
+      // NOT __cam.following: camera.js only clears `follow` on Reset, so that
+      // term latched true after the first publication click and never fell
+      // back. Following the ISS is exactly when you still want to read it.
       !!(document.getElementById('detailView') || {}).classList?.contains('active');
     if (focused === wasFocused) return;
     wasFocused = focused;
-    setInfo(!focused, { silent: true });
+    if (focused) {
+      if (infoOn) { autoOff = true; setInfo(false, { silent: true }); }
+    } else if (autoOff) {
+      autoOff = false;
+      setInfo(true, { silent: true });
+    }
   })();
 
   const resetBtn = document.getElementById('btnReset');

@@ -221,7 +221,7 @@ a:hover {
   bottom: 16px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(30, 60, 100, 0.95);
+  background: rgba(9, 16, 30, 0.42);
   border: 2px solid rgba(158, 201, 255, 0.4);
   border-radius: 12px;
   padding: 12px;
@@ -233,9 +233,12 @@ a:hover {
 }
 
 .controls button {
-  background: rgba(50,90,140,.8);
-  color: #eaf1ff;
-  border: 1px solid rgba(255,255,255,.15);
+  /* blended into the map rather than a solid slab: translucent fill over a
+     blur, so the scene reads through the toolbar */
+  background: rgba(12, 22, 42, .55);
+  backdrop-filter: blur(8px);
+  color: #cfe2ff;
+  border: 1px solid rgba(158, 201, 255, .22);
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
@@ -247,8 +250,19 @@ a:hover {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* U+23F8 / U+25B6 are emoji: browsers render them from a COLOUR font, so the
+   pause glyph came out orange and ignored `color` entirely. Asking for the
+   text presentation of the codepoint gives the monochrome glyph, which then
+   takes the button's own colour. */
+#btnPause {
+  font-family: "Segoe UI Symbol", "Apple Symbols", system-ui, sans-serif;
+  font-variant-emoji: text;
+  color: #eaf1ff;
+}
 .controls button:hover {
-  background: rgba(50,90,140,.8);
+  background: rgba(158, 201, 255, .16);
+  border-color: rgba(158, 201, 255, .45);
+  color: #ffffff;
   transform: translateY(-1px);
 }
 .controls button.active {
@@ -574,7 +588,10 @@ a:hover {
   width: 100%;
   max-width: 500px;
   height: auto;
-  min-height: 350px;
+  /* was min-height:350px with object-fit:cover below, which cropped every
+     figure to fill a fixed box. These are scientific figures; they are shown
+     whole or not at all. The box now follows the figure. */
+  min-height: 0;
   border-radius: 12px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,.2);
@@ -592,8 +609,10 @@ a:hover {
 }
 .detail-image img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
+  display: block;
+  cursor: zoom-in;
 }
 .detail-info {
   min-width: 0;
@@ -1130,8 +1149,8 @@ a:hover {
 
 .mobile-device .detail-image img {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
 }
 
 .mobile-device .detail-top {

@@ -58,14 +58,19 @@
     anchors[i].innerHTML = svg(ICONS[key[0]]);
   }
 
-  // ---- 3. expand the map to fullscreen -----------------------------------
+  // ---- 3. strip the readouts that do not earn their space ---------------
+  // The date / "1.17 AU" corner readout means nothing without context, and
+  // Object info drives a hover tag — there is no hover on a phone.
+  document.documentElement.classList.add('m-noinfo');
+
+  // ---- 4. expand the map to fullscreen -----------------------------------
   var EXPAND = svg('<path d="M14 4h6v6"/><path d="M20 4l-7.5 7.5"/>' +
                    '<path d="M10 20H4v-6"/><path d="M4 20l7.5-7.5"/>');
   var CLOSE  = svg('<path d="M6 6l12 12"/><path d="M18 6L6 18"/>');
 
   var expand = document.createElement('button');
   expand.type = 'button';
-  expand.className = 'm-expand';
+  expand.className = 'm-btn m-expand';
   expand.innerHTML = EXPAND;
   expand.setAttribute('aria-label', 'Expand map to full screen');
   expand.setAttribute('aria-pressed', 'false');
@@ -78,18 +83,22 @@
     var f = window.onWindowResize;
     if (typeof f !== 'function') return;
     requestAnimationFrame(function () {
-      f(); setTimeout(f, 60); setTimeout(f, 180);
+      f(); setTimeout(f, 60); setTimeout(f, 180); setTimeout(f, 400);
     });
   }
 
   var full = false;
   function setFull(on) {
-    full = on;
-    document.documentElement.classList.toggle('m-full', on);
-    expand.innerHTML = on ? CLOSE : EXPAND;
-    expand.setAttribute('aria-label', on ? 'Close full screen map'
-                                         : 'Expand map to full screen');
-    expand.setAttribute('aria-pressed', String(on));
+    full = !!on;
+    document.documentElement.classList.toggle('m-full', full);
+    expand.innerHTML = full ? CLOSE : EXPAND;
+    expand.setAttribute('aria-label', full ? 'Close full screen map'
+                                           : 'Expand map to full screen');
+    expand.setAttribute('aria-pressed', String(full));
+    // Closing used to leave the map full-height: app.js writes inline heights
+    // on the panel when a publication opens or closes, and those survived the
+    // class going away. Clear them so the stylesheet decides again.
+    if (!full) { left.style.height = ''; left.style.minHeight = ''; }
     reflow();
   }
 
@@ -107,9 +116,79 @@
   }
   onTap(expand, function () { setFull(!full); });
 
-  // leaving fullscreen when something else takes over the screen
+  // ---- 5. tools: the control bar is hidden until asked for ---------------
+  var tools = document.createElement('button');
+  tools.type = 'button';
+  tools.className = 'm-btn m-tools';
+  tools.innerHTML = svg('<circle cx="12" cy="12" r="2.6"/>' +
+    '<path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/>');
+  tools.setAttribute('aria-label', 'Show map controls');
+  tools.setAttribute('aria-expanded', 'false');
+  left.appendChild(tools);
+
+  function setTools(on) {
+    document.documentElement.classList.toggle('m-tools-on', !!on);
+    tools.setAttribute('aria-expanded', String(!!on));
+    tools.setAttribute('aria-label', on ? 'Hide map controls' : 'Show map controls');
+  }
+  onTap(tools, function () {
+    setTools(!document.documentElement.classList.contains('m-tools-on'));
+  });
+
+  // ---- 6. "How to explore" is text on a phone, not a demo ---------------
+  // The tour drives the real controls and reads as chaos on a 40vh map, so
+  // tour3's replay button is hidden here (mobile.css) and this explains the
+  // gestures instead — for the map AND the list, which nothing covered.
+  var help = document.createElement('button');
+  help.type = 'button';
+  help.className = 'm-btn m-help';
+  help.innerHTML = svg('<circle cx="12" cy="12" r="9.3"/><path d="M12 16.8v.01"/>' +
+                       '<path d="M9.3 9.1a2.8 2.8 0 1 1 3 3.3v1"/>') +
+                   '<span>How to explore</span>';
+  help.setAttribute('aria-label', 'How to explore');
+  left.appendChild(help);
+
+  var sheet = document.createElement('div');
+  sheet.className = 'm-sheet';
+  sheet.setAttribute('role', 'dialog');
+  sheet.setAttribute('aria-label', 'How to explore');
+  sheet.innerHTML =
+    '<div class="m-sheet-card">' +
+      '<div class="m-sheet-h">How to explore</div>' +
+      '<div class="m-sheet-sec">The map</div>' +
+      '<ul>' +
+        '<li><b>Tap</b> an object in yellow brackets to open its project.</li>' +
+        '<li><b>Drag one finger</b> to turn the view around.</li>' +
+        '<li><b>Pinch</b> two fingers to zoom in and out.</li>' +
+        '<li><b>Double-tap</b> to jump closer, and again to pull back.</li>' +
+        '<li>Tap <b>&#9881;</b> for play, pause, speed and reset.</li>' +
+        '<li>Tap <b>&#10530;</b> to make the map full screen.</li>' +
+      '</ul>' +
+      '<div class="m-sheet-sec">The projects</div>' +
+      '<ul>' +
+        '<li><b>Scroll</b> the list under the map.</li>' +
+        '<li><b>Tap a card</b> for the full description and the figure.</li>' +
+        '<li>Opening one <b>moves the map</b> to the object it is about.</li>' +
+        '<li><b>Tap the figure</b> to see it full size.</li>' +
+      '</ul>' +
+      '<button type="button" class="m-sheet-x">Got it</button>' +
+    '</div>';
+  document.body.appendChild(sheet);
+
+  function setSheet(on) { document.documentElement.classList.toggle('m-sheet-on', !!on); }
+  onTap(help, function () { setSheet(true); });
+  onTap(sheet.querySelector('.m-sheet-x'), function () { setSheet(false); });
+  sheet.addEventListener('click', function (e) { if (e.target === sheet) setSheet(false); });
+
+  // Centring on the Sun is done in framing.js (it zeroes its thirds-line
+  // offset on mobile). Doing it here instead fought framing's idle drift,
+  // which re-applies its own pose every frame.
+
   window.addEventListener('orientationchange', reflow);
   document.addEventListener('mission:enter', function () { if (full) setFull(false); });
 
-  window.__mobileMap = { setFull: setFull, isFull: function () { return full; } };
+  window.__mobileMap = {
+    setFull: setFull, isFull: function () { return full; },
+    setTools: setTools
+  };
 })();
