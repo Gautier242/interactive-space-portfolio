@@ -746,7 +746,9 @@ if (!isMobileDevice && resizer) {
   resizer.addEventListener('pointerdown', e => {
     isResizing = true;
     document.body.style.cursor = 'col-resize';
-    if (resizer.setPointerCapture) resizer.setPointerCapture(e.pointerId);
+    // capture keeps the drag alive if the finger slides off the 12px strip.
+    // It throws if the pointer is already gone, which must not abort the drag.
+    try { resizer.setPointerCapture(e.pointerId); } catch (_) {}
     e.preventDefault();
   });
 
