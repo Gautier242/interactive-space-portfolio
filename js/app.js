@@ -32,8 +32,11 @@ if (isMobileDevice) {
     // Just ensure animation is always at reduced size
     if (leftPanel) {
       leftPanel.classList.remove('expanded');
-      leftPanel.style.height = '20vh';
-      leftPanel.style.minHeight = '180px';
+      // height comes from CSS (demo/mobile.css: 40vh, and the fullscreen
+      // class). Writing it inline here fought that rule and forced it to be
+      // !important just to be seen.
+      leftPanel.style.height = '';
+      leftPanel.style.minHeight = '';
     }
     
     if (rightPanel) {
@@ -445,8 +448,11 @@ function showDetail(item) {
     const rightPanel = document.querySelector('.right');
     if (leftPanel && rightPanel) {
       leftPanel.classList.remove('expanded');
-      leftPanel.style.height = '20vh';
-      leftPanel.style.minHeight = '180px';
+      // height comes from CSS (demo/mobile.css: 40vh, and the fullscreen
+      // class). Writing it inline here fought that rule and forced it to be
+      // !important just to be seen.
+      leftPanel.style.height = '';
+      leftPanel.style.minHeight = '';
       rightPanel.classList.remove('expanded', 'shrunk');
       rightPanel.style.maxHeight = '';
       
@@ -615,8 +621,11 @@ function hideDetail() {
     const rightPanel = document.querySelector('.right');
     if (leftPanel && rightPanel) {
       leftPanel.classList.remove('expanded');
-      leftPanel.style.height = '20vh';
-      leftPanel.style.minHeight = '180px';
+      // height comes from CSS (demo/mobile.css: 40vh, and the fullscreen
+      // class). Writing it inline here fought that rule and forced it to be
+      // !important just to be seen.
+      leftPanel.style.height = '';
+      leftPanel.style.minHeight = '';
       rightPanel.classList.remove('expanded', 'shrunk');
       rightPanel.style.maxHeight = '';
       
@@ -730,13 +739,20 @@ const leftPanel = document.getElementById('leftPanel');
 let isResizing = false;
 
 if (!isMobileDevice && resizer) {
-  resizer.addEventListener('mousedown', e => {
+  // Pointer events, not mouse events: a phone set to "Desktop site" gets this
+  // layout (the UA sniff above is false there) but never emits mousedown/
+  // mousemove during a touch drag, so the divider could not be moved at all.
+  // pointerdown covers mouse, touch and pen identically.
+  resizer.addEventListener('pointerdown', e => {
     isResizing = true;
     document.body.style.cursor = 'col-resize';
+    if (resizer.setPointerCapture) resizer.setPointerCapture(e.pointerId);
+    e.preventDefault();
   });
 
-  document.addEventListener('mousemove', e => {
+  document.addEventListener('pointermove', e => {
     if (!isResizing) return;
+    e.preventDefault();
     const newWidth = (e.clientX / window.innerWidth) * 100;
     if (newWidth > 15 && newWidth < 75) {
       leftPanel.style.flex = `0 0 ${newWidth}%`;
@@ -745,7 +761,7 @@ if (!isMobileDevice && resizer) {
     }
   });
 
-  document.addEventListener('mouseup', () => {
+  document.addEventListener('pointerup', () => {
     if (isResizing) {
       isResizing = false;
       document.body.style.cursor = '';
@@ -870,10 +886,23 @@ if (isMobileDevice && canvas) {
   let hasMoved = false;
   
   canvas.addEventListener('touchmove', (e) => {
-    // Disable pinch-to-zoom - only allow zoom via +/- buttons
     if (e.touches.length === 2) {
-      // Two fingers: Do nothing - zoom disabled
+      // Pinch to zoom. initialDistance/initialCameraDistance are set by the
+      // touchstart handler above, which has always run — this branch used to
+      // return without reading them, so that measurement went nowhere.
       e.preventDefault();
+      if (!initialDistance) return;
+      const d = Math.hypot(
+        e.touches[1].clientX - e.touches[0].clientX,
+        e.touches[1].clientY - e.touches[0].clientY
+      );
+      if (!d) return;
+      // fingers apart => scale > 1 => camera closer
+      const target = getCurrentViewTarget();
+      const dir = new THREE.Vector3().subVectors(camera.position, target);
+      const want = THREE.MathUtils.clamp(
+        initialCameraDistance * (initialDistance / d), 50, 2000);
+      camera.position.copy(target).add(dir.setLength(want));
       return;
     } else if (e.touches.length === 1) {
       // One finger: Rotate or Pan (if button is selected)
