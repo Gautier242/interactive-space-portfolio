@@ -468,7 +468,7 @@ function showDetail(item) {
   // Pause animation and center on related object
   if (item.body && item.id !== 'about') {
     pausedPlanets = true;
-    document.getElementById('btnPause').textContent = '▶︎';
+    document.getElementById('btnPause').className = 'is-play';
     zoomToBody(item.body);
   }
   
@@ -618,7 +618,7 @@ function hideDetail() {
   // Resume animation when closing detail
   if (pausedPlanets) {
     pausedPlanets = false;
-    document.getElementById('btnPause').textContent = '⏸︎';
+    document.getElementById('btnPause').className = 'is-pause';
   }
   
   // Mobile: Ensure animation stays at fixed reduced size when closing detail
@@ -865,13 +865,22 @@ if (isMobileDevice && canvas) {
   // A pinch is measured frame to frame, so the only state is the last spread.
   // Clearing it whenever the gesture is not exactly two fingers stops the
   // first move after a finger lands or lifts from reading as a huge jump.
+  //
+  // lastTouchX/Y have to be cleared with it. The one-finger branch below
+  // measures its delta against them and only re-anchors when they are 0, so
+  // when a pinch ended with one finger still down, that finger's first move
+  // was measured against an anchor from before the pinch — the view lurched
+  // sideways the moment you let go, which is not something you can undo by
+  // dragging back.
+  function endGesture() { pinchPrev = 0; lastTouchX = 0; lastTouchY = 0; }
+
   canvas.addEventListener('touchstart', (e) => {
     if (e.touches.length === 2) e.preventDefault();
-    pinchPrev = 0;
+    endGesture();
   }, { passive: false });
 
-  canvas.addEventListener('touchend', () => { pinchPrev = 0; }, { passive: false });
-  canvas.addEventListener('touchcancel', () => { pinchPrev = 0; }, { passive: false });
+  canvas.addEventListener('touchend', endGesture, { passive: false });
+  canvas.addEventListener('touchcancel', endGesture, { passive: false });
   
   // Touch interactions: rotate/pan (1 finger if button selected) or tap for object selection
   let lastTouchX = 0, lastTouchY = 0;
@@ -1078,7 +1087,7 @@ if (isMobileDevice && canvas) {
       }
     }
     hasMoved = false;
-    pinchPrev = 0;
+    endGesture();          // re-anchor, so the next drag starts from scratch
   }, { passive: false });
 }
 
@@ -2582,12 +2591,12 @@ document.getElementById('btnReset').addEventListener('click', () => {
     card.classList.remove('highlighted');
   });
   
-  document.getElementById('btnPause').textContent = '⏸︎';
+  document.getElementById('btnPause').className = 'is-pause';
 });
 
 document.getElementById('btnPause').addEventListener('click', e => {
   pausedPlanets = !pausedPlanets;
-  e.target.textContent = pausedPlanets ? '▶︎' : '⏸︎';
+  e.target.className = pausedPlanets ? 'is-play' : 'is-pause';
 });
 
 const speedBtn = document.getElementById('btnSpeed');
@@ -2835,7 +2844,7 @@ function saveSimStateOnce() {
 function forcePlayFast() {
   pausedPlanets = false;
   isAnimating = true;
-  document.getElementById('btnPause').textContent = '⏸︎';
+  document.getElementById('btnPause').className = 'is-pause';
   applySpeedUI(6);
 }
 
@@ -2853,7 +2862,7 @@ function restoreSimState() {
   pausedPlanets = savedSimState.paused;
   isAnimating = savedSimState.animating;
   animationSpeed = savedSimState.speed;
-  document.getElementById('btnPause').textContent = savedSimState.paused ? '▶︎' : '⏸︎';
+  document.getElementById('btnPause').className = savedSimState.paused ? 'is-play' : 'is-pause';
   const b = document.getElementById('btnSpeed');
   if (b) b.textContent = savedSimState.speedLabel;
   savedSimState = null;

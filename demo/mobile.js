@@ -98,6 +98,7 @@
     // Closing used to leave the map full-height: app.js writes inline heights
     // on the panel when a publication opens or closes, and those survived the
     // class going away. Clear them so the stylesheet decides again.
+    if (window.__mobileShowHeader) window.__mobileShowHeader();
     if (!full) {
       // app.js writes inline sizing on this panel for the desktop row layout;
       // anything left behind keeps the map full-height after the class goes.
@@ -170,8 +171,8 @@
         '<li><b>Drag one finger</b> to turn the view around.</li>' +
         '<li><b>Pinch</b> two fingers to zoom in and out.</li>' +
         '<li><b>Double-tap</b> to jump closer, and again to pull back.</li>' +
-        '<li>Tap <b>&#9881;</b> for play, pause, speed and reset.</li>' +
-        '<li>Tap <b>&#10530;</b> to make the map full screen.</li>' +
+        '<li>Tap the <b class="m-ico-tools"></b> button for play, pause, speed and reset.</li>' +
+        '<li>Tap <b class="m-ico-full"></b> to make the map full screen.</li>' +
       '</ul>' +
       '<div class="m-sheet-sec">The projects</div>' +
       '<ul>' +
@@ -193,7 +194,7 @@
         '<li><b>&#8592; &#8594;</b> steer left and right.</li>' +
         '<li><b>Hold</b> a button to keep moving; let go to stop.</li>' +
         '<li><b>Drag one finger</b> on the view to look around while you drive.</li>' +
-        '<li>The buttons are in the control bar &#8212; tap the sliders icon if it is closed.</li>' +
+        '<li>The buttons are in the control bar &#8212; tap <b class="m-ico-tools"></b> if it is closed.</li>' +
       '</ul>' +
       '<div class="m-sheet-sec">Leaving</div>' +
       '<ul>' +
@@ -223,16 +224,21 @@
   // Three stops, driven by a slim bar between the two panels. Shrinking the
   // map re-aims at whatever is focused and pulls back a little, so the object
   // you were looking at stays centred and in frame instead of sliding out.
-  var STOPS = ['m-map', 'm-split', 'm-text'];   // 58vh / 40vh / 22vh
-  var stop = 1;
+  // Two stops only. Full screen already covers "as much map as possible", so a
+  // third large-map stop just made the control harder to predict.
+  //   m-split = 40vh, the size the page opens at
+  //   m-text  = 22vh, more room to read
+  // The chevron points where the MAP EDGE moves: up shrinks it, down grows it.
+  var STOPS = ['m-split', 'm-text'];
+  var stop = 0;
 
   var split = document.createElement('div');
   split.className = 'm-split';
   split.innerHTML =
-    '<button type="button" class="m-split-b" data-d="-1" aria-label="Show more map">' +
+    '<button type="button" class="m-split-b" data-d="1" aria-label="Shrink the map, show more text">' +
       svg('<path d="M6 14l6-6 6 6"/>') + '</button>' +
     '<span class="m-split-grip"></span>' +
-    '<button type="button" class="m-split-b" data-d="1" aria-label="Show more text">' +
+    '<button type="button" class="m-split-b" data-d="-1" aria-label="Grow the map">' +
       svg('<path d="M6 10l6 6 6-6"/>') + '</button>';
   left.parentNode.insertBefore(split, dock.nextSibling);
 
@@ -257,8 +263,7 @@
     var b = e.target.closest('.m-split-b');
     if (b && !b.disabled) setSplit(stop + (+b.dataset.d));
   });
-  setSplit(1); stop = 1;
-  document.documentElement.classList.add('m-split');
+  stop = -1; setSplit(0);        // apply the default stop and sync the buttons
 
   // ---- 8. react to what the app does -------------------------------------
   var detail = document.getElementById('detailView');
@@ -272,8 +277,7 @@
       // underneath it (the map is position:fixed at z-index 400), so tapping
       // a body in full screen looked like nothing happened.
       if (open && full) setFull(false);
-      if (open) setSplit(2);          // give the text the room
-      else setSplit(1);
+      setSplit(open ? 1 : 0);         // reading room while a publication is open
     }).observe(detail, { attributes: true, attributeFilter: ['class'] });
   }
 
@@ -285,6 +289,42 @@
       if (rov.style.display && rov.style.display !== 'none') setTools(true);
     }).observe(rov, { attributes: true, attributeFilter: ['style'] });
   }
+
+  // ---- 9. hide the header while reading ---------------------------------
+  // Both the page and the list can scroll on this layout, so track whichever
+  // one moved rather than assuming. Down past the top edge hides the header;
+  // any upward move brings it straight back.
+  var lastY = 0, headHidden = false;
+  function scrollTopOf(t) {
+    if (!t || t === document || t === window) {
+      return (document.scrollingElement || document.documentElement).scrollTop;
+    }
+    return t.scrollTop || 0;
+  }
+  function onScroll(e) {
+    var y = scrollTopOf(e && e.target);
+    if (y < 0) return;
+    var dy = y - lastY;
+    if (Math.abs(dy) < 6) return;          // ignore jitter and rubber-banding
+    lastY = y;
+    var want = dy > 0 && y > 40;
+    if (want === headHidden) return;
+    headHidden = want;
+    document.documentElement.classList.toggle('m-hide-head', want);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  ['pubsList', 'detailView'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('scroll', onScroll, { passive: true });
+  });
+  var ps = document.querySelector('.pubs-scroll');
+  if (ps) ps.addEventListener('scroll', onScroll, { passive: true });
+  // the header must never be hidden while the map is what you are using
+  function showHeader() {
+    headHidden = false; lastY = 0;
+    document.documentElement.classList.remove('m-hide-head');
+  }
+  window.__mobileShowHeader = showHeader;
 
   window.addEventListener('orientationchange', reflow);
   document.addEventListener('mission:enter', function () { if (full) setFull(false); });

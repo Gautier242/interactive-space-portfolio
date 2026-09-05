@@ -55,6 +55,17 @@
 /* the AI motif behind the header is decoration this screen cannot spare */
 .mobile-device #headerNeural { display: none; }
 
+/* the header slides away while you read and comes back the moment you scroll
+   up, so the list gets the whole screen without losing the way back */
+.mobile-device .header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  transition: transform .22s ease;
+  will-change: transform;
+}
+.mobile-device.m-hide-head .header { transform: translateY(-100%); }
+
 /* ---- 2. map: 40vh, and nothing sits on top of it ------------------------ */
 .mobile-device .app {
   min-height: 0;
@@ -63,8 +74,8 @@
   height: 40vh !important;
   min-height: 200px !important;
 }
-/* three stops for the map/text trade, set by the bar between the panels */
-.mobile-device.m-map  .left { height: 58vh !important; }
+/* two stops for the map/text trade, set by the bar between the panels.
+   Full screen covers the "more map" end, so a third stop was noise. */
 .mobile-device.m-text .left { height: 22vh !important; min-height: 150px !important; }
 
 /* ---- the map/text split bar -------------------------------------------- */
@@ -252,6 +263,24 @@
 .m-sheet-card ul { margin: 0; padding-left: 18px; }
 .m-sheet-card li { font-size: 13px; line-height: 1.5; margin-bottom: 5px; }
 .m-sheet-card b { color: #cfe2ff; }
+/* inline copies of the real buttons, so the help points at what you can see */
+.m-ico-tools, .m-ico-full {
+  display: inline-block; vertical-align: -3px;
+  width: 16px; height: 16px;
+  background: currentColor; color: #cfe2ff;
+}
+.m-ico-tools {
+  -webkit-mask: var(--ico-tools) center/16px no-repeat;
+          mask: var(--ico-tools) center/16px no-repeat;
+}
+.m-ico-full {
+  -webkit-mask: var(--ico-full) center/16px no-repeat;
+          mask: var(--ico-full) center/16px no-repeat;
+}
+:root {
+  --ico-tools: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'><path d='M4 7h10M18 7h2M4 17h4M12 17h8'/><circle cx='16' cy='7' r='2'/><circle cx='10' cy='17' r='2'/></svg>");
+  --ico-full: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4l-7.5 7.5'/><path d='M10 20H4v-6'/><path d='M4 20l7.5-7.5'/></svg>");
+}
 .m-sheet-x {
   margin-top: 16px; width: 100%; min-height: 42px;
   background: rgba(158, 201, 255, .16);
@@ -338,6 +367,30 @@
 }
 .mobile-device .detail-extended { padding: 0 12px 16px; }
 .mobile-device .detail-image { max-width: 100%; margin-bottom: 12px; }
+
+/* ---- VIPER: the exit button is a glyph, not a sentence ------------------
+   "EXIT MISSION" sat next to the map buttons in the same bottom-right corner
+   and crowded a 390px screen while driving. The control stays (it is the way
+   back to the Moon overview) with the label reduced to an arrow. */
+.mobile-device #missionExit {
+  font-size: 0;                 /* drops the text, keeps the button */
+  padding: 0;
+  width: 38px; height: 38px;
+  bottom: 8px; right: 96px;     /* clear of the sliders and expand buttons */
+  border-radius: 10px;
+  background: rgba(9, 16, 30, .55);
+  border: 1px solid rgba(158, 201, 255, .26);
+  backdrop-filter: blur(10px);
+}
+.mobile-device #missionExit::after {
+  content: '';
+  display: block;
+  width: 15px; height: 15px;
+  margin: 0 auto;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translate(1px, -1px);
+}
 
 /* the canvas owns every gesture on it: one finger rotates/pans, two pinch.
    main.css allowed pan-x pan-y, which let the browser scroll the page out

@@ -126,7 +126,14 @@
   function heroPose(mesh, name) {
     const target = mesh.getWorldPosition(V());
     const r = radiusOf(mesh);
-    const dist = Math.max(r * 2.2, r / Math.tan((camera.fov * Math.PI / 360)) / FILL);
+    let dist = Math.max(r * 2.2, r / Math.tan((camera.fov * Math.PI / 360)) / FILL);
+    // The Lunar Foundation Model is about the Moon; LRO is how it is pinned to
+    // the map. Framed to fill, the orbiter is a speck against black — pull
+    // back far enough that the Moon it orbits is in the shot with it.
+    if (name === 'LRO' && typeof bodies !== 'undefined' && bodies.Moon && bodies.Moon.mesh) {
+      const moonPos = bodies.Moon.mesh.getWorldPosition(V());
+      dist = Math.max(dist, moonPos.distanceTo(target) * 2.6);
+    }
 
     const face = FACE[name];
     if (face) {
@@ -226,7 +233,16 @@
   const detailEl = document.getElementById('detailView');
   if (detailEl) {
     new MutationObserver(() => {
-      if (!detailEl.classList.contains('active')) setKey(false);
+      if (detailEl.classList.contains('active')) return;
+      // Closing a publication returns the map to the view you landed on, so
+      // the X is always a way out — including out of the Moon surface view,
+      // which otherwise swallowed every later click.
+      setKey(false);
+      follow = null;
+      flying = null;
+      exitSurface();
+      const F = window.__framing;
+      if (F && F.place) { F.resume && F.resume(); F.place(); }
     }).observe(detailEl, { attributes: true, attributeFilter: ['class'] });
   }
 
@@ -248,23 +264,28 @@
       follow.localOffset = follow.offset.clone().applyQuaternion(wq.clone().invert());
     }
 
+    const leg = follow;                 // this flight's own target
     (function step(now) {
+      // The flight can be cancelled mid-air now that closing a publication
+      // clears the follow lock. Hold the leg locally and stop if it is no
+      // longer the current one, rather than dereferencing a null `follow`.
+      if (follow !== leg) return;
       const t = Math.min(1, ((now || performance.now()) - t0) / ms);
       const e = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       mesh.getWorldPosition(_a);
       let want;
-      if (follow.localOffset) {
+      if (leg.localOffset) {
         mesh.getWorldQuaternion(_q);
-        want = _a.clone().add(follow.localOffset.clone().applyQuaternion(_q));
+        want = _a.clone().add(leg.localOffset.clone().applyQuaternion(_q));
       } else {
-        want = _a.clone().add(follow.offset);
+        want = _a.clone().add(leg.offset);
       }
       camera.position.lerpVectors(from, want, e);
       camera.lookAt(_a);
       if (t < 1) requestAnimationFrame(step);
       else {
         flying = null;
-        if (!follow.localOffset) follow.offset.subVectors(camera.position, _a);
+        if (!leg.localOffset) leg.offset.subVectors(camera.position, _a);
       }
     })(t0);
     return true;
@@ -273,17 +294,39 @@
   // ---- hook publication opening ----------------------------------------
   // Wrap zoomToBody rather than editing app.js. Moon and VIPER keep their
   // own dedicated views, so pass those straight through.
+  // Starship, VIPER and LRO have their own presence on the Moon surface.
+  const ON_SURFACE = { Starship: 1, VIPER: 1, LRO: 1 };
+
+  // The same teardown app.js performs when you tap Earth in the Moon sky.
+  // app.js has no callable helper for it, so it is spelled out here rather
+  // than editing app.js.
+  function exitSurface() {
+    try { if (typeof roverPOVMode !== 'undefined' && roverPOVMode) leaveRoverMode(); } catch (_) {}
+    try { moonSurfaceActive = false; } catch (_) {}
+    if (typeof restoreSimState === 'function') restoreSimState();
+    const c = document.getElementById('moonSurface');
+    if (c) c.classList.remove('active');
+    if (typeof MoonMission !== 'undefined' && MoonMission.hideMission) MoonMission.hideMission();
+  }
   const rawZoom = window.zoomToBody;
   if (typeof rawZoom === 'function') {
     window.zoomToBody = function (name) {
       if (name === 'Moon' || name === 'VIPER') return rawZoom.call(this, name);
-      if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) return rawZoom.call(this, name);
+      // Anything that is not ON the surface has to leave the surface view
+      // first. Without this, one visit to the Moon or VIPER left
+      // moonSurfaceActive true and every later publication fell through to
+      // rawZoom, so the main map never moved again — Sun, Mars and Earth all
+      // looked broken until a reload, and the moon canvas stayed on top.
+      if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) {
+        if (ON_SURFACE[name]) return rawZoom.call(this, name);
+        exitSurface();
+      }
       // Hold the scene still on the hero view; the visitor presses play when
       // they want motion back, and the camera then rides with the object.
       if (typeof pausedPlanets !== 'undefined') {
         pausedPlanets = true;
         const b = document.getElementById('btnPause');
-        if (b) b.textContent = '▶';
+        if (b) b.className = 'is-play';
       }
       if (typeof cameraFollowTarget !== 'undefined') cameraFollowTarget = null;  // disable app.js's re-aim
       if (!flyTo(name)) return rawZoom.call(this, name);

@@ -251,14 +251,35 @@ a:hover {
 }
 
 /* U+23F8 / U+25B6 are emoji: browsers render them from a COLOUR font, so the
-   pause glyph came out orange and ignored `color` entirely. Asking for the
-   text presentation of the codepoint gives the monochrome glyph, which then
-   takes the button's own colour. */
+   pause glyph came out orange and ignored `color` entirely. The variation
+   selector helps but only where every write remembers it, and the glyph is
+   written from seven different places across two files — one that forgot
+   (camera.js, on every body click) was enough to bring the orange back.
+   Drawn here instead, so no call site can reintroduce a colour font. */
 #btnPause {
-  font-family: "Segoe UI Symbol", "Apple Symbols", system-ui, sans-serif;
-  font-variant-emoji: text;
   color: #eaf1ff;
+  position: relative;
+  line-height: 0;
 }
+/* two bars for pause: a box with a middle gap punched out by a border */
+#btnPause.is-pause::before {
+  content: '';
+  display: inline-block;
+  width: 11px; height: 12px;
+  border-left: 4px solid currentColor;
+  border-right: 4px solid currentColor;
+  box-sizing: border-box;
+}
+/* a right-pointing triangle for play, drawn with borders */
+#btnPause.is-play::before {
+  content: '';
+  display: inline-block;
+  width: 0; height: 0;
+  border-left: 11px solid currentColor;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+
 .controls button:hover {
   background: rgba(158, 201, 255, .16);
   border-color: rgba(158, 201, 255, .45);
