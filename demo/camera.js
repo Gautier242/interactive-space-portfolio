@@ -367,13 +367,16 @@
         if (ON_SURFACE[name]) return rawZoom.call(this, name);
         exitSurface();
       }
-      // Hold the scene still on the hero view; the visitor presses play when
-      // they want motion back, and the camera then rides with the object.
-      if (typeof pausedPlanets !== 'undefined') {
-        pausedPlanets = true;
-        const b = document.getElementById('btnPause');
-        if (b) b.className = 'is-play';
-      }
+      // This used to pause the sim to hold the hero view still. It read as the
+      // page freezing: you tap a planet, everything stops dead, and the
+      // toolbar buttons appear to do nothing. The scene does not need holding
+      // - followTick above re-reads the body's world position every frame and
+      // rides it, which is what the old comment here already promised would
+      // happen "when the visitor presses play". So let it play.
+      //
+      // app.js's showDetail also set this, and removing it there was not
+      // enough on its own: every planet click routes through this wrapper,
+      // so the pause came back from here.
       if (typeof cameraFollowTarget !== 'undefined') cameraFollowTarget = null;  // disable app.js's re-aim
       if (!flyTo(name)) return rawZoom.call(this, name);
     };
