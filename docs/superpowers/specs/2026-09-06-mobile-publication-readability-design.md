@@ -102,10 +102,16 @@ restores size via the guarded `onWindowResize()`.
 block above the text. `object-fit: contain` is preserved — cropping a
 scientific figure is a standing rejection and applies here too.
 
-The `sizes` attribute in `js/app.js:350` currently ends in `250px`, so the
-browser fetches the 400w variant. Left alone it would keep fetching 400w for a
-box that now wants ~1000w and the change would look no sharper. The mobile
-branch of `sizes` must ask for `100vw`.
+The `sizes` attribute in `js/app.js:350` is
+`auto, (max-width: 900px) 150px, (max-width: 1200px) 200px, 250px`, so on a
+phone the browser is told the box is 150px and fetches the 400w variant. Left
+alone it would keep fetching 400w for a box that now wants ~1000w, and the
+layout change would look no sharper.
+
+The `(max-width: 900px)` branch becomes `100vw`. `sizes` media queries are
+evaluated against the viewport, so this is self-scoping: a desktop window over
+1200px keeps `250px` and fetches exactly what it fetches today. No JS
+branching is needed, and the shared markup stays shared.
 
 This is the single highest-value change in the design: 3.5x linear size, no
 new assets, no new bytes beyond the larger variant the browser now picks.
@@ -122,6 +128,12 @@ same institution group.
 
 Swipes are undiscoverable, so the detail header carries `< 2 of 3 >`. The
 chevrons are real tap targets, so nobody depends on knowing the gesture.
+
+This lands in a **new `demo/pub-swipe.js`**, not in `figure.js`. The
+architecture rule in `HANDOFF.md` is that each added behaviour is one file in
+`demo/`, loaded after `app.js`, revertible by deleting its script tag. Folding
+a second concern into `figure.js` would mean reverting the swipe also reverts
+the figure-opening behaviour.
 
 ### 4. Scaling to 30 papers
 
@@ -148,8 +160,8 @@ already handles.
 | `js/app.js` | zero guard in `onWindowResize`; mobile branch of `sizes` |
 | `demo/mobile.css` | full-width figure block, `m-read` rules, sticky headers |
 | `demo/mobile.js` | `m-read` stop, the two title tabs, render pause |
-| `demo/figure.js` | sibling swipe + `< n of m >` affordance |
-| `index.html` | the two titles in `.section-title` |
+| `demo/pub-swipe.js` | **new.** sibling swipe + `< n of m >` affordance |
+| `index.html` | the two titles in `.section-title`; one script tag for `pub-swipe.js` |
 
 Every CSS rule scoped to `.mobile-device`. The desktop layout matches neither
 `.mobile-device` nor `m-read`.
