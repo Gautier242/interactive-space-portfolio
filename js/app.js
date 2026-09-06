@@ -155,6 +155,7 @@ const PUBS = [
     id: "swot", 
     title: "From Space to Sea: an application of machine learning to identify soliton in SWOT satellite data", 
     inst: "NASA JET PROPULSION LABORATORY", 
+    subInst: "NASA JPL · Oral presentation, AGU 2024 · paper in progress",
     icon: "https://picsum.photos/seed/swot/400/300", 
     body: "Earth",
     desc: "Built a computer vision pipeline to automatically detect internal ocean waves (solitons) in several hundreds of thousands satellite images from the Surface Water and Ocean Topography (SWOT) mission. The model processes high-resolution remote sensing imagery and applies image cleansing as well as enhancing before automatically identifying wave patterns on the ocean surface. This software provides oceanographers with a novel capability to quickly identify ocean features and thus perform this at global scales.",
@@ -174,6 +175,7 @@ const PUBS = [
     id: "rover", 
     title: "Digital twin and physics informed machine learning for rover motion simulation", 
     inst: "NASA JET PROPULSION LABORATORY", 
+    subInst: "NASA JPL · Full paper, IAC 2024",
     icon: "https://picsum.photos/seed/rover/400/300", 
     body: "VIPER",  
     desc: "Created a physics-informed machine learning model for real time prediction of rover mobility on lunar terrain to enable integration of digital twins in virtual test bed based on Omniverse. The system fuses ODEs (Ordinary Differential Equations) with neural networks trained on high-fidelity finite element (FEM) simulations. On the performed tests, the approach proved to speed up predictions by replacing 90-minute FEM simulations with real time ML predictions while providing similar accuracy, enabling real time decision-making.",
@@ -187,6 +189,7 @@ const PUBS = [
     id: "lunarfm", 
     title: "Lunar Foundation Model", 
     inst: "FRONTIER DEVELOPMENT LAB (FDL)", 
+    subInst: "FDL · NASA & Google partnership · publication in progress, 2025",
     icon: "https://picsum.photos/seed/lunar/400/300", 
     body: "LRO",
     desc: "Developed a <span style=\"color: #9ec9ff; font-weight: 900;\">machine learning and signal processing pipeline</span> to automatically analyze and cluster over 100,000 of triggers from a new instrument sent to the <span style=\"color: #9ec9ff; font-weight: 900;\">International Space Station and identify</span> their probable causes. This instrument, based on custom-made piezoelectric fibers woven into the outer insulation layer, is designed to <span style=\"color: #9ec9ff; font-weight: 900;\">detect micrometeorite impacts</span> on the structure, improving eventually real-time structural health monitoring in orbit.",
@@ -200,6 +203,7 @@ const PUBS = [
     id: "esa", 
     title: "Moon Mineral Classification from VNIR", 
     inst: "EUROPEAN SPACE AGENCY - EUROPEAN ASTRONAUT CENTER", 
+    subInst: "ESA European Astronaut Centre · Confidential manuscript, 2022",
     icon: "https://picsum.photos/seed/esa/400/300", 
     body: "Moon",
     desc: "Contributed to the development of the Machine Learning capabilities of a comprehensive tool set developed to be sent to the Moon to help astronauts select relevant lunar rocks to bring back to Earth.The goal of this CNN based model was to predict the mineral composition of lunar rocks and mineral based on their visible and near-infrared (VNIR) spectra. After improving the current CNN, I proposed a <span style=\"color: #9ec9ff; font-weight: 900;\">new method improving the best CNN accuracy by 15%, and reducing the variance by 90%</span>.",
@@ -213,6 +217,7 @@ const PUBS = [
     id: "isu", 
     title: "From Spacecraft to Habitat: Starship HLS", 
     inst: "INTERNATIONAL SPACE UNIVERSITY (ISU)", 
+    subInst: "ISU · Team project report & paper, IAC 2021",
     icon: "https://media.giphy.com/media/l0HlQXlQ3nHyLMvte/giphy.gif", 
     body: "Starship",
     desc: "Performed a comprehensive systems engineering study on repurposing SpaceX’s Starship Human Landing System (HLS) as a permanent lunar habitat. This concept study examined how the Starship HLS, originally designed to transport crew to the Moon, could be converted into a long-term living and research facility on the lunar surface. We analyzed structural modifications, life support and environmental control upgrades, radiation shielding strategies, crew habitability and psychology factors, and operational logistics needed to sustain a Moon base using a landed Starship as the core module.",
@@ -227,6 +232,7 @@ const PUBS = [
     id: "hwo", 
     title: "Habitable Worlds Observatory: AI/ML", 
     inst: "NASA JET PROPULSION LABORATORY", 
+    subInst: "NASA JPL · Abstract, AGU 2024",
     icon: "https://picsum.photos/seed/hwo/400/300", 
     body: "HWO",  // Linked to HWO satellite
     desc: "Contributing to NASA’s next flagship exoplanet mission, the Habitable Worlds Observatory, through participation in the AI and ML working group for mission operations, and data analysis. This work explores how intelligent algorithms can optimize many capabilities of the HWO including observation schedules, automate telescope operations, and enhance analysis of faint exoplanet signals, addressing the grand challenge of detecting biosignatures on distant Earth-like planets.",
@@ -240,6 +246,7 @@ const PUBS = [
     id: "megsai", 
     title: "MEGS‑AI: EUV from AIA", 
     inst: "FRONTIER DEVELOPMENT LAB (FDL)",  
+    subInst: "FDL · Oral presentation, AGU 2024",
     icon: "https://picsum.photos/seed/megsai/400/300", 
     body: "Mars",  // Linked to Mars
     desc: "Contributed to a deep learning model (“MEGS-AI”) that estimates the Sun’s full extreme ultraviolet (EUV) spectral irradiance using only images from the Solar Dynamics Observatory’s AIA camera. MEGS-AI bridges gaps when direct EUV spectrometers are offline or unavailable by reconstructing hidden spectral data from imaging. This capability helps provide continuous monitoring of solar irradiance  critical to space weather understanding and preserving assets in space.",
@@ -253,6 +260,7 @@ const PUBS = [
     id: "sunerfs", 
     title: "SuNeRFs: 4D Solar Corona", 
     inst: "FRONTIER DEVELOPMENT LAB (FDL)",  
+    subInst: "FDL · Interactive presentation, AGU 2024",
     icon: "https://media.giphy.com/media/3oKIPnAiaMCws8nOsE/giphy.gif", 
     body: "Sun",  // Linked to Sun
     desc: "Contributed to the development of Neural Radiance Field (NeRF) techniques to reconstruct a time-varying 3D model of the Sun’s corona from multi-viewpoint imagery. This deep learning approach captures the evolving density and temperature structure of the solar corona, enabling new scientific approximations  of solar characteristics. By creating a dynamic, volumetric map of the Sun’s atmosphere, the project provides researchers with unprecedented insight into the drivers of space weather.",
@@ -1060,16 +1068,37 @@ if (isMobileDevice && canvas) {
         raycaster.setFromCamera(mouse, camera);
         const clickables = Object.values(bodies).map(b => b.mesh).concat([sun]);
         const hits = raycaster.intersectObjects(clickables, true);
-        
+
+        let bodyName = null;
         if (hits.length > 0) {
-          let bodyName = hits[0].object.userData.name;
-          if (!bodyName && hits[0].object.parent && hits[0].object.parent.userData) {
-            bodyName = hits[0].object.parent.userData.name;
+          let o = hits[0].object;
+          while (o && !(o.userData && o.userData.name)) o = o.parent;
+          bodyName = o ? o.userData.name : null;
+        }
+        if (!bodyName) {
+          // A fingertip is ~44px across; ISS, LRO, VIPER and Starship are a
+          // few pixels. An exact ray misses them almost every time, which is
+          // why they took several taps to select while Earth was effortless.
+          // Fall back to the nearest body whose centre is within a finger of
+          // the touch.
+          const rr = canvas.getBoundingClientRect();
+          const px = mouse.x, py = mouse.y;
+          let bestD = 44, tmp = new THREE.Vector3();
+          for (const [nm, b] of Object.entries(bodies)) {
+            if (!b.mesh) continue;
+            b.mesh.getWorldPosition(tmp);
+            tmp.project(camera);
+            if (tmp.z > 1) continue;
+            // on screen only, so a body just past the edge is not reachable
+            if (tmp.x < -1 || tmp.x > 1 || tmp.y < -1 || tmp.y > 1) continue;
+            const dx = (tmp.x - px) * rr.width / 2;
+            const dy = (tmp.y - py) * rr.height / 2;
+            const d = Math.hypot(dx, dy);
+            if (d < bestD) { bestD = d; bodyName = nm; }
           }
-          if (!bodyName && hits[0].object.parent && hits[0].object.parent.parent && hits[0].object.parent.parent.userData) {
-            bodyName = hits[0].object.parent.parent.userData.name;
-          }
-          
+        }
+
+        {
           if (bodyName) {
             selectedBody = bodyName;
             const bodyInfo = bodyData.find(b => b.name === bodyName);

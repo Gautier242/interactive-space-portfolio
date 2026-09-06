@@ -105,55 +105,71 @@
   background: rgba(158, 201, 255, .3);
 }
 
-/* The controls move OUT of .left into this dock so they stop covering the
-   map. .left keeps its full box, so renderer.setSize (app.js onWindowResize,
-   which reads leftPanel.clientWidth/Height) needs no change at all.
-
-   The dock is hidden until the gear is tapped: a permanent slab of buttons
-   under the map was the single ugliest thing on the phone layout. */
+/* The control bar rides along the bottom edge of the map, on the same line as
+   the expand button, with no background of its own — the buttons carry their
+   own translucency, so the scene reads straight through the row. As a solid
+   band under the map this cost ~52px of a screen that has none to spare. */
 .m-dock {
+  position: absolute;
+  left: 6px;
+  right: 50px;                     /* clear of the expand button */
+  bottom: 8px;
+  height: 34px;                    /* one row, never two */
+  z-index: 28;
   display: flex;
   align-items: center;
-  justify-content: center;
+  flex-wrap: nowrap;
   gap: 4px;
-  padding: 0 8px;
-  order: 2;
+  padding: 0;
+  background: none !important;     /* the row itself draws nothing */
+  border: 0;
+  box-shadow: none;
+  backdrop-filter: none;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 6px 8px;
 }
 .m-dock::-webkit-scrollbar { display: none; }
 
-/* inside the dock the control bar is a plain row, not a floating overlay */
+/* inside the dock the control bar is a plain row, not a floating panel */
 .mobile-device .m-dock .controls {
   position: static;
   transform: none;
   opacity: 1;
   pointer-events: all;
-  background: none;
+  background: none !important;
   border: none;
   box-shadow: none;
   padding: 0;
-  gap: 5px;
+  gap: 4px;
   max-width: none;
   backdrop-filter: none;
+  flex-wrap: nowrap;               /* never a second row */
+  white-space: nowrap;
 }
-/* transparent, outlined, blended into the map rather than a solid slab */
+/* the inner groups app.js toggles are rows too */
+.mobile-device .m-dock #standardControls,
+.mobile-device .m-dock #roverControls {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+/* each button carries the translucency instead of the bar behind them */
 .mobile-device .m-dock .controls button {
-  min-width: 38px;
-  min-height: 34px;
-  font-size: 12px;
-  padding: 5px 9px;
-  background: rgba(12, 22, 42, .55);
-  border: 1px solid rgba(158, 201, 255, .22);
+  min-width: 30px;
+  min-height: 30px;
+  height: 30px;
+  font-size: 11px;
+  padding: 0 6px;
+  flex: 0 0 auto;
+  background: rgba(9, 16, 30, .34);
+  border: 1px solid rgba(158, 201, 255, .20);
   color: #cfe2ff;
   backdrop-filter: blur(8px);
 }
-/* the pause/play button read as orange, which looked like a warning */
 .mobile-device .m-dock #btnPause,
 .mobile-device .m-dock #btnPause:hover { color: #ffffff; }
-/* the active tool keeps a hint of accent without the solid blue fill */
 .mobile-device .m-dock .controls button.active {
   background: rgba(158, 201, 255, .20);
   border-color: rgba(158, 201, 255, .55);
@@ -181,8 +197,8 @@
   z-index: 30;
   display: flex; align-items: center; justify-content: center;
   gap: 6px;
-  min-width: 36px; height: 36px;
-  padding: 0 9px;
+  min-width: 32px; height: 32px;
+  padding: 0 8px;
   background: rgba(9, 16, 30, .55);
   border: 1px solid rgba(158, 201, 255, .26);
   border-radius: 10px;
@@ -205,18 +221,14 @@
   z-index: 400;
   margin: 0;
 }
+/* full screen: the dock is a child of .left, so it rides with it — it only
+   needs to clear the home indicator */
 .mobile-device.m-full .m-dock {
-  position: fixed;
-  left: 50%;
-  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  transform: translateX(-50%);
-  z-index: 401;
-  width: auto;
-  max-width: 96vw;
-  border-radius: 12px;
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
 }
-.mobile-device.m-full .m-btn { position: fixed; z-index: 402; }
-.mobile-device.m-full .m-expand { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
+.mobile-device.m-full .m-expand {
+  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+}
 .mobile-device.m-full body { overflow: hidden; }
 
 /* ---- 4b. the "how to explore" sheet ------------------------------------ */
@@ -281,7 +293,7 @@
 .mobile-device .pub-title { font-size: calc(14px   * var(--list-font-scale)) !important;
                             line-height: 1.3; }
 .mobile-device .pub-subinst { font-size: calc(10.5px * var(--list-font-scale)) !important;
-                            opacity: .75; }
+                            opacity: .78; line-height: 1.35; margin-top: 3px; }
 /* the grouped band above each card already names the institution — printing
    it again inside the card cost ~30px per card for a repeated string */
 .mobile-device .pub-card .pub-inst { display: none; }

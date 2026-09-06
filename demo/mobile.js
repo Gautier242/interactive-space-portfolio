@@ -20,10 +20,14 @@
   // They were absolutely positioned inside .left, covering ~46px of a 180px
   // map. .left keeps its own box, so onWindowResize() (which measures
   // leftPanel) still gets the right numbers with no change to app.js.
+  // The dock rides INSIDE the map, along its bottom edge, on the same line as
+  // the expand button. As a band under the map it was another ~52px of
+  // vertical space on a screen that has none to spare; over the map it costs
+  // nothing, because the corners of a solar system are empty.
   var dock = document.createElement('div');
   dock.className = 'm-dock';
   if (controls) dock.appendChild(controls);
-  left.parentNode.insertBefore(dock, left.nextSibling);
+  left.appendChild(dock);
 
   // ---- 2. header links become icons --------------------------------------
   var ICONS = {
@@ -100,6 +104,7 @@
     // class going away. Clear them so the stylesheet decides again.
     if (window.__mobileShowHeader) window.__mobileShowHeader();
     if (!full) {
+      releasePending();
       // app.js writes inline sizing on this panel for the desktop row layout;
       // anything left behind keeps the map full-height after the class goes.
       left.style.height = ''; left.style.minHeight = ''; left.style.flex = '';
@@ -120,6 +125,24 @@
     });
   }
   onTap(expand, function () { setFull(!full); });
+
+  // While the map is full screen, selecting a body should not yank you out of
+  // it to read — but the choice must not be lost either. Hold the publication
+  // and open it the moment full screen is left, so the thing you tapped is
+  // the thing you end up reading.
+  var pending = null;
+  var rawShowDetail = window.showDetail;
+  if (typeof rawShowDetail === 'function') {
+    window.showDetail = function (item) {
+      if (full && item && item.id !== 'about') { pending = item; return; }
+      return rawShowDetail.apply(this, arguments);
+    };
+  }
+  function releasePending() {
+    if (!pending || typeof rawShowDetail !== 'function') return;
+    var item = pending; pending = null;
+    setTimeout(function () { rawShowDetail(item); }, 60);
+  }
 
   function isRover() {
     try { return !!roverPOVMode; } catch (_) { return false; }
@@ -229,7 +252,9 @@
     '<span class="m-split-grip"></span>' +
     '<button type="button" class="m-split-b" data-d="-1" aria-label="Grow the map">' +
       svg('<path d="M6 10l6 6 6-6"/>') + '</button>';
-  left.parentNode.insertBefore(split, dock.nextSibling);
+  // directly after the map. (Not relative to the dock: the dock is a CHILD
+  // of the map now, so passing its sibling to left.parentNode threw.)
+  left.parentNode.insertBefore(split, left.nextSibling);
 
   function setSplit(next) {
     next = Math.max(0, Math.min(STOPS.length - 1, next));
@@ -262,10 +287,6 @@
       var open = detail.classList.contains('active');
       if (open === wasOpen) return;
       wasOpen = open;
-      // A publication opening while the map is full screen used to render
-      // underneath it (the map is position:fixed at z-index 400), so tapping
-      // a body in full screen looked like nothing happened.
-      if (open && full) setFull(false);
       setSplit(open ? 1 : 0);         // reading room while a publication is open
     }).observe(detail, { attributes: true, attributeFilter: ['class'] });
   }

@@ -100,11 +100,28 @@
 
   // ---- true follow ------------------------------------------------------
   const _q = new THREE.Quaternion();
+  // What this loop last wrote. Anything else in camera.position at the top of
+  // the next frame was put there by the visitor — the +/- buttons, a drag, a
+  // pinch — and has to be honoured, not overwritten. Without this the follow
+  // loop stomped every control once a publication was open, so the view felt
+  // frozen: you could press zoom and nothing happened, because the next frame
+  // put the camera straight back.
+  const _written = V();
+  let hasWritten = false;
   (function followTick() {
     requestAnimationFrame(followTick);
-    if (!follow || !follow.mesh) return;
-    if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) return;
+    if (!follow || !follow.mesh) { hasWritten = false; return; }
+    if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) { hasWritten = false; return; }
     follow.mesh.getWorldPosition(_a);
+    // absorb whatever the visitor did into the offset we ride at
+    if (hasWritten && !flying && camera.position.distanceToSquared(_written) > 1e-8) {
+      if (follow.localOffset) {
+        follow.mesh.getWorldQuaternion(_q);
+        follow.localOffset.subVectors(camera.position, _a).applyQuaternion(_q.invert());
+      } else {
+        follow.offset.subVectors(camera.position, _a);
+      }
+    }
     if (follow.localOffset) {
       // These bodies spin on their own axis, so a fixed WORLD offset slides
       // around the object as it rotates — HWO ended up 66° off its aperture
@@ -116,6 +133,8 @@
       camera.position.copy(_a).add(follow.offset);
     }
     camera.lookAt(_a);
+    _written.copy(camera.position);
+    hasWritten = true;
   })();
 
   // ---- composed hero view ----------------------------------------------
