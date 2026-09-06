@@ -11,8 +11,12 @@
 
 /* ---- 1. header: one row, links become icons ---------------------------- */
 .mobile-device .header {
-  padding: 8px 12px;
-  gap: 8px;
+  padding: 6px 12px 0;
+  /* `gap` applies to BOTH axes, and the tabs are a wrapped second row, so a
+     column gap meant for the photo/name/icons was also being spent above the
+     tabs. Split it: keep the horizontal gap, take the vertical one to zero. */
+  column-gap: 8px;
+  row-gap: 0;
   min-height: 0;
 }
 .mobile-device .header img {
@@ -498,7 +502,7 @@
   flex: 1 0 100%;
   display: flex;
   gap: 2px;
-  margin: 5px 0 0;
+  margin: 3px 0 0;
   border-bottom: 1px solid rgba(110, 163, 255, .22);
 }
 .mobile-device .m-tab {
@@ -521,37 +525,6 @@
   border-color: #6ea3ff;
   color: #08192f;
   font-weight: 700;
-}
-
-/* ---- 14. sibling navigation in the detail header ------------------------ */
-/* A swipe nobody knows about is a feature nobody uses, so the count is shown
-   and the chevrons are real buttons. Hidden when the institution holds only
-   one paper — there is nothing to move between. */
-.mobile-device .m-sib {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  flex: 0 0 auto;
-  margin-left: 6px;
-}
-.mobile-device .m-sib-b {
-  background: rgba(9, 16, 30, .34);
-  border: 1px solid rgba(158, 201, 255, .20);
-  color: #cfe2ff;
-  border-radius: 7px;
-  min-width: 30px;
-  height: 30px;
-  font-size: 17px;
-  line-height: 1;
-  padding: 0;
-  -webkit-tap-highlight-color: transparent;
-}
-.mobile-device .m-sib-n {
-  font-size: 10px;
-  color: rgba(207, 226, 255, .62);
-  white-space: nowrap;
-  padding: 0 3px;
-  font-variant-numeric: tabular-nums;
 }
 
 /* ---- 15. ?fig=wide — the full-width card, for comparison ---------------- */
