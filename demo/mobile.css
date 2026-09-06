@@ -476,11 +476,10 @@
 /* The two titles replace the static "Publications & Projects" text, so the
    mode switch costs no vertical height on a screen that has none to spare. */
 /* The title row is a flex row that also holds SET TEXT SIZE. A flex item
-   defaults to min-width:auto, so these buttons would not shrink; instead they
-   broke their own labels across lines, forced the row wider than the screen
-   and put the WHOLE right panel into horizontal overflow. Hence nowrap on the
-   labels, min-width:0 so the row can shrink, and wrap on the row as the last
-   resort rather than overflowing. */
+   defaults to min-width:auto, so with a longer label the buttons broke their
+   text across lines rather than shrinking. nowrap keeps each label on one
+   line, min-width:0 lets the row shrink, and wrap is the last resort so the
+   row can never push the panel wider than the screen. */
 .mobile-device .right > .section-title {
   flex-wrap: wrap;
   min-width: 0;
