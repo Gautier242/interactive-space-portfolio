@@ -342,6 +342,66 @@
   window.addEventListener('orientationchange', reflow);
   document.addEventListener('mission:enter', function () { if (full) setFull(false); });
 
+  // ---- 10. reading mode --------------------------------------------------
+  // The map is the wrapper; the research is the point. PROJECTS hides the map
+  // and gives the list the whole screen. Built here rather than in index.html
+  // so deleting this script tag reverts it like every other overlay.
+  var reading = false;
+  var titleBar = document.querySelector('.right > .section-title');
+  if (titleBar) {
+    // the static "Publications & Projects" text node becomes two tappable
+    // titles in the same row, so the switch costs no vertical height
+    for (var n = titleBar.firstChild; n; ) {
+      var next = n.nextSibling;
+      if (n.nodeType === 3) titleBar.removeChild(n);
+      n = next;
+    }
+    var tabs = document.createElement('div');
+    tabs.className = 'm-tabs';
+    tabs.innerHTML =
+      '<button type="button" class="m-tab is-on" data-read="0">Map</button>' +
+      '<button type="button" class="m-tab" data-read="1">Projects</button>';
+    titleBar.insertBefore(tabs, titleBar.firstChild);
+
+    // Skip the render while the map is hidden. The bloom pass alone is 1.80ms
+    // of every frame and there is nothing on screen to receive it. Wrapping
+    // the render call is enough: the tick loops are 33ms/s against the render
+    // loop's 209ms/s, so this drops the overwhelming majority of the cost.
+    function skipRender(obj) {
+      if (!obj || obj.__readWrapped) return;
+      obj.__readWrapped = true;
+      var raw = obj.render.bind(obj);
+      obj.render = function (sc, cam) { return reading ? undefined : raw(sc, cam); };
+    }
+    if (typeof renderer !== 'undefined') skipRender(renderer);
+
+    function setRead(on) {
+      if (on === reading) return;
+      reading = on;
+      document.documentElement.classList.toggle('m-read', on);
+      tabs.querySelectorAll('.m-tab').forEach(function (b) {
+        b.classList.toggle('is-on', (b.dataset.read === '1') === on);
+      });
+      // the moon renderer is built lazily, so catch it whenever it exists
+      if (typeof moonRenderer !== 'undefined') skipRender(moonRenderer);
+      if (!on) {
+        // onWindowResize measured 0 while the panel was hidden and app.js
+        // guards that now, so the panel needs a real measurement on the way
+        // back or the canvas keeps its pre-hide size.
+        showHeader();
+        reflow();
+      }
+    }
+    tabs.addEventListener('click', function (e) {
+      var b = e.target.closest('.m-tab');
+      if (b) setRead(b.dataset.read === '1');
+    });
+    // entering the Moon or driving VIPER needs the map, so leave reading mode
+    document.addEventListener('mission:enter', function () { setRead(false); });
+
+    window.__mobileRead = { set: setRead, is: function () { return reading; } };
+  }
+
   window.__mobileMap = {
     setFull: setFull, isFull: function () { return full; },
     setTools: setTools
