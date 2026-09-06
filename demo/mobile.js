@@ -347,21 +347,20 @@
   // and gives the list the whole screen. Built here rather than in index.html
   // so deleting this script tag reverts it like every other overlay.
   var reading = false;
-  var titleBar = document.querySelector('.right > .section-title');
-  if (titleBar) {
-    // the static "Publications & Projects" text node becomes two tappable
-    // titles in the same row, so the switch costs no vertical height
-    for (var n = titleBar.firstChild; n; ) {
-      var next = n.nextSibling;
-      if (n.nodeType === 3) titleBar.removeChild(n);
-      n = next;
-    }
-    var tabs = document.createElement('div');
+  var headerEl = document.querySelector('.header');
+  if (headerEl) {
+    // Site navigation, not a control tucked into a list heading. Tabs inside
+    // the section title were too small and too far down the page to read as
+    // "this changes the whole layout". These sit as a second row inside the
+    // header, so they are the first thing under the name and they inherit the
+    // header's sticky positioning and its hide-while-reading behaviour for
+    // free rather than fighting it for the same top:0.
+    var tabs = document.createElement('nav');
     tabs.className = 'm-tabs';
     tabs.innerHTML =
       '<button type="button" class="m-tab is-on" data-read="0">Map</button>' +
       '<button type="button" class="m-tab" data-read="1">Projects</button>';
-    titleBar.insertBefore(tabs, titleBar.firstChild);
+    headerEl.appendChild(tabs);
 
     // Skip the render while the map is hidden. The bloom pass alone is 1.80ms
     // of every frame and there is nothing on screen to receive it. Wrapping
