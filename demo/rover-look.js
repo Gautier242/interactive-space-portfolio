@@ -65,27 +65,47 @@
   const aim = new THREE.Vector3();
   const UP = new THREE.Vector3(0, 1, 0);
 
-  (function tick() {
-    requestAnimationFrame(tick);
-    const on = active();
-    if (on !== was) {
-      was = on;
-      if (!on) { yaw = 0; pitch = 0; dragging = false; dragId = null; }
-    }
-    if (!on) return;
+  const OFF = new THREE.Vector3(0, 2, 0);
 
+  function applyLook() {
     // rover heading, then our yaw offset about world up
     fwd.set(0, 0, -1).applyQuaternion(moonViper.quaternion);
     fwd.applyAxisAngle(UP, yaw);
 
     // chase position sits behind and above the rover, along the looked-at dir
-    eye.copy(moonViper.position).addScaledVector(fwd, -5).add(new THREE.Vector3(0, 2, 0));
+    eye.copy(moonViper.position).addScaledVector(fwd, -5).add(OFF);
     moonCamera.position.copy(eye);
 
     aim.copy(moonViper.position).addScaledVector(fwd, 3);
     aim.y += 1 - pitch * 4;        // pitch tilts the aim point up or down
     moonCamera.lookAt(aim);
+  }
+
+  // moonRenderer is built lazily, when the Moon view first opens, so watch for
+  // it rather than assuming it exists at load.
+  let wrapped = false;
+  (function waitForRenderer() {
+    if (typeof moonRenderer !== 'undefined' && moonRenderer) {
+      wrapped = true;
+      const raw = moonRenderer.render.bind(moonRenderer);
+      moonRenderer.render = function (sc, cam) {
+        const on = active();
+        if (on !== was) {
+          was = on;
+          if (!on) { yaw = 0; pitch = 0; dragging = false; dragId = null; }
+        }
+        if (on && cam === moonCamera) applyLook();
+        return raw(sc, cam);
+      };
+      return;
+    }
+    requestAnimationFrame(waitForRenderer);
   })();
 
-  window.__roverLook = { reset() { yaw = 0; pitch = 0; } };
+  window.__roverLook = {
+    reset() { yaw = 0; pitch = 0; },
+    get yaw() { return yaw; },
+    get pitch() { return pitch; },
+    get wrapped() { return wrapped; }
+  };
 })();

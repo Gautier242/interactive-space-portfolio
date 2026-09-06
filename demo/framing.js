@@ -23,17 +23,14 @@
   const ELEV = (PORTRAIT ? 20 : 26) * Math.PI / 180;
   const Y = R * Math.tan(ELEV);
 
-  // Aim BELOW the Sun so it rides in the upper third and the nested orbit
-  // arcs sweep across the bottom two-thirds. Expressed as fractions of R so
-  // the composition holds when the distance changes — as absolute units they
-  // would drift off-centre the moment R moved.
-  // On a phone the panel is ~390px wide and 40vh tall. The thirds-line
-  // composition that reads well on a wide desktop panel pushes the Sun to
-  // the edge there — and sometimes out of frame entirely — so the offset is
-  // dropped and the Sun is centred. Desktop keeps the composition.
-  const MOBILE = document.documentElement.classList.contains('mobile-device');
-  const DOWN = MOBILE ? 0 : R * (PORTRAIT ? -0.166 : -0.096);
-  const SIDE = MOBILE ? 0 : R * 0.166;
+  // The Sun is centred, on every screen. This used to aim off-centre so the
+  // Sun rode a thirds line, which composes nicely at one window size and
+  // reads as "the view is shifted and looks weird" at the rest — the offset
+  // is a fixed fraction of R, but how far off-centre that LOOKS depends on
+  // the panel's aspect ratio, so no single value works everywhere. Mobile
+  // had already dropped it for that reason; desktop now does the same.
+  const DOWN = 0;
+  const SIDE = 0;
 
   const aim = new THREE.Vector3();
   const dir = new THREE.Vector3();
