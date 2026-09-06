@@ -421,3 +421,35 @@
   }
   .controls button { min-height: 34px; }
 }
+
+/* ---- 12. bigger toolbar in full screen ---------------------------------- */
+/* The dock buttons are 34px because a 40vh map has no vertical room to spare.
+   Full screen does have the room, and the rover's arrows are the one control
+   you HOLD DOWN rather than tap, so they get the largest target of all.
+   Height is what makes a target hittable, so on a narrow phone the widths are
+   shaved back rather than the heights. */
+.mobile-device.m-full .m-dock,
+.mobile-device.m-full .m-dock .controls { gap: 7px; }
+
+.mobile-device.m-full .m-dock .controls button {
+  min-width: 44px;
+  min-height: 44px;
+  height: 44px;
+  font-size: 14px;
+  padding: 0 10px;
+}
+.mobile-device.m-full .m-dock #roverControls button {
+  min-width: 54px;
+  min-height: 48px;
+  height: 48px;
+  font-size: 21px;
+  line-height: 1;
+}
+.mobile-device.m-full .m-expand { min-width: 44px; height: 44px; }
+
+@media (max-width: 370px) {
+  .mobile-device.m-full .m-dock,
+  .mobile-device.m-full .m-dock .controls { gap: 5px; }
+  .mobile-device.m-full .m-dock .controls button { min-width: 38px; padding: 0 7px; }
+  .mobile-device.m-full .m-dock #roverControls button { min-width: 46px; }
+}
