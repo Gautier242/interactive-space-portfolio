@@ -52,18 +52,41 @@
     }
   }
 
+  // Writes must be idempotent AND must not be observed, or sync retriggers
+  // itself. Both matter: this nav lives inside .detail-header, which is inside
+  // #detailView, so observing #detailView's subtree for childList meant every
+  // textContent write here fired the observer that had just called us. That
+  // loop starved the event loop and hard-froze the page on every body click.
+  var lastLabel = null, lastShown = null;
+  var countEl = nav.querySelector('.m-sib-n');
+
   function sync() {
     var item = detail.classList.contains('active') && current();
     var group = item ? siblings(item) : [];
     // one paper in its institution has nothing to swipe to
-    nav.style.display = group.length > 1 ? '' : 'none';
-    if (group.length > 1) {
-      nav.querySelector('.m-sib-n').textContent =
-        (group.indexOf(item) + 1) + ' of ' + group.length;
+    var show = group.length > 1;
+    if (show !== lastShown) {
+      nav.style.display = show ? '' : 'none';
+      lastShown = show;
+    }
+    if (!show) return;
+    var label = (group.indexOf(item) + 1) + ' of ' + group.length;
+    if (label !== lastLabel) {
+      countEl.textContent = label;
+      lastLabel = label;
     }
   }
+
+  // Watch the class (open/close) and the title only. #detailTitle is in
+  // .detail-content, a sibling of the header this nav sits in, so nothing
+  // sync() writes can be seen by either observer.
   new MutationObserver(sync).observe(detail, { attributes: true, attributeFilter: ['class'] });
-  new MutationObserver(sync).observe(detail, { childList: true, subtree: true });
+  var titleEl = document.getElementById('detailTitle');
+  if (titleEl) {
+    new MutationObserver(sync).observe(titleEl, {
+      childList: true, characterData: true, subtree: true
+    });
+  }
   sync();
 
   nav.addEventListener('click', function (e) {
