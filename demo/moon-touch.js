@@ -69,15 +69,20 @@
       if (typeof exitMoonMission === 'function') exitMoonMission();
       return;
     }
+    let driving = false;
+    try { driving = !!roverPOVMode; } catch (_) {}
+
     if (name === 'VIPER') {
-      let driving = false;
-      try { driving = !!roverPOVMode; } catch (_) {}
-      if (!driving) { if (typeof enterRoverMode === 'function') enterRoverMode(); return; }
-    } else {
-      let driving = false;
-      try { driving = !!roverPOVMode; } catch (_) {}
-      if (driving && typeof exitRoverToMoon === 'function') exitRoverToMoon();
+      // One tap does both. app.js needed two: the first entered rover mode and
+      // returned WITHOUT opening the project, so whatever you had open before
+      // (Starship, usually) stayed on screen and it looked like the tap had
+      // failed. Only a second tap opened VIPER's own project.
+      if (!driving && typeof enterRoverMode === 'function') enterRoverMode();
+    } else if (driving && typeof exitRoverToMoon === 'function') {
+      exitRoverToMoon();
     }
+
+    // Always open the project of the thing that was tapped.
     const pub = (typeof PUBS !== 'undefined') && PUBS.find(p => p.body === name);
     if (pub && typeof showDetail === 'function') {
       showDetail(pub);

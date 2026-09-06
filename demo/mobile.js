@@ -78,10 +78,10 @@
   expand.innerHTML = EXPAND;
   expand.setAttribute('aria-label', 'Expand map to full screen');
   expand.setAttribute('aria-pressed', 'false');
-  // Inside the dock, as the last item in the same row. Parked separately at
-  // the bottom-right of a 100vh map it sat BEHIND the browser's own bottom
-  // toolbar on a real phone and looked like it had disappeared.
-  dock.appendChild(expand);
+  // Top-right of the map. The bottom edge is where the browser's own toolbar
+  // lives on a phone, which is what swallowed this button when it sat there;
+  // the top edge is always visible.
+  left.appendChild(expand);
 
   // The renderer reads leftPanel's box, so it must be told after the box
   // changes. One rAF is not enough on iOS — the fixed/100vh box settles a

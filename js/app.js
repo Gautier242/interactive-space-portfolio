@@ -831,6 +831,10 @@ if (isMobileDevice && canvas) {
   let tapTimeout;
   
   canvas.addEventListener('touchend', (e) => {
+    // Ending a pinch fires one touchend per finger, milliseconds apart, which
+    // this read as a double tap and answered with a 100-unit jump - the zoom
+    // that snapped back the moment you let go.
+    if (multiTouch) { lastTap = 0; return; }
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTap;
     
@@ -1316,6 +1320,10 @@ function initMoonSurface() {
   }, { passive: false });
 
   moonCanvas.addEventListener('touchmove', (e) => {
+    // While driving, demo/rover-look.js owns look-around via pointer events.
+    // preventDefault here fires pointercancel and kills that drag, which is
+    // why you could not look left and right from the rover.
+    if (typeof roverPOVMode !== 'undefined' && roverPOVMode) return;
     if (e.touches.length === 1 && dragging) {
        e.preventDefault(); // Prevent scrolling while rotating moon
        const x = e.touches[0].clientX;
