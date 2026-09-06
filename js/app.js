@@ -347,7 +347,7 @@ function renderPublications() {
       
       card.innerHTML = `
         <div class="pub-image">
-          <img src="${pub.img}" srcset="${window.imgSrcset(pub.img)}" sizes="auto, (max-width: 900px) 150px, (max-width: 1200px) 200px, 250px" alt="${pub.title}" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src=window.PLACEHOLDER_IMG"/>
+          <img src="${pub.img}" srcset="${window.imgSrcset(pub.img)}" sizes="auto, (max-width: 900px) 100vw, (max-width: 1200px) 200px, 250px" alt="${pub.title}" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src=window.PLACEHOLDER_IMG"/>
         </div>
         <div class="pub-content">
           <div class="pub-header">
@@ -2853,6 +2853,10 @@ document.getElementById('btnPan').addEventListener('click', e => {
 function onWindowResize() {
   const width = leftPanel.clientWidth;
   const height = leftPanel.clientHeight;
+  // A hidden panel measures 0, and 0 height makes aspect Infinity, which puts
+  // NaN through updateProjectionMatrix and leaves the scene blank FOREVER -
+  // including after the panel comes back. Keep the last good matrix instead.
+  if (!width || !height) return;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
   renderer.setSize(width, height);
