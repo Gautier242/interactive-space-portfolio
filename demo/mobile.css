@@ -476,46 +476,42 @@
 
 /* The two titles replace the static "Publications & Projects" text, so the
    mode switch costs no vertical height on a screen that has none to spare. */
-/* A segmented control, not two links. Underlined tabs were missed entirely -
-   they read as headings, and an underline says "you are here" rather than
-   "there is another one of these". Two pills in a visible track say two modes
-   at a glance, which is the whole point of the switch.
+/* Two words, and colour carries the meaning. The segmented control said
+   "two modes" clearly but cost ~38px of a screen with none to spare, which is
+   a bad trade on the row directly above the content. This is ~20px.
 
-   The font size is unchanged at 14px. What makes it visible is contrast and
-   the track around it, not size: the inactive pill goes from 45% to 78%
-   opacity so it stops looking disabled, and the filled active pill gives the
-   pair an obvious on/off relationship.
+   Each mode owns a hue rather than sharing one: blue for the animation, amber
+   for the list. Two different colours say "two different displays" without
+   any box around them, and the active one is the saturated one with the rule
+   under it while the other sits at 50%. That is the signal an underline alone
+   could not give - an underline says "you are here", it does not say "there is
+   another one of these".
 
-   It lives as a second row inside the header (flex:1 0 100%), so it sticks
-   and hides with the header for free instead of competing for the same top:0. */
+   Second row inside the header (flex:1 0 100%), so it sticks and hides with
+   the header instead of competing for the same top:0. */
 .mobile-device .header { flex-wrap: wrap; }
 .mobile-device .m-tabs {
   flex: 1 0 100%;
   display: flex;
-  gap: 3px;
-  margin: 7px 0 1px;
-  padding: 3px;
-  background: rgba(255, 255, 255, .06);
-  border: 1px solid rgba(158, 201, 255, .16);
-  border-radius: 10px;
+  gap: 18px;
+  margin: 5px 0 0;
 }
 .mobile-device .m-tab {
-  flex: 1 1 0;
   background: none;
   border: 0;
-  border-radius: 7px;
-  padding: 7px 6px;
+  border-bottom: 2px solid transparent;
+  padding: 0 0 3px;
   font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  color: rgba(207, 226, 255, .78);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .03em;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
-.mobile-device .m-tab.is-on {
-  color: #06101f;
-  background: var(--accent, #6ea3ff);
-}
+.mobile-device .m-tab[data-read="0"]       { color: rgba(110, 163, 255, .5); }
+.mobile-device .m-tab[data-read="0"].is-on { color: #6ea3ff; border-bottom-color: #6ea3ff; }
+.mobile-device .m-tab[data-read="1"]       { color: rgba(255, 190, 106, .5); }
+.mobile-device .m-tab[data-read="1"].is-on { color: #ffbe6a; border-bottom-color: #ffbe6a; }
 
 /* ---- 14. sibling navigation in the detail header ------------------------ */
 /* A swipe nobody knows about is a feature nobody uses, so the count is shown

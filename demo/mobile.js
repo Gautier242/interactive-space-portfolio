@@ -366,7 +366,7 @@
     var tabs = document.createElement('nav');
     tabs.className = 'm-tabs';
     tabs.innerHTML =
-      '<button type="button" class="m-tab is-on" data-read="0">Solar System</button>' +
+      '<button type="button" class="m-tab is-on" data-read="0">Animation</button>' +
       '<button type="button" class="m-tab" data-read="1">Projects</button>';
     headerEl.appendChild(tabs);
 
