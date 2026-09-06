@@ -83,7 +83,9 @@
   var expand = document.createElement('button');
   expand.type = 'button';
   expand.className = 'm-btn m-expand';
-  expand.innerHTML = EXPAND;
+  // A bare arrow glyph was not being found on the map. The word is: it says
+  // what it does, and it is a wider target than a 34px icon square.
+  expand.innerHTML = EXPAND + '<span class="m-expand-t">Full screen</span>';
   expand.setAttribute('aria-label', 'Expand map to full screen');
   expand.setAttribute('aria-pressed', 'false');
   // Top-right of the map. The bottom edge is where the browser's own toolbar
@@ -106,7 +108,8 @@
   function setFull(on) {
     full = !!on;
     document.documentElement.classList.toggle('m-full', full);
-    expand.innerHTML = full ? CLOSE : EXPAND;
+    expand.innerHTML = (full ? CLOSE : EXPAND) +
+      '<span class="m-expand-t">' + (full ? 'Exit' : 'Full screen') + '</span>';
     expand.setAttribute('aria-label', full ? 'Close full screen map'
                                            : 'Expand map to full screen');
     expand.setAttribute('aria-pressed', String(full));

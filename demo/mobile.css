@@ -232,7 +232,16 @@
 .m-expand {
   top: max(8px, env(safe-area-inset-top, 0px));
   right: 8px;
-  min-width: 38px; height: 34px;
+  min-width: 38px; height: 32px;
+  padding: 0 10px 0 8px;
+  background: rgba(9, 16, 30, .78);
+  border-color: rgba(158, 201, 255, .45);
+}
+/* The icon alone was not being found against a starfield. The word says what
+   the control does and widens the target at the same time. */
+.mobile-device .m-expand-t {
+  font: 700 11px/1 Inter, system-ui, sans-serif;
+  letter-spacing: .02em;
 }
 .mobile-device.m-full .m-expand {
   position: fixed;
@@ -476,16 +485,11 @@
 
 /* The two titles replace the static "Publications & Projects" text, so the
    mode switch costs no vertical height on a screen that has none to spare. */
-/* Two buttons, one blue family. Filled means selected: white on light blue
-   for the active mode, light blue on dark blue for the other. That reads as a
-   pair of buttons at a glance, where coloured text alone read as headings and
-   the first underlined version was missed entirely.
-
-   No outer track around them - the earlier segmented control cost ~38px on a
-   row directly above the content it exists to help you reach. Two bare pills
-   are ~28px, and they size to their labels rather than splitting the width,
-   which keeps the row short and leaves the pair looking like controls rather
-   than like a divided bar.
+/* Browser tabs, and as little height as they can be. Pills read as buttons
+   but cost ~28px on the row above the content; these are ~22px and sit flush
+   on a shared baseline the way a browser's tab strip does - joined at the
+   bottom, the active one lifted out of the rail by being lighter and losing
+   its bottom border.
 
    Second row inside the header (flex:1 0 100%), so it sticks and hides with
    the header instead of competing for the same top:0. */
@@ -493,27 +497,30 @@
 .mobile-device .m-tabs {
   flex: 1 0 100%;
   display: flex;
-  gap: 7px;
-  margin: 6px 0 1px;
+  gap: 2px;
+  margin: 5px 0 0;
+  border-bottom: 1px solid rgba(110, 163, 255, .22);
 }
 .mobile-device .m-tab {
   flex: 0 0 auto;
-  background: rgba(18, 38, 72, .92);
-  border: 1px solid rgba(110, 163, 255, .30);
-  border-radius: 8px;
-  padding: 5px 13px;
+  background: rgba(18, 38, 72, .55);
+  border: 1px solid rgba(110, 163, 255, .18);
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 3px 11px 4px;
+  margin-bottom: -1px;            /* sit ON the rail, not above it */
   font: inherit;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .02em;
-  color: #9ec9ff;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8fb4e8;
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 .mobile-device .m-tab.is-on {
   background: #6ea3ff;
   border-color: #6ea3ff;
-  color: #ffffff;
+  color: #08192f;
+  font-weight: 700;
 }
 
 /* ---- 14. sibling navigation in the detail header ------------------------ */
