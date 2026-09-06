@@ -533,3 +533,15 @@
   padding: 0 3px;
   font-variant-numeric: tabular-nums;
 }
+
+/* ---- 15. ?fig=wide — the full-width card, for comparison ---------------- */
+/* Temporary A/B so the two card layouts can be judged on a real phone.
+   Delete this block and the m-fig-wide line in mobile.js once decided. */
+.mobile-device.m-fig-wide .pub-image {
+  float: none;
+  width: 100%;
+  max-width: 100%;
+  height: auto !important;
+  aspect-ratio: 16 / 9;
+  margin: 0 0 10px;
+}

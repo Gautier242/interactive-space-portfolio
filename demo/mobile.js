@@ -16,6 +16,14 @@
   var controls = document.querySelector('.left .controls');
   if (!app || !left) return;
 
+  // ?fig=wide puts the figure full width above the text instead of beside it,
+  // so the two card layouts can be compared on a real phone rather than
+  // described. Default is the thumbnail. Temporary: drop this line and the
+  // m-fig-wide block in mobile.css once the choice is made.
+  if (new URLSearchParams(location.search).get('fig') === 'wide') {
+    document.documentElement.classList.add('m-fig-wide');
+  }
+
   // ---- 1. controls out of the map, into their own dock underneath --------
   // They were absolutely positioned inside .left, covering ~46px of a 180px
   // map. .left keeps its own box, so onWindowResize() (which measures
