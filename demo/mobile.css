@@ -121,18 +121,9 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  max-height: 0;
-  opacity: 0;
-  pointer-events: none;
-  transition: max-height .22s ease, opacity .18s ease, padding .22s ease;
-}
-.m-dock::-webkit-scrollbar { display: none; }
-.mobile-device.m-tools-on .m-dock {
-  max-height: 60px;
-  opacity: 1;
-  pointer-events: auto;
   padding: 6px 8px;
 }
+.m-dock::-webkit-scrollbar { display: none; }
 
 /* inside the dock the control bar is a plain row, not a floating overlay */
 .mobile-device .m-dock .controls {
@@ -204,13 +195,7 @@
 .m-btn svg { width: 17px; height: 17px; display: block; flex: 0 0 auto; }
 .m-btn:active { background: rgba(158, 201, 255, .18); }
 .m-help   { top: 8px; left: 8px; }
-.m-tools  { right: 52px; bottom: 8px; }
 .m-expand { right: 8px; bottom: 8px; }
-.mobile-device.m-tools-on .m-tools {
-  background: rgba(158, 201, 255, .20);
-  border-color: rgba(158, 201, 255, .55);
-  color: #fff;
-}
 
 .mobile-device.m-full .left {
   position: fixed;
@@ -223,7 +208,7 @@
 .mobile-device.m-full .m-dock {
   position: fixed;
   left: 50%;
-  bottom: calc(56px + env(safe-area-inset-bottom, 0px));
+  bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
   z-index: 401;
   width: auto;
@@ -231,8 +216,7 @@
   border-radius: 12px;
 }
 .mobile-device.m-full .m-btn { position: fixed; z-index: 402; }
-.mobile-device.m-full .m-expand { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
-.mobile-device.m-full .m-tools  { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+.mobile-device.m-full .m-expand { bottom: calc(64px + env(safe-area-inset-bottom, 0px)); }
 .mobile-device.m-full body { overflow: hidden; }
 
 /* ---- 4b. the "how to explore" sheet ------------------------------------ */
@@ -264,21 +248,16 @@
 .m-sheet-card li { font-size: 13px; line-height: 1.5; margin-bottom: 5px; }
 .m-sheet-card b { color: #cfe2ff; }
 /* inline copies of the real buttons, so the help points at what you can see */
-.m-ico-tools, .m-ico-full {
+.m-ico-full {
   display: inline-block; vertical-align: -3px;
   width: 16px; height: 16px;
   background: currentColor; color: #cfe2ff;
-}
-.m-ico-tools {
-  -webkit-mask: var(--ico-tools) center/16px no-repeat;
-          mask: var(--ico-tools) center/16px no-repeat;
 }
 .m-ico-full {
   -webkit-mask: var(--ico-full) center/16px no-repeat;
           mask: var(--ico-full) center/16px no-repeat;
 }
 :root {
-  --ico-tools: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'><path d='M4 7h10M18 7h2M4 17h4M12 17h8'/><circle cx='16' cy='7' r='2'/><circle cx='10' cy='17' r='2'/></svg>");
   --ico-full: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4l-7.5 7.5'/><path d='M10 20H4v-6'/><path d='M4 20l7.5-7.5'/></svg>");
 }
 .m-sheet-x {
@@ -376,7 +355,7 @@
   font-size: 0;                 /* drops the text, keeps the button */
   padding: 0;
   width: 38px; height: 38px;
-  bottom: 8px; right: 96px;     /* clear of the sliders and expand buttons */
+  bottom: 8px; right: 54px;     /* clear of the expand button */
   border-radius: 10px;
   background: rgba(9, 16, 30, .55);
   border: 1px solid rgba(158, 201, 255, .26);

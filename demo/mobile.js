@@ -125,25 +125,14 @@
     try { return !!roverPOVMode; } catch (_) { return false; }
   }
 
-  // ---- 5. tools: the control bar is hidden until asked for ---------------
-  var tools = document.createElement('button');
-  tools.type = 'button';
-  tools.className = 'm-btn m-tools';
-  tools.innerHTML = svg('<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/>' +
-    '<circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>');
-  tools.setAttribute('aria-label', 'Show map controls');
-  tools.setAttribute('title', 'Map controls');
-  tools.setAttribute('aria-expanded', 'false');
-  left.appendChild(tools);
-
+  // ---- 5. the control bar is always visible ------------------------------
+  // It used to hide behind a button. That was one more thing to discover
+  // before you could press play, and the icon never read as "controls" — the
+  // bar is translucent enough now that it does not crowd the map.
   function setTools(on) {
-    document.documentElement.classList.toggle('m-tools-on', !!on);
-    tools.setAttribute('aria-expanded', String(!!on));
-    tools.setAttribute('aria-label', on ? 'Hide map controls' : 'Show map controls');
+    document.documentElement.classList.toggle('m-tools-on', on !== false);
   }
-  onTap(tools, function () {
-    setTools(!document.documentElement.classList.contains('m-tools-on'));
-  });
+  setTools(true);
 
   // ---- 6. "How to explore" is text on a phone, not a demo ---------------
   // The tour drives the real controls and reads as chaos on a 40vh map, so
@@ -171,7 +160,7 @@
         '<li><b>Drag one finger</b> to turn the view around.</li>' +
         '<li><b>Pinch</b> two fingers to zoom in and out.</li>' +
         '<li><b>Double-tap</b> to jump closer, and again to pull back.</li>' +
-        '<li>Tap the <b class="m-ico-tools"></b> button for play, pause, speed and reset.</li>' +
+        '<li>Play, pause, speed and reset are in the bar under the map.</li>' +
         '<li>Tap <b class="m-ico-full"></b> to make the map full screen.</li>' +
       '</ul>' +
       '<div class="m-sheet-sec">The projects</div>' +
@@ -194,7 +183,7 @@
         '<li><b>&#8592; &#8594;</b> steer left and right.</li>' +
         '<li><b>Hold</b> a button to keep moving; let go to stop.</li>' +
         '<li><b>Drag one finger</b> on the view to look around while you drive.</li>' +
-        '<li>The buttons are in the control bar &#8212; tap <b class="m-ico-tools"></b> if it is closed.</li>' +
+        '<li>The arrows are in the bar under the map.</li>' +
       '</ul>' +
       '<div class="m-sheet-sec">Leaving</div>' +
       '<ul>' +
@@ -283,11 +272,11 @@
 
   // VIPER's driving buttons live in the control bar, which is now behind the
   // gear — entering rover mode with them hidden left no way to drive.
+  // The rover swaps the bar's contents; nothing to reveal now that it is
+  // always on, but reflow so the taller row does not clip the map.
   var rov = document.getElementById('roverControls');
   if (rov) {
-    new MutationObserver(function () {
-      if (rov.style.display && rov.style.display !== 'none') setTools(true);
-    }).observe(rov, { attributes: true, attributeFilter: ['style'] });
+    new MutationObserver(reflow).observe(rov, { attributes: true, attributeFilter: ['style'] });
   }
 
   // ---- 9. hide the header while reading ---------------------------------

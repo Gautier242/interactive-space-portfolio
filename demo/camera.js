@@ -67,6 +67,16 @@
   // centre to orbit — which threw the camera backwards on every pinch frame.
   // step > 1 pulls back, step < 1 moves closer.
   function zoomBy(step) {
+    // Never while a flight is running. This function mutates follow.offset,
+    // and the flight reads that offset every frame to decide where it is
+    // going — so a zoom mid-flight multiplies the offset by the distance the
+    // camera has not covered yet, and the flight then chases the inflated
+    // target. Mobile hit this every time: opening a publication starts the
+    // flight AND changes the split, and the split calls zoomBy. The camera
+    // ended up thousands of units out, past Neptune, so every body looked
+    // like it had stopped zooming. Desktop has no split control, which is
+    // exactly why it only ever broke on the phone.
+    if (flying) return;
     // Pivot: the followed body if there is one, else a point ahead of the
     // camera at its current viewing distance.
     let pivot, minDist;
@@ -255,6 +265,12 @@
     const t0 = performance.now();
     const ms = (opts && opts.ms) || 900;
     flying = true;
+    // framing.js's idle drift calls place() every frame and only stops on the
+    // first real pointer/wheel/key event. A publication opened any other way
+    // (the tour, a deep link, a programmatic open) would be fought frame for
+    // frame and the camera would never leave the default pose. Suspend it for
+    // the duration; closing the publication resumes and re-places it.
+    if (window.__framing && window.__framing.suspend) window.__framing.suspend();
     follow = { name, mesh, offset: V().subVectors(pos, target) };
     setKey(true);
 
@@ -270,7 +286,16 @@
       // clears the follow lock. Hold the leg locally and stop if it is no
       // longer the current one, rather than dereferencing a null `follow`.
       if (follow !== leg) return;
-      const t = Math.min(1, ((now || performance.now()) - t0) / ms);
+      // Clamp BOTH ends. A rAF timestamp is the time the frame started, which
+      // can be EARLIER than the performance.now() captured when flyTo was
+      // called mid-frame — so t went negative, and the easing curve happily
+      // extrapolates: at t = -2 it returns e = 8, and lerpVectors then threw
+      // the camera eight times PAST its target, thousands of units out. Every
+      // body after that looked like it had stopped zooming. It depended on
+      // where in the frame the tap landed, which is why it came and went and
+      // survived a reload, and why a phone (longer frames) hit it far more
+      // often than a desktop.
+      const t = Math.min(1, Math.max(0, ((now || performance.now()) - t0) / ms));
       const e = t < .5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
       mesh.getWorldPosition(_a);
       let want;
@@ -295,7 +320,9 @@
   // Wrap zoomToBody rather than editing app.js. Moon and VIPER keep their
   // own dedicated views, so pass those straight through.
   // Starship, VIPER and LRO have their own presence on the Moon surface.
-  const ON_SURFACE = { Starship: 1, VIPER: 1, LRO: 1 };
+  // LRO is shown from outside, in the solar-system view — it is the map's
+  // handle on the Lunar Foundation Model, not a thing you stand next to.
+  const ON_SURFACE = { Starship: 1, VIPER: 1 };
 
   // The same teardown app.js performs when you tap Earth in the Moon sky.
   // app.js has no callable helper for it, so it is spelled out here rather
@@ -363,5 +390,12 @@
     clear() { follow = null; setKey(false); },
     get keyLight() { return keyLight; },
     get following() { return follow && follow.name; },
+    // the pose the follow loop will settle on, for verification
+    get pose() {
+      if (!follow) return null;
+      const p = follow.mesh.getWorldPosition(V());
+      return { name: follow.name, gap: +(follow.localOffset || follow.offset).length().toFixed(1),
+               targetLen: +p.length().toFixed(1) };
+    },
   };
 })();
