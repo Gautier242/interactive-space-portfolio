@@ -327,17 +327,28 @@
    it again inside the card cost ~30px per card for a repeated string */
 .mobile-device .pub-card .pub-inst { display: none; }
 
-/* The figure box came out 104x160 around a 102x55 image — intrinsic sizing
-   through srcset/sizes="auto" would not settle, so the box is given explicit
-   dimensions instead of being left to negotiate. object-fit:contain, never
-   cover: these are scientific figures and cropping one is not acceptable. */
+/* The figure is the publication. At 104x72 a 1000x539 figure rendered at
+   104x56 — about a tenth of the pixels shipped — which is a colour swatch,
+   not something you can read. Full width is ~366 CSS px on a 390px phone,
+   3.5x the linear size, and at DPR 3 that asks for ~1098 device px against a
+   1000px asset: almost exactly what we have.
+
+   The box keeps explicit proportions rather than sizing to its content. The
+   earlier note here is still true — intrinsic sizing through srcset with
+   sizes="auto" would not settle — and a fixed ratio also means the card does
+   not reflow when a lazy image finally lands. 16/9 is the median of the nine
+   figures (they run 1.42:1 to 2.25:1), so it wastes the least overall.
+
+   object-fit:contain, never cover: these are scientific figures and cropping
+   one is not acceptable. */
 .mobile-device .pub-image {
-  width: 104px;
-  max-width: 104px;
-  height: 72px !important;
+  float: none;
+  width: 100%;
+  max-width: 100%;
+  height: auto !important;
   min-height: 0 !important;
-  margin-right: 12px;
-  margin-bottom: 6px;
+  aspect-ratio: 16 / 9;
+  margin: 0 0 10px;
 }
 .mobile-device .pub-image img {
   width: 100%;
@@ -452,4 +463,80 @@
   .mobile-device.m-full .m-dock .controls { gap: 5px; }
   .mobile-device.m-full .m-dock .controls button { min-width: 38px; padding: 0 7px; }
   .mobile-device.m-full .m-dock #roverControls button { min-width: 46px; }
+}
+
+/* ---- 13. reading mode -------------------------------------------------- */
+/* The map is the memorable wrapper; the research is the point. PROJECTS hides
+   the map so the list gets the whole screen. Note this is a labelled mode
+   reached by tapping a title, NOT a third chevron stop — a third stop was
+   tried before and made the chevron control unpredictable. */
+.mobile-device.m-read .left,
+.mobile-device.m-read .m-split { display: none !important; }
+
+/* The two titles replace the static "Publications & Projects" text, so the
+   mode switch costs no vertical height on a screen that has none to spare. */
+/* The title row is a flex row that also holds SET TEXT SIZE. A flex item
+   defaults to min-width:auto, so these buttons would not shrink; instead they
+   broke their own labels across lines, forced the row wider than the screen
+   and put the WHOLE right panel into horizontal overflow. Hence nowrap on the
+   labels, min-width:0 so the row can shrink, and wrap on the row as the last
+   resort rather than overflowing. */
+.mobile-device .right > .section-title {
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.mobile-device .m-tabs {
+  display: flex;
+  gap: 2px;
+  margin-right: auto;
+  min-width: 0;
+  flex-shrink: 0;
+}
+.mobile-device .m-tab {
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  padding: 3px 6px;
+  font: inherit;
+  font-size: 10.5px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: rgba(207, 226, 255, .42);
+  white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-device .m-tab.is-on {
+  color: #cfe2ff;
+  border-bottom-color: rgba(110, 163, 255, .85);
+}
+
+/* ---- 14. sibling navigation in the detail header ------------------------ */
+/* A swipe nobody knows about is a feature nobody uses, so the count is shown
+   and the chevrons are real buttons. Hidden when the institution holds only
+   one paper — there is nothing to move between. */
+.mobile-device .m-sib {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
+  margin-left: 6px;
+}
+.mobile-device .m-sib-b {
+  background: rgba(9, 16, 30, .34);
+  border: 1px solid rgba(158, 201, 255, .20);
+  color: #cfe2ff;
+  border-radius: 7px;
+  min-width: 30px;
+  height: 30px;
+  font-size: 17px;
+  line-height: 1;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.mobile-device .m-sib-n {
+  font-size: 10px;
+  color: rgba(207, 226, 255, .62);
+  white-space: nowrap;
+  padding: 0 3px;
+  font-variant-numeric: tabular-nums;
 }
