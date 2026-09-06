@@ -70,9 +70,12 @@
 .mobile-device .app {
   min-height: 0;
 }
+/* The map opens at 31vh, halfway between the old 40vh default and the 22vh
+   shrunk stop, so more of the publication list is visible before any scroll.
+   The chevron still trades the rest. min-height moves with it, 200 -> 175. */
 .mobile-device .left {
-  height: 40vh !important;
-  min-height: 200px !important;
+  height: 31vh !important;
+  min-height: 175px !important;
 }
 /* two stops for the map/text trade, set by the bar between the panels.
    Full screen covers the "more map" end, so a third stop was noise. */
@@ -473,34 +476,45 @@
 
 /* The two titles replace the static "Publications & Projects" text, so the
    mode switch costs no vertical height on a screen that has none to spare. */
-/* A second row inside the header, so the switch reads as site navigation
-   rather than as a control belonging to the list below it. The header is a
-   flex row; flex:1 0 100% drops this onto its own line beneath the name.
-   Being inside the header means it sticks and hides with it for free. */
+/* A segmented control, not two links. Underlined tabs were missed entirely -
+   they read as headings, and an underline says "you are here" rather than
+   "there is another one of these". Two pills in a visible track say two modes
+   at a glance, which is the whole point of the switch.
+
+   The font size is unchanged at 14px. What makes it visible is contrast and
+   the track around it, not size: the inactive pill goes from 45% to 78%
+   opacity so it stops looking disabled, and the filled active pill gives the
+   pair an obvious on/off relationship.
+
+   It lives as a second row inside the header (flex:1 0 100%), so it sticks
+   and hides with the header for free instead of competing for the same top:0. */
 .mobile-device .header { flex-wrap: wrap; }
 .mobile-device .m-tabs {
   flex: 1 0 100%;
   display: flex;
-  gap: 22px;
-  margin: 6px 0 0;
-  padding-top: 7px;
-  border-top: 1px solid rgba(255, 255, 255, .07);
+  gap: 3px;
+  margin: 7px 0 1px;
+  padding: 3px;
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(158, 201, 255, .16);
+  border-radius: 10px;
 }
 .mobile-device .m-tab {
+  flex: 1 1 0;
   background: none;
   border: 0;
-  border-bottom: 2px solid transparent;
-  padding: 2px 1px 5px;
+  border-radius: 7px;
+  padding: 7px 6px;
   font: inherit;
   font-size: 14px;
   font-weight: 600;
-  color: rgba(207, 226, 255, .45);
+  color: rgba(207, 226, 255, .78);
   white-space: nowrap;
   -webkit-tap-highlight-color: transparent;
 }
 .mobile-device .m-tab.is-on {
-  color: #cfe2ff;
-  border-bottom-color: var(--accent, #6ea3ff);
+  color: #06101f;
+  background: var(--accent, #6ea3ff);
 }
 
 /* ---- 14. sibling navigation in the detail header ------------------------ */
