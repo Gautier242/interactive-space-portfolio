@@ -109,7 +109,8 @@
         e.touches[1].clientY - e.touches[0].clientY);
       if (!d) return;
       if (!pinchPrev) { pinchPrev = d; return; }
-      const step = Math.min(1.2, Math.max(0.83, pinchPrev / d));
+      // same gain as the solar-system pinch, so both feel alike
+      const step = Math.min(1.6, Math.max(0.62, Math.pow(pinchPrev / d, 2.2)));
       pinchPrev = d;
       const t = new THREE.Vector3(0, 0, 0);
       const off = new THREE.Vector3().subVectors(moonCamera.position, t);
@@ -128,6 +129,8 @@
   // app.js's shared isDragging flag and of the click event's ~300ms delay.
   moonCanvas.addEventListener('touchend', e => {
     pinchPrev = 0;
+    // `touching` is cleared the moment a second finger lands, so the end of a
+    // pinch can never be mistaken for a tap here.
     if (!touching || !active()) { touching = false; return; }
     touching = false;
     if (moved > 12) return;                     // that was a drag, not a tap

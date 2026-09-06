@@ -109,18 +109,22 @@
    the expand button, with no background of its own — the buttons carry their
    own translucency, so the scene reads straight through the row. As a solid
    band under the map this cost ~52px of a screen that has none to spare. */
+/* One centred row along the bottom edge of the map: the play/speed controls
+   and the full-screen button together, so nothing can be orphaned off the
+   edge. Width follows the screen; if a narrow phone cannot fit the row it
+   scrolls sideways rather than wrapping to a second line. */
 .m-dock {
   position: absolute;
-  left: 6px;
-  right: 50px;                     /* clear of the expand button */
-  bottom: 8px;
-  height: 34px;                    /* one row, never two */
+  left: 0;
+  right: 0;
+  bottom: max(8px, env(safe-area-inset-bottom, 0px));
   z-index: 28;
   display: flex;
   align-items: center;
+  justify-content: center;         /* centred, whatever the screen width */
   flex-wrap: nowrap;
-  gap: 4px;
-  padding: 0;
+  gap: 5px;
+  padding: 0 8px;
   background: none !important;     /* the row itself draws nothing */
   border: 0;
   box-shadow: none;
@@ -157,11 +161,11 @@
 }
 /* each button carries the translucency instead of the bar behind them */
 .mobile-device .m-dock .controls button {
-  min-width: 30px;
-  min-height: 30px;
-  height: 30px;
-  font-size: 11px;
-  padding: 0 6px;
+  min-width: 38px;
+  min-height: 34px;
+  height: 34px;
+  font-size: 12px;
+  padding: 0 8px;
   flex: 0 0 auto;
   background: rgba(9, 16, 30, .34);
   border: 1px solid rgba(158, 201, 255, .20);
@@ -174,6 +178,16 @@
   background: rgba(158, 201, 255, .20);
   border-color: rgba(158, 201, 255, .55);
   color: #ffffff;
+}
+
+/* On a narrow phone (iPhone SE and friends) eight buttons at full size
+   overflow and the row scrolls instead of centring. Shave them a little so
+   the whole toolbar fits and stays centred. */
+@media (max-width: 370px) {
+  .mobile-device .m-dock { gap: 4px; padding: 0 6px; }
+  .mobile-device .m-dock .controls { gap: 4px; }
+  .mobile-device .m-dock .controls button,
+  .mobile-device .m-expand { min-width: 32px; padding: 0 5px; }
 }
 
 /* ---- 3. the buttons that were stacked in the same corner ---------------- */
@@ -211,23 +225,32 @@
 .m-btn svg { width: 17px; height: 17px; display: block; flex: 0 0 auto; }
 .m-btn:active { background: rgba(158, 201, 255, .18); }
 .m-help   { top: 8px; left: 8px; }
-.m-expand { right: 8px; bottom: 8px; }
+.m-expand {
+  position: static;                /* a row item now, not a floating corner */
+  flex: 0 0 auto;
+  min-width: 38px; height: 34px;
+  margin-left: 3px;
+}
 
 .mobile-device.m-full .left {
   position: fixed;
   inset: 0;
   height: 100vh !important;
+  height: 100dvh !important;       /* excludes the browser's own chrome */
   width: 100vw;
   z-index: 400;
   margin: 0;
 }
-/* full screen: the dock is a child of .left, so it rides with it — it only
-   needs to clear the home indicator */
+/* Full screen: anchor the row to the VISUAL viewport. 100vh on a phone
+   includes the strip behind the browser's own bottom toolbar, so an
+   absolutely-positioned row inside a 100vh map sits underneath it — which is
+   exactly how the full-screen exit button vanished. position:fixed measures
+   against what is actually on screen. */
 .mobile-device.m-full .m-dock {
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-}
-.mobile-device.m-full .m-expand {
-  bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+  position: fixed;
+  left: 0; right: 0;
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
+  z-index: 402;
 }
 .mobile-device.m-full body { overflow: hidden; }
 

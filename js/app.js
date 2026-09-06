@@ -870,6 +870,12 @@ if (isMobileDevice && canvas) {
   // Pinch-to-zoom: incremental, so it needs only the previous finger spread.
   let pinchPrev = 0;
   
+  // True from the moment a second finger lands until every finger is up.
+  // Releasing a pinch ends with ONE finger lifting, which the tap handler
+  // below read as a tap: it then selected whatever was near and flew the
+  // camera there, which is the "jump that zooms back out" after every pinch.
+  let multiTouch = false;
+
   // A pinch is measured frame to frame, so the only state is the last spread.
   // Clearing it whenever the gesture is not exactly two fingers stops the
   // first move after a finger lands or lifts from reading as a huge jump.
@@ -883,7 +889,7 @@ if (isMobileDevice && canvas) {
   function endGesture() { pinchPrev = 0; lastTouchX = 0; lastTouchY = 0; }
 
   canvas.addEventListener('touchstart', (e) => {
-    if (e.touches.length === 2) e.preventDefault();
+    if (e.touches.length >= 2) { e.preventDefault(); multiTouch = true; }
     endGesture();
   }, { passive: false });
 
@@ -911,10 +917,14 @@ if (isMobileDevice && canvas) {
         e.touches[1].clientY - e.touches[0].clientY
       );
       if (!d) return;
+      multiTouch = true;
       if (!pinchPrev) { pinchPrev = d; return; }
-      // fingers apart -> ratio < 1 -> closer. Clamped per frame so a jumpy
-      // touch reading cannot throw the camera across the system.
-      const step = Math.min(1.2, Math.max(0.83, pinchPrev / d));
+      // fingers apart -> ratio < 1 -> closer. GAIN makes the camera cover more
+      // ground than the fingers do, because a phone screen is only so wide and
+      // 1:1 felt like nothing was happening. The clamp is per frame, so a
+      // jumpy touch reading still cannot throw the camera across the system.
+      const GAIN = 2.2;
+      const step = Math.min(1.6, Math.max(0.62, Math.pow(pinchPrev / d, GAIN)));
       pinchPrev = d;
       if (window.__cam && window.__cam.zoomBy) window.__cam.zoomBy(step);
       return;
@@ -1006,8 +1016,9 @@ if (isMobileDevice && canvas) {
   }, { passive: false });
   
   canvas.addEventListener('touchend', (e) => {
+    if (e.touches.length === 0 && multiTouch) { multiTouch = false; return; }
     // Check if this was a tap (not a drag) - allow object selection
-    if (e.changedTouches.length === 1 && !hasMoved) {
+    if (!multiTouch && e.changedTouches.length === 1 && !hasMoved) {
       const touch = e.changedTouches[0];
       const touchDuration = Date.now() - touchStartTime;
       const moveDistance = Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY);
