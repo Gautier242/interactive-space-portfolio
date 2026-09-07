@@ -843,29 +843,20 @@ if (isMobileDevice && canvas) {
     const tapLength = currentTime - lastTap;
     
     if (tapLength < 300 && tapLength > 0) {
-      // Double tap detected
+      // Double tap: one step closer, every time.
+      // It used to toggle - in under 500 units from the Sun, out beyond it -
+      // so the same gesture did opposite things depending on where you were,
+      // and a second double-tap threw you back out instead of going deeper.
+      // The maths here was also a third copy of the zoom, pivoting on
+      // getCurrentViewTarget(), a point 100 units IN FRONT of the camera
+      // rather than a centre to orbit. camera.js owns the one correct zoom:
+      // it pivots on the focused body, floors at its radius and clamps the
+      // far end, so double-tap now behaves exactly like the wheel and pinch.
       e.preventDefault();
       clearTimeout(tapTimeout);
-      
-      // Zoom in/out (toggle)
-      const currentDistance = camera.position.length();
-      const zoomDirection = currentDistance > 500 ? -1 : 1;
-      const zoomAmount = zoomDirection * 100;
-      
-      const target = getCurrentViewTarget();
-      const direction = new THREE.Vector3().subVectors(camera.position, target).normalize();
-      camera.position.add(direction.multiplyScalar(zoomAmount));
-      
-      // Clamp zoom
-      const minDistance = 50;
-      const maxDistance = 2000;
-      const distance = camera.position.length();
-      if (distance < minDistance) {
-        camera.position.normalize().multiplyScalar(minDistance);
-      } else if (distance > maxDistance) {
-        camera.position.normalize().multiplyScalar(maxDistance);
-      }
-      
+
+      if (window.__cam && window.__cam.zoomBy) window.__cam.zoomBy(0.72);
+
       lastTap = 0;
     } else {
       lastTap = currentTime;
