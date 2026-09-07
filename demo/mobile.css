@@ -316,19 +316,6 @@
 .m-sheet-card ul { margin: 0; padding-left: 18px; }
 .m-sheet-card li { font-size: 13px; line-height: 1.5; margin-bottom: 5px; }
 .m-sheet-card b { color: #cfe2ff; }
-/* inline copies of the real buttons, so the help points at what you can see */
-.m-ico-full {
-  display: inline-block; vertical-align: -3px;
-  width: 16px; height: 16px;
-  background: currentColor; color: #cfe2ff;
-}
-.m-ico-full {
-  -webkit-mask: var(--ico-full) center/16px no-repeat;
-          mask: var(--ico-full) center/16px no-repeat;
-}
-:root {
-  --ico-full: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'><path d='M14 4h6v6'/><path d='M20 4l-7.5 7.5'/><path d='M10 20H4v-6'/><path d='M4 20l7.5-7.5'/></svg>");
-}
 .m-sheet-x {
   margin-top: 16px; width: 100%; min-height: 42px;
   background: rgba(158, 201, 255, .16);

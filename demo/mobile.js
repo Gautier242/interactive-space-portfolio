@@ -200,9 +200,10 @@
         '<li><b>Tap</b> an object in yellow brackets to open its project.</li>' +
         '<li><b>Drag one finger</b> to turn the view around.</li>' +
         '<li><b>Pinch</b> two fingers to zoom in and out.</li>' +
-        '<li><b>Double-tap</b> to jump closer, and again to pull back.</li>' +
+        '<li><b>Double-tap</b> to zoom in a step.</li>' +
         '<li>Play, pause, speed and reset are in the bar under the map.</li>' +
-        '<li>Tap <b class="m-ico-full"></b> to make the map full screen.</li>' +
+        '<li>Tap <b>Full screen</b>, at the top right of the map, to fill the screen with it.</li>' +
+        '<li>Some objects open a world of their own \u2014 <b>land on the Moon</b> and drive a rover across it.</li>' +
       '</ul>' +
       '<div class="m-sheet-sec">The projects</div>' +
       '<ul>' +
