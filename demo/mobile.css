@@ -443,6 +443,25 @@
     border-radius: 2px;
     background: rgba(158, 201, 255, .5);
   }
+  /* A phone on "Desktop site" lays out at ~980px and scales that onto a
+     ~393px screen, so the 14px strip above lands as 5.6 PHYSICAL pixels -
+     the reason the divider is almost impossible to catch with a thumb. The
+     answer is a bigger target, not a fatter line: stretch the ::before box
+     15px past each edge so the grab area is ~44px to a finger, while what
+     you SEE stays the 14px strip. Pointer events on it bubble to .resizer,
+     which owns the drag.
+     Note what is deliberately NOT declared here: `content`. main.css:194
+     puts the visible grip glyph in this same pseudo-element, and redeclaring
+     content would erase it on every coarse-pointer device. Only the box is
+     touched, and the flex centring puts the glyph back where the auto
+     position had it, so nothing looks different. */
+  .resizer::before {
+    top: 0; bottom: 0;
+    left: -15px; right: -15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .controls button { min-height: 34px; }
 }
 
@@ -496,4 +515,59 @@
   height: auto !important;
   aspect-ratio: 16 / 9;
   margin: 0 0 10px;
+}
+
+/* ---- 16. landscape: the three stops trade WIDTH, not height ------------ */
+/* css/main.css:1373 already turns .app into a row in landscape and gives the
+   map 42% of the width. Section 2 of THIS file then forces
+   height: 36vh !important; min-height: 190px !important on .left - written
+   for the stacked portrait layout, and it wins on load order because this
+   file comes last. Measured at 844x390 before this block existed:
+     .left     354x190 inside a 337px-tall row  -> 147px of dead sky under it
+     .m-split  844x397 at 0,0                   -> the chevron over the screen
+     .resizer  order:0                          -> the divider left of the map
+   All three are corrected here rather than in main.css, so the portrait
+   layout and the desktop layout are both left exactly as they are.
+   .m-full is excluded throughout: full screen is position:fixed inset:0 and
+   must keep its own 100vw/100vh box. */
+@media (orientation: landscape) {
+  .mobile-device:not(.m-full) .left,
+  .mobile-device:not(.m-full).m-text .left {
+    height: 100% !important;
+    min-height: 0 !important;
+  }
+
+  /* the stops trade horizontal space now. m-read keeps the display:none from
+     section 13, which is what closes the map entirely. */
+  .mobile-device:not(.m-full) .left {
+    flex: 0 0 42% !important;
+    width: 42% !important;
+  }
+  .mobile-device:not(.m-full).m-text .left {
+    flex: 0 0 27% !important;
+    width: 27% !important;
+  }
+
+  /* the chevron becomes the vertical divider between the two panels */
+  .mobile-device:not(.m-full) .m-split {
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 16px;
+    padding: 0 4px;
+    border-top: 0;
+    border-bottom: 0;
+    border-left: 1px solid rgba(255,255,255,.06);
+    border-right: 1px solid rgba(255,255,255,.06);
+  }
+  /* 46x26 laid on its side. The arrows still point where the map EDGE moves:
+     rotating -90deg turns the portrait "up = shrink" into "left = shrink",
+     which is the same promise in the new axis. */
+  .mobile-device:not(.m-full) .m-split-b { width: 28px; height: 46px; }
+  .mobile-device:not(.m-full) .m-split-b svg { transform: rotate(-90deg); }
+  .mobile-device:not(.m-full) .m-split-grip { width: 3px; height: 34px; }
+
+  /* main.css's landscape block shows .resizer as a 2px line but never gives
+     it an order, so it defaults to 0 and renders BEFORE the map. The chevron
+     is the divider in this layout; the line is redundant either way. */
+  .mobile-device .resizer { display: none !important; }
 }
