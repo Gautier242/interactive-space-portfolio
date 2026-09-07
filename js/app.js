@@ -2495,9 +2495,18 @@ canvas.addEventListener('click', e => {
       if (pub) {
         setTimeout(() => showDetail(pub), 300);
         highlightPublication(targetBody);
-      } else {
-        hideDetail();
       }
+      // No publication on this body - Jupiter, Venus, Neptune, a moon - so
+      // just fly there and leave the right-hand panel exactly as it was.
+      //
+      // This used to call hideDetail(), which did two unwanted things. It
+      // closed whatever you were reading, and worse, camera.js watches
+      // #detailView for exactly that class change and treats it as "the
+      // visitor left the object": it clears the follow lock, cancels the
+      // in-flight animation and calls framing.place(). The flight to Jupiter
+      // had already started one line above, so the camera was yanked back to
+      // the opening pose a frame later and the click looked like it did
+      // nothing at all.
     }
   }
 });
