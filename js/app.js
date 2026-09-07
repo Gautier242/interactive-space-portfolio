@@ -761,8 +761,39 @@ if (!isMobileDevice && resizer) {
   // layout (the UA sniff above is false there) but never emits mousedown/
   // mousemove during a touch drag, so the divider could not be moved at all.
   // pointerdown covers mouse, touch and pen identically.
+  // A TOUCH drag gets the live treatment below; a mouse takes the original
+  // path unchanged, so the laptop behaves exactly as it always has.
+  //
+  // Two things made the divider feel dead under a finger:
+  //
+  // 1. `.left` carries `transition: flex 0.3s ease` (main.css:175). Every
+  //    move event starts a fresh 300ms ease toward the new width and the
+  //    next event restarts it, so the bar is forever animating toward where
+  //    the finger WAS, never where it is. A mouse fires often enough to hide
+  //    this; a touch drag does not. It is the same transition that made a
+  //    divider drag look completely broken under a headless probe.
+  // 2. The panel therefore keeps resizing for 300ms AFTER the last move, and
+  //    cinematic.js:167 has a ResizeObserver on #leftPanel that reallocates
+  //    the composer and five bloom mip levels on every frame it changes.
+  //    Dropping the transition ends that tail as well as the lag.
+  //
+  // What stays per-event is one style write, which is what makes the bar
+  // track the finger. What moves to one-per-frame is the expensive pair:
+  // renderer.setSize() reallocates the drawing buffer, and updateImageSizes()
+  // re-queries every .pub-image and writes two styles to each.
+  let liveDrag = false;
+  let dragRaf = 0;
+  let dragPct = 0;
+  const dragFrame = () => {
+    dragRaf = 0;
+    updateImageSizes(100 - dragPct);
+    onWindowResize();
+  };
+
   resizer.addEventListener('pointerdown', e => {
     isResizing = true;
+    liveDrag = e.pointerType !== 'mouse';
+    if (liveDrag) leftPanel.style.transition = 'none';
     document.body.style.cursor = 'col-resize';
     // capture keeps the drag alive if the finger slides off the 12px strip.
     // It throws if the pointer is already gone, which must not abort the drag.
@@ -776,14 +807,27 @@ if (!isMobileDevice && resizer) {
     const newWidth = (e.clientX / window.innerWidth) * 100;
     if (newWidth > 15 && newWidth < 75) {
       leftPanel.style.flex = `0 0 ${newWidth}%`;
-      updateImageSizes(100 - newWidth);
-      onWindowResize();
+      if (liveDrag) {
+        dragPct = newWidth;
+        if (!dragRaf) dragRaf = requestAnimationFrame(dragFrame);
+      } else {
+        updateImageSizes(100 - newWidth);
+        onWindowResize();
+      }
     }
   });
 
   document.addEventListener('pointerup', () => {
     if (isResizing) {
       isResizing = false;
+      if (liveDrag) {
+        // land on the final width once, then hand the 0.3s ease back so the
+        // mobile chevron and everything else animate as before
+        if (dragRaf) { cancelAnimationFrame(dragRaf); dragRaf = 0; }
+        dragFrame();
+        leftPanel.style.transition = '';
+        liveDrag = false;
+      }
       document.body.style.cursor = '';
       
       // Force canvas update by triggering multiple resize calls to eliminate black bar
