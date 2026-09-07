@@ -98,6 +98,78 @@
     if (follow) follow.offset.subVectors(camera.position, pivot);
   }
 
+  // ---- stars thin out as you close in -----------------------------------
+  // Up close the sky sits ON the object you came in to look at and the
+  // speckle fights its surface detail. Worse for the three shells
+  // cinematic.js adds than for the stock field, because those are
+  // sizeAttenuation:false - fixed-size screen dots that do not shrink as you
+  // approach anything.
+  //
+  // FOUR layers draw this sky, not one: app.js's 25k-point starField, which
+  // cinematic.js then mutes to 0.35, plus cinematic's own 9000/4000/900
+  // parallax shells. Fading only the first is nearly invisible. They are
+  // collected off the scene rather than from a global, because cinematic
+  // keeps its starLayers array private to its own IIFE.
+  //
+  // Fade on the distance the camera is actually VIEWING at - the same pivot
+  // zoomBy uses - not on the distance to the nearest body. Nearest-body was
+  // tried first and dimmed the default wide view to 28%: from the opening
+  // pose an outer planet's orbit passes within ~47 units of the camera while
+  // the shot is still the whole system.
+  //
+  // Free-flying in to a planet with nothing focused keeps the full sky: there
+  // is no view target to measure against, and distance from the Sun says
+  // nothing out at Jupiter. Every zoom that has a subject - opening a
+  // publication, and the wheel, pinch or double-tap after it, which all keep
+  // the follow lock - is covered.
+  // ?starfade=0 restores the shipped constant starfield for comparison.
+  const STAR_FAR = 260;        // beyond this, the sky is untouched
+  const STAR_NEAR = 18;        // this close to the subject, as dim as it goes
+  // How dim it goes is a taste call that needs a real screen, so it is a knob:
+  // ?starfade=0 is off entirely (the shipped constant sky), ?starfade=0.4 sets
+  // the floor to 40% of each layer's own brightness. Default 0.18.
+  const _sf = new URLSearchParams(location.search).get('starfade');
+  const STAR_FADE = _sf !== '0';
+  const STAR_MIN = (+_sf > 0 && +_sf < 1) ? +_sf : 0.18;
+  const _s = V();
+  let starMats = null;         // [{ mat, base }], collected once
+  let _starD = null;
+
+  function collectStars() {
+    const out = [];
+    if (typeof scene === 'undefined' || !scene) return out;
+    scene.traverse(o => {
+      if (!o.isPoints || !o.material) return;
+      // cinematic's shells carry a parallax radius; the stock field is the
+      // only other Points object in this scene with a star-sized count.
+      const isShell = o.userData && o.userData.parallax;
+      const isStock = o.geometry && o.geometry.attributes.position &&
+                      o.geometry.attributes.position.count > 20000;
+      if (!isShell && !isStock) return;
+      o.material.transparent = true;
+      out.push({ mat: o.material, base: o.material.opacity });
+    });
+    return out;
+  }
+
+  function fadeStars() {
+    if (!STAR_FADE) return;
+    if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) return;
+    // cinematic.js builds its shells before this file loads, but collect
+    // lazily anyway and retry until something is there.
+    if (!starMats || !starMats.length) starMats = collectStars();
+    if (!starMats.length) return;
+    const d = (follow && follow.mesh)
+      ? camera.position.distanceTo(follow.mesh.getWorldPosition(_s)) - radiusOf(follow.mesh)
+      : camera.position.length();
+    _starD = d;
+    const t = Math.max(0, Math.min(1, (d - STAR_NEAR) / (STAR_FAR - STAR_NEAR)));
+    const k = STAR_MIN + (1 - STAR_MIN) * t;
+    for (let i = 0; i < starMats.length; i++) {
+      starMats[i].mat.opacity = starMats[i].base * k;
+    }
+  }
+
   // ---- true follow ------------------------------------------------------
   const _q = new THREE.Quaternion();
   // What this loop last wrote. Anything else in camera.position at the top of
@@ -110,6 +182,8 @@
   let hasWritten = false;
   (function followTick() {
     requestAnimationFrame(followTick);
+    // ride the loop that already exists rather than adding a second rAF
+    fadeStars();
     if (!follow || !follow.mesh) { hasWritten = false; return; }
     if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) { hasWritten = false; return; }
     follow.mesh.getWorldPosition(_a);
@@ -421,6 +495,12 @@
     clear() { follow = null; setKey(false); },
     get keyLight() { return keyLight; },
     get following() { return follow && follow.name; },
+    // layers 0 means fadeStars never got past its guards
+    get stars() {
+      return { layers: starMats ? starMats.length : 0, d: _starD, on: STAR_FADE,
+               op: (starMats || []).map(x => +x.mat.opacity.toFixed(3)),
+               base: (starMats || []).map(x => x.base) };
+    },
     // the pose the follow loop will settle on, for verification
     get pose() {
       if (!follow) return null;
