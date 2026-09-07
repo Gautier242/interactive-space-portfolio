@@ -137,8 +137,14 @@
   // How dim it goes is a taste call that needs a real screen, so it is a knob:
   // ?starfade=0 is off entirely (the shipped constant sky), ?starfade=0.4 sets
   // the floor to 40% of each layer's own brightness. Default 0.18.
+  // Phones only. This runs every frame and writes four material opacities, and
+  // it was the one thing added to the DESKTOP render path in the session that
+  // introduced it - which is a standing "do not change desktop". On a laptop
+  // the sky is constant again, exactly as it shipped. ?starfade=1 forces it on
+  // anywhere, if it is ever wanted there.
   const _sf = new URLSearchParams(location.search).get('starfade');
-  const STAR_FADE = _sf !== '0';
+  const STAR_FADE = _sf === '1' ||
+    (_sf !== '0' && document.documentElement.classList.contains('mobile-device'));
   const STAR_MIN = (+_sf > 0 && +_sf < 1) ? +_sf : 0.18;
   const _s = V();
   let starMats = null;         // [{ mat, base }], collected once
