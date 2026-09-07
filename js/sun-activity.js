@@ -40,7 +40,12 @@
   // Photosphere: base texture + granulation + differential rotation + limb dark
   // --------------------------------------------------------------------------
   function makePhotosphere() {
-    var tx = loader.load('assets/textures/2k_sun.webp');
+    // planets-real.js owns which variant of a texture this device gets; on a
+    // phone that is the 1024x512 copy. Going straight to the 2k file here kept
+    // the Sun at full resolution after every other body had halved.
+    var tx = loader.load(window.PlanetsReal && window.PlanetsReal.texUrl
+      ? window.PlanetsReal.texUrl('2k_sun.webp')
+      : 'assets/textures/2k_sun.webp');
     tx.wrapS = THREE.RepeatWrapping;
     photosphereMat = new THREE.ShaderMaterial({
       uniforms: { uTime: { value: 0 }, uMap: { value: tx }, uHighlight: { value: 0 } },

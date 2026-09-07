@@ -19,8 +19,44 @@
   var timeUniforms = [];
   var cloudLayers = [];
 
+  // ---- mobile: half-resolution copies where nothing depends on the pixels --
+  // Twelve textures at 2048x1024 are 25.2M pixels, which Three.js decodes and
+  // uploads as RGBA8 with mipmaps: about 134 MB of texture memory built during
+  // startup. On a phone that costs far more than the download does.
+  //
+  // Only Moon, Mercury and Mars may not be touched: BUMP below gives them a
+  // relief term, and the shader derives it from texture luminance at a fixed
+  // UV offset, so their apparent surface changes with resolution. Every other
+  // body has uBump 0 and the 'if (uBump > 0.0)' branch never runs, so its
+  // texture is sampled for colour alone.
+  //
+  // The nine listed here ship a 1024x512 copy for phones: 1564K -> 340K to
+  // download, and 18.9M -> 4.7M pixels to decode and upload. A planet spans
+  // 50-300 px on a phone screen, so 1024 is still well past what it can show.
+  // Desktop is untouched and keeps every 2k file.
+  var HALF = {
+    '2k_earth_clouds.webp':     '1k_earth_clouds.webp',
+    '2k_earth_daymap.webp':     '1k_earth_daymap.webp',
+    '2k_earth_nightmap.webp':   '1k_earth_nightmap.webp',
+    '2k_sun.webp':              '1k_sun.webp',
+    '2k_jupiter.webp':          '1k_jupiter.webp',
+    '2k_saturn.webp':           '1k_saturn.webp',
+    '2k_venus_atmosphere.webp': '1k_venus_atmosphere.webp',
+    '2k_uranus.webp':           '1k_uranus.webp',
+    '2k_neptune.webp':          '1k_neptune.webp'
+  };
+  var HALF_RES = document.documentElement.classList.contains('mobile-device');
+
+  // Shared so anything else loading these files picks the same variant.
+  // sun-activity.js builds the photosphere with its own TextureLoader and was
+  // the one path that bypassed this, which is why the Sun stayed at 2k after
+  // the rest had halved.
+  function texUrl(file) {
+    return 'assets/textures/' + ((HALF_RES && HALF[file]) ? HALF[file] : file);
+  }
+
   function tex(file) {
-    var t = loader.load('assets/textures/' + file);
+    var t = loader.load(texUrl(file));
     t.anisotropy = 4;
     return t;
   }
@@ -478,6 +514,7 @@
   }
 
   window.PlanetsReal = {
+    texUrl: texUrl,
     createPlanet: createPlanet,
     addRing: addRing,
     applySunTexture: applySunTexture,
