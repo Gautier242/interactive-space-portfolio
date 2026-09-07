@@ -367,16 +367,25 @@
         if (ON_SURFACE[name]) return rawZoom.call(this, name);
         exitSurface();
       }
-      // This used to pause the sim to hold the hero view still. It read as the
-      // page freezing: you tap a planet, everything stops dead, and the
-      // toolbar buttons appear to do nothing. The scene does not need holding
-      // - followTick above re-reads the body's world position every frame and
-      // rides it, which is what the old comment here already promised would
-      // happen "when the visitor presses play". So let it play.
+      // Hold the scene still on the hero view. heroPose puts the camera on the
+      // Sun's side of the object and centres it, so a stationary body is the
+      // best-lit, best-framed picture of it the map can give — which is the
+      // point of opening a publication. Press play and it all resumes, with
+      // followTick riding the object as it moves.
       //
-      // app.js's showDetail also set this, and removing it there was not
-      // enough on its own: every planet click routes through this wrapper,
-      // so the pause came back from here.
+      // This was removed once, on the reading that a stopped scene looks like
+      // a broken page. It does not: the hard freeze in that report was an
+      // infinite MutationObserver loop in a since-deleted file, and the "no
+      // button works" report was VIPER, where pausing also gates
+      // MoonMission.stepRover and really did kill the drive arrows. VIPER and
+      // Moon return early above and never reach this line, so driving stays
+      // live. app.js's own copy of this pause in showDetail stays removed for
+      // the same reason: showDetail runs for VIPER too.
+      if (typeof pausedPlanets !== 'undefined') {
+        pausedPlanets = true;
+        const b = document.getElementById('btnPause');
+        if (b) b.className = 'is-play';
+      }
       if (typeof cameraFollowTarget !== 'undefined') cameraFollowTarget = null;  // disable app.js's re-aim
       if (!flyTo(name)) return rawZoom.call(this, name);
     };
