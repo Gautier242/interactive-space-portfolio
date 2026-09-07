@@ -250,12 +250,15 @@
   // Three stops, driven by a slim bar between the two panels. Shrinking the
   // map re-aims at whatever is focused and pulls back a little, so the object
   // you were looking at stays centred and in frame instead of sliding out.
-  // Two stops only. Full screen already covers "as much map as possible", so a
-  // third large-map stop just made the control harder to predict.
-  //   m-split = 40vh, the size the page opens at
+  // Three stops, all on the same control, because two tabs plus a chevron were
+  // two ways to do one thing: trade map for text. A third LARGE stop was tried
+  // once and removed for making the chevron unpredictable - this third one is
+  // at the small end, where each press plainly means "less map".
+  //   m-split = 36vh, the size the page opens at
   //   m-text  = 22vh, more room to read
+  //   m-read  = closed, the list has the screen
   // The chevron points where the MAP EDGE moves: up shrinks it, down grows it.
-  var STOPS = ['m-split', 'm-text'];
+  var STOPS = ['m-split', 'm-text', 'm-read'];
   var stop = 0;
 
   var split = document.createElement('div');
@@ -284,7 +287,14 @@
     });
     // zoomBy pivots on the followed body when there is one and re-aims at it,
     // so this both keeps the subject centred and adds a little context.
-    if (window.__cam && window.__cam.zoomBy) window.__cam.zoomBy(shrinking ? 1.16 : 0.86);
+    // the moon renderer is built lazily, so catch it whenever it appears
+    if (typeof moonRenderer !== 'undefined') skipRender(moonRenderer);
+    // zoomBy pivots on the followed body, so this keeps the subject centred
+    // and adds a little context. Meaningless with the map closed.
+    if (stop < STOPS.length - 1 &&
+        window.__cam && window.__cam.zoomBy) window.__cam.zoomBy(shrinking ? 1.16 : 0.86);
+    // onWindowResize measures 0 while the panel is closed and app.js guards
+    // that, so the panel needs a real measurement on the way back out.
     reflow();
   }
   split.addEventListener('click', function (e) {
@@ -301,7 +311,9 @@
       var open = detail.classList.contains('active');
       if (open === wasOpen) return;
       wasOpen = open;
-      setSplit(open ? 1 : 0);         // reading room while a publication is open
+      // reading room while a publication is open, but never past the middle
+      // stop: closing the map here would look like the map had vanished
+      if (open) { if (stop < 1) setSplit(1); } else setSplit(0);
     }).observe(detail, { attributes: true, attributeFilter: ['class'] });
   }
 
@@ -351,66 +363,26 @@
   window.__mobileShowHeader = showHeader;
 
   window.addEventListener('orientationchange', reflow);
-  document.addEventListener('mission:enter', function () { if (full) setFull(false); });
+  document.addEventListener('mission:enter', function () {
+    if (full) setFull(false);
+    if (stop === STOPS.length - 1) setSplit(0);   // the Moon needs a map
+  });
 
-  // ---- 10. reading mode --------------------------------------------------
-  // The map is the wrapper; the research is the point. PROJECTS hides the map
-  // and gives the list the whole screen. Built here rather than in index.html
-  // so deleting this script tag reverts it like every other overlay.
-  var reading = false;
-  var headerEl = document.querySelector('.header');
-  if (headerEl) {
-    // Site navigation, not a control tucked into a list heading. Tabs inside
-    // the section title were too small and too far down the page to read as
-    // "this changes the whole layout". These sit as a second row inside the
-    // header, so they are the first thing under the name and they inherit the
-    // header's sticky positioning and its hide-while-reading behaviour for
-    // free rather than fighting it for the same top:0.
-    var tabs = document.createElement('nav');
-    tabs.className = 'm-tabs';
-    tabs.innerHTML =
-      '<button type="button" class="m-tab is-on" data-read="0">Animation</button>' +
-      '<button type="button" class="m-tab" data-read="1">Projects</button>';
-    headerEl.appendChild(tabs);
-
-    // Skip the render while the map is hidden. The bloom pass alone is 1.80ms
-    // of every frame and there is nothing on screen to receive it. Wrapping
-    // the render call is enough: the tick loops are 33ms/s against the render
-    // loop's 209ms/s, so this drops the overwhelming majority of the cost.
-    function skipRender(obj) {
-      if (!obj || obj.__readWrapped) return;
-      obj.__readWrapped = true;
-      var raw = obj.render.bind(obj);
-      obj.render = function (sc, cam) { return reading ? undefined : raw(sc, cam); };
-    }
-    if (typeof renderer !== 'undefined') skipRender(renderer);
-
-    function setRead(on) {
-      if (on === reading) return;
-      reading = on;
-      document.documentElement.classList.toggle('m-read', on);
-      tabs.querySelectorAll('.m-tab').forEach(function (b) {
-        b.classList.toggle('is-on', (b.dataset.read === '1') === on);
-      });
-      // the moon renderer is built lazily, so catch it whenever it exists
-      if (typeof moonRenderer !== 'undefined') skipRender(moonRenderer);
-      if (!on) {
-        // onWindowResize measured 0 while the panel was hidden and app.js
-        // guards that now, so the panel needs a real measurement on the way
-        // back or the canvas keeps its pre-hide size.
-        showHeader();
-        reflow();
-      }
-    }
-    tabs.addEventListener('click', function (e) {
-      var b = e.target.closest('.m-tab');
-      if (b) setRead(b.dataset.read === '1');
-    });
-    // entering the Moon or driving VIPER needs the map, so leave reading mode
-    document.addEventListener('mission:enter', function () { setRead(false); });
-
-    window.__mobileRead = { set: setRead, is: function () { return reading; } };
+  // ---- 10. closed map: stop rendering ------------------------------------
+  // At the m-read stop the map is not on screen, so there is nothing for the
+  // render to produce. The bloom pass alone is 1.80ms of every frame; the tick
+  // loops are 33ms/s against the render loop's 209ms/s, so skipping the render
+  // call drops the overwhelming majority of the cost. Real battery on a phone.
+  function skipRender(obj) {
+    if (!obj || obj.__readWrapped) return;
+    obj.__readWrapped = true;
+    var raw = obj.render.bind(obj);
+    obj.render = function (sc, cam) {
+      return document.documentElement.classList.contains('m-read')
+        ? undefined : raw(sc, cam);
+    };
   }
+  if (typeof renderer !== 'undefined') skipRender(renderer);
 
   window.__mobileMap = {
     setFull: setFull, isFull: function () { return full; },

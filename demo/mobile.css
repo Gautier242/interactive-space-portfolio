@@ -11,12 +11,8 @@
 
 /* ---- 1. header: one row, links become icons ---------------------------- */
 .mobile-device .header {
-  padding: 6px 12px 0;
-  /* `gap` applies to BOTH axes, and the tabs are a wrapped second row, so a
-     column gap meant for the photo/name/icons was also being spent above the
-     tabs. Split it: keep the horizontal gap, take the vertical one to zero. */
-  column-gap: 8px;
-  row-gap: 0;
+  padding: 6px 12px;
+  gap: 8px;
   min-height: 0;
 }
 .mobile-device .header img {
@@ -74,12 +70,28 @@
 .mobile-device .app {
   min-height: 0;
 }
-/* The map opens at 31vh, halfway between the old 40vh default and the 22vh
-   shrunk stop, so more of the publication list is visible before any scroll.
-   The chevron still trades the rest. min-height moves with it, 200 -> 175. */
+/* main.css sets .app to calc(100vh - 77px) — a hard-coded header height that
+   the mobile header has never actually been, so the difference showed as a
+   band of body background along the bottom of the page. Let the column do the
+   arithmetic instead: body owns the viewport, .app takes what the header
+   leaves. dvh so the browser's own toolbar is excluded. */
+.mobile-device body {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+}
+.mobile-device .app {
+  flex: 1 1 auto;
+  height: auto !important;
+  min-height: 0;
+}
+
+/* Three stops on the chevron: 36vh, 22vh, closed. */
 .mobile-device .left {
-  height: 31vh !important;
-  min-height: 175px !important;
+  height: 36vh !important;
+  min-height: 190px !important;
 }
 /* two stops for the map/text trade, set by the bar between the panels.
    Full screen covers the "more map" end, so a third stop was noise. */
@@ -479,54 +491,14 @@
   .mobile-device.m-full .m-dock #roverControls button { min-width: 46px; }
 }
 
-/* ---- 13. reading mode -------------------------------------------------- */
-/* The map is the memorable wrapper; the research is the point. PROJECTS hides
-   the map so the list gets the whole screen. Note this is a labelled mode
-   reached by tapping a title, NOT a third chevron stop — a third stop was
-   tried before and made the chevron control unpredictable. */
-.mobile-device.m-read .left,
-.mobile-device.m-read .m-split { display: none !important; }
+/* ---- 13. the closed stop ------------------------------------------------ */
+/* The third chevron stop. The map goes, the chevron STAYS — it is the only way
+   to bring the map back, so hiding it here would strand the visitor in a list
+   with no route to the solar system. */
+.mobile-device.m-read .left { display: none !important; }
 
 /* The two titles replace the static "Publications & Projects" text, so the
    mode switch costs no vertical height on a screen that has none to spare. */
-/* Browser tabs, and as little height as they can be. Pills read as buttons
-   but cost ~28px on the row above the content; these are ~22px and sit flush
-   on a shared baseline the way a browser's tab strip does - joined at the
-   bottom, the active one lifted out of the rail by being lighter and losing
-   its bottom border.
-
-   Second row inside the header (flex:1 0 100%), so it sticks and hides with
-   the header instead of competing for the same top:0. */
-.mobile-device .header { flex-wrap: wrap; }
-.mobile-device .m-tabs {
-  flex: 1 0 100%;
-  display: flex;
-  gap: 2px;
-  margin: 3px 0 0;
-  border-bottom: 1px solid rgba(110, 163, 255, .22);
-}
-.mobile-device .m-tab {
-  flex: 0 0 auto;
-  background: rgba(18, 38, 72, .55);
-  border: 1px solid rgba(110, 163, 255, .18);
-  border-bottom: none;
-  border-radius: 6px 6px 0 0;
-  padding: 3px 11px 4px;
-  margin-bottom: -1px;            /* sit ON the rail, not above it */
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  color: #8fb4e8;
-  white-space: nowrap;
-  -webkit-tap-highlight-color: transparent;
-}
-.mobile-device .m-tab.is-on {
-  background: #6ea3ff;
-  border-color: #6ea3ff;
-  color: #08192f;
-  font-weight: 700;
-}
-
 /* ---- 15. ?fig=wide — the full-width card, for comparison ---------------- */
 /* Temporary A/B so the two card layouts can be judged on a real phone.
    Delete this block and the m-fig-wide line in mobile.js once decided. */
