@@ -39,6 +39,10 @@
 
   // ---- 2. header links become icons --------------------------------------
   var ICONS = {
+    home:                                      // house
+      '<path d="M3.6 10.4 12 3.6l8.4 6.8"/>' +
+      '<path d="M5.8 9.1V20h12.4V9.1"/>' +
+      '<path d="M9.9 20v-5.5h4.2V20"/>',
     about:
       '<circle cx="12" cy="12" r="9.5"/><path d="M12 10.5v6.5"/>' +
       '<circle cx="12" cy="7.3" r="1.05" fill="currentColor" stroke="none"/>',
@@ -57,7 +61,7 @@
            'aria-hidden="true">' + d + '</svg>';
   }
   var linkIcon = [
-    ['about', 'About Me'], ['scholar', 'Google Scholar'],
+    ['home', 'Home'], ['about', 'About Me'], ['scholar', 'Google Scholar'],
     ['researchgate', 'ResearchGate'], ['github', 'GitHub']
   ];
   var anchors = document.querySelectorAll('.header .links a');
@@ -297,6 +301,13 @@
     // that, so the panel needs a real measurement on the way back out.
     reflow();
   }
+  // Reset (and the Home link that fires it) means "back to how the page
+  // opened", so the map/text split goes home too. Closing a publication
+  // already does this via the observer below; this covers pressing it with
+  // no publication open, where nothing else would restore the map.
+  var resetBtn = document.getElementById('btnReset');
+  if (resetBtn) resetBtn.addEventListener('click', function () { setSplit(0); });
+
   split.addEventListener('click', function (e) {
     var b = e.target.closest('.m-split-b');
     if (b && !b.disabled) setSplit(stop + (+b.dataset.d));
