@@ -104,12 +104,40 @@
     return model;
   }
 
-  function attach(group, url, opts) {
-    if (!group || group.userData.realModel) return;
+  // ---- mobile: fetch on approach, not on startup ------------------------
+  // iss.glb (466K) + lro.glb (639K) pull in the Draco decoder they are
+  // compressed with (274.9K wasm + 52.3K wrapper), which measured as the LAST
+  // two resources to finish loading on the page. 1.43 MB in total.
+  //
+  // The LOD below hides both behind their procedural stand-ins until the
+  // camera is within LOD_DIST (55). The opening pose sits ~370 units out and
+  // the ISS orbits Earth at ~110 from the Sun, so the closest the camera ever
+  // gets at rest is ~260 - the real models cannot be on screen at load. On a
+  // phone that 1.43 MB is competing for bandwidth with the textures and
+  // figures the visitor CAN see.
+  //
+  // So on mobile the main-scene models are queued and fetched when the camera
+  // comes near, which includes the flight that opening their publication
+  // starts. Desktop keeps the eager idle-time load exactly as it was.
+  //
+  // Only LOD'd attaches are deferred. The Moon-surface ones pass lod:false
+  // because you are standing next to them, and they are already lazy in
+  // practice: that scene is not built until the visitor enters it.
+  const DEFER = document.documentElement.classList.contains('mobile-device');
+  const LOAD_DIST = LOD_DIST * 3;      // begin fetching before it is needed
+  const queued = [];
+
+  function startLoad(group, url, opts) {
     load(url).then(src => {
       try { swap(group, src, opts); }
       catch (e) { console.warn('[real-models] swap failed', url, e); }
     }).catch(e => console.warn('[real-models] load failed', url, e));
+  }
+
+  function attach(group, url, opts) {
+    if (!group || group.userData.realModel) return;
+    if (DEFER && (!opts || opts.lod !== false)) { queued.push({ group, url, opts }); return; }
+    startLoad(group, url, opts);
   }
 
   // ---- main scene -------------------------------------------------------
@@ -129,6 +157,14 @@
   // Built lazily on first entry, so watch for it rather than assuming it
   // exists. No LOD here: the visitor is standing on the surface, always close.
   function doMoonScene() {
+    // On a phone this is another 639K plus the 327K Draco decoder, for a
+    // scene the visitor may never open. The comment above says "built lazily
+    // on first entry", but app.js assigns moonLRO during startup, so the
+    // 500ms poll in ready() attached it immediately - which is how lro.glb
+    // and the whole decoder stayed on the critical path even after the main
+    // scene was deferred. Wait until the visitor is actually standing there.
+    // (Desktop keeps loading it up front, unchanged.)
+    if (DEFER && !(typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive)) return;
     // moon-view.js sets keepProcedural: at surface scale the original
     // procedural LRO was preferred, so this scene opts out of the swap.
     if (typeof moonLRO !== 'undefined' && moonLRO &&
@@ -159,10 +195,28 @@
 
   // ---- LOD tick ---------------------------------------------------------
   const camPos = new THREE.Vector3(), objPos = new THREE.Vector3();
+  let moonReleased = false;
   (function lodTick() {
     requestAnimationFrame(lodTick);
-    if (!lods.length) return;
+    // Entering the Moon surface is the trigger for that scene's models. This
+    // rides the loop that already exists rather than adding a timer, and
+    // ready()'s poll gives up after ~5 minutes, which a visitor can outlast.
+    if (DEFER && !moonReleased &&
+        typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) {
+      moonReleased = true;
+      doMoonScene();
+    }
+    if (!lods.length && !queued.length) return;
     camera.getWorldPosition(camPos);
+    // release a queued model once the camera is close enough to want it soon
+    for (let i = queued.length - 1; i >= 0; i--) {
+      const q = queued[i];
+      q.group.getWorldPosition(objPos);
+      if (camPos.distanceTo(objPos) > LOAD_DIST) continue;
+      queued.splice(i, 1);
+      startLoad(q.group, q.url, q.opts);
+    }
+    if (!lods.length) return;
     for (const l of lods) {
       l.group.getWorldPosition(objPos);
       const near = camPos.distanceTo(objPos) < LOD_DIST;
