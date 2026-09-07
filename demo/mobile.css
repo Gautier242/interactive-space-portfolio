@@ -219,9 +219,16 @@
 .mobile-device .t3-replay { display: none !important; }
 
 /* Object info drives a hover tag and there is no hover on a phone; the corner
-   readout is a date and an "AU" figure with nothing to anchor them to. */
-.mobile-device.m-noinfo .obj-toggle,
-.mobile-device.m-noinfo .obj-corner { display: none !important; }
+   readout is a date and an "AU" figure with nothing to anchor them to.
+   Keyed on .mobile-device alone, NOT on a class a script adds. This used to
+   need .m-noinfo, which mobile.js - the last of 20 scripts - set at the end
+   of startup, while hover-info.js creates the button eight scripts earlier.
+   The result was the desktop Object info button sitting on the map through
+   the whole load and then being swapped for the Full screen button, which
+   reads as two different pages loading. .mobile-device is set by the inline
+   script in <head>, so this hides it before the first paint. */
+.mobile-device .obj-toggle,
+.mobile-device .obj-corner { display: none !important; }
 
 /* ---- 4. the floating map buttons --------------------------------------- */
 .m-btn {

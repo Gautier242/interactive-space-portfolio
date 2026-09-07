@@ -74,10 +74,10 @@
     anchors[i].innerHTML = svg(ICONS[key[0]]);
   }
 
-  // ---- 3. strip the readouts that do not earn their space ---------------
-  // The date / "1.17 AU" corner readout means nothing without context, and
-  // Object info drives a hover tag — there is no hover on a phone.
-  document.documentElement.classList.add('m-noinfo');
+  // ---- 3. the readouts that do not earn their space ----------------------
+  // Hidden in mobile.css off .mobile-device directly. This used to add an
+  // m-noinfo class here, which meant the button was visible for the whole of
+  // startup because this file runs last.
 
   // ---- 4. expand the map to fullscreen -----------------------------------
   var EXPAND = svg('<path d="M14 4h6v6"/><path d="M20 4l-7.5 7.5"/>' +
