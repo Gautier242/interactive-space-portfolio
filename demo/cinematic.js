@@ -71,10 +71,15 @@
     return t;
   })();
 
+  // Same reasoning as the stock field in app.js: these are built point by point
+  // in JS before the first frame, and a phone screen shows a fraction of the
+  // sky a desktop does. Counts only - radius, size and brightness are
+  // untouched, so the look is the same field at lower density.
+  const M = document.documentElement.classList.contains('mobile-device') ? 0.4 : 1;
   const SHELLS = [
-    { n: 9000, r: 3600, size: 1.6, bright: 0.42 },
-    { n: 4000, r: 2400, size: 2.6, bright: 0.62 },
-    { n: 900,  r: 1500, size: 4.2, bright: 0.85 },
+    { n: Math.round(9000 * M), r: 3600, size: 1.6, bright: 0.42 },
+    { n: Math.round(4000 * M), r: 2400, size: 2.6, bright: 0.62 },
+    { n: Math.round(900 * M),  r: 1500, size: 4.2, bright: 0.85 },
   ];
   const starLayers = [];
   SHELLS.forEach(s => {

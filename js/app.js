@@ -1191,7 +1191,14 @@ const starsVerts = [];
 const starsColors = [];
 const starsSizes = [];
 
-for (let i = 0; i < 25000; i++) {
+// A phone builds this in JS before anything can render: 25 000 iterations of
+// three Math.random calls plus an HSL conversion, then a vertex buffer upload,
+// and cinematic.js adds three more shells of 9000/4000/900 on top - 38 900
+// points in total. The screen is a fraction of a desktop's, and this field is
+// muted to 0.35 by cinematic.js anyway, so the count buys far less here.
+const STAR_COUNT = document.documentElement.classList.contains('mobile-device')
+  ? 10000 : 25000;
+for (let i = 0; i < STAR_COUNT; i++) {
   const x = (Math.random() - 0.5) * 4000;
   const y = (Math.random() - 0.5) * 4000;
   const z = (Math.random() - 0.5) * 4000;
