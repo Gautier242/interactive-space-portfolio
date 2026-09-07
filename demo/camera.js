@@ -123,8 +123,17 @@
   // publication, and the wheel, pinch or double-tap after it, which all keep
   // the follow lock - is covered.
   // ?starfade=0 restores the shipped constant starfield for comparison.
-  const STAR_FAR = 260;        // beyond this, the sky is untouched
-  const STAR_NEAR = 18;        // this close to the subject, as dim as it goes
+  // Driven by how much of the system the view takes in, not by raw distance:
+  // half the world-space height visible at the subject, d * tan(fov/2). Orbit
+  // radii are fixed (Mercury 50, Venus 70, Earth 100, Mars 135, Jupiter 210,
+  // Saturn 270, Uranus 330, Neptune 390 - app.js:1565-1585), so this reads the
+  // ZOOM rather than what happens to be in frame. Planets drift along their
+  // orbits constantly; a measure that counted the ones actually on screen
+  // would brighten and dim on its own while nothing was being touched.
+  //   <= 22  a single body and its moons - Earth hero framing sits at ~13
+  //   >= 80  reaches past the Venus orbit, so several planets can be in shot
+  const STAR_WIDE = 80;        // this much of the system in view: full sky
+  const STAR_TIGHT = 22;       // down to one object: as dim as it goes
   // How dim it goes is a taste call that needs a real screen, so it is a knob:
   // ?starfade=0 is off entirely (the shipped constant sky), ?starfade=0.4 sets
   // the floor to 40% of each layer's own brightness. Default 0.18.
@@ -162,8 +171,10 @@
     const d = (follow && follow.mesh)
       ? camera.position.distanceTo(follow.mesh.getWorldPosition(_s)) - radiusOf(follow.mesh)
       : camera.position.length();
-    _starD = d;
-    const t = Math.max(0, Math.min(1, (d - STAR_NEAR) / (STAR_FAR - STAR_NEAR)));
+    // half the world height the view covers at that distance
+    const span = d * Math.tan(camera.fov * Math.PI / 360);
+    _starD = span;
+    const t = Math.max(0, Math.min(1, (span - STAR_TIGHT) / (STAR_WIDE - STAR_TIGHT)));
     const k = STAR_MIN + (1 - STAR_MIN) * t;
     for (let i = 0; i < starMats.length; i++) {
       starMats[i].mat.opacity = starMats[i].base * k;
