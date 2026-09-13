@@ -279,7 +279,7 @@ const ABOUT_ME = {
   desc: "Researcher at the intersection of AI and Space Technology, developing innovative solutions for space exploration and Earth observation.",
   extendedDesc: "Currently in the PhD track at MIT in the Department of Aeronautics and Astronautics, advised by Dr. Dava Newman and Dr. Daniel Varon. My work spans from developing intelligent sensor systems for the International Space Station to creating foundation models for lunar exploration. I'm passionate about leveraging artificial intelligence to advance our understanding of the cosmos and improve life on Earth. My research combines deep learning, computer vision, physics-informed machine learning, and systems engineering to solve complex challenges in space science and exploration.",
   // authors: "<strong>PhD Candidate in AI for Space</strong>",
-  venue: "MIT Media Lab · NASA Jet Propulsion Laboratory · International Space University",
+  venue: "MIT AeroAstro · NASA Jet Propulsion Laboratory",
   subsections: [
     {
       title: "Selected Talks & Outreach",
