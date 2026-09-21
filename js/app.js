@@ -282,7 +282,7 @@ const ABOUT_ME = {
   venue: "MIT AeroAstro · NASA Jet Propulsion Laboratory",
   subsections: [
     {
-      title: "Selected Talks & Outreach",
+      title: "Selected Talks & Presentations",
       items: [
         "AGU 2024 · Oral: MEGS‑AI; From Space to Sea",
         "IAC 2024 · Interactive: Physics‑informed twins for lunar rovers",
