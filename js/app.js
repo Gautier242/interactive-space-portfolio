@@ -189,14 +189,15 @@ const PUBS = [
     id: "lunarfm", 
     title: "Lunar Foundation Model", 
     inst: "FRONTIER DEVELOPMENT LAB (FDL)", 
-    subInst: "FDL · NASA & Google partnership · publication in progress, 2025 · Dr. Raul Ramos",
+    subInst: "FDL · NASA & Google partnership · ICLR 2026 Workshop FM4Science · Dr. Raul Ramos",
     icon: "https://picsum.photos/seed/lunar/400/300", 
     body: "LRO",
     desc: "Developed a <span style=\"color: #9ec9ff; font-weight: 900;\">machine learning and signal processing pipeline</span> to automatically analyze and cluster over 100,000 of triggers from a new instrument sent to the <span style=\"color: #9ec9ff; font-weight: 900;\">International Space Station and identify</span> their probable causes. This instrument, based on custom-made piezoelectric fibers woven into the outer insulation layer, is designed to <span style=\"color: #9ec9ff; font-weight: 900;\">detect micrometeorite impacts</span> on the structure, improving eventually real-time structural health monitoring in orbit.",
     extendedDesc: "We used a wide array of lunar datasets from missions like GRAIL (gravity field), LRO/LOLA (topography), Clementine (multispectral imagery), and Mini-RF (radar) to train a <span style=\"color: #9ec9ff; font-weight: 700;\"> visual transformer to grasp a multimodal understanding of the Moon</span>. Rather than treating each dataset in isolation, the foundation model fuses them, learning the complex interdependencies (e.g. how surface mineral signals correlate with subsurface density or gravity anomalies) to answer complex tasks. Through <span style=\"color: #9ec9ff; font-weight: 700;\">multi masked autoencoder</span>, we obtained condensed informative <span style=\"color: #9ec9ff; font-weight: 700;\">embeddings that can be used for downstream tasks</span>, similarity search or to augment the vocabulary of an LLM. Users can interact with this model via <span style=\"color: #9ec9ff; font-weight: 700;\">high-level queries</span> for example, asking which regions have high titanium content or predict geologic features of a given location and receive informed answers with supporting maps. The system thus functions as an <span style=\"color: #9ec9ff; font-weight: 700;\">AI lunar agent</span>, capturing both measured data and learned predictions about unmeasured properties. By providing instant access to integrated lunar information, the <span style=\"color: #9ec9ff; font-weight: 700;\">Lunar Foundation Model aims at supporting scientific discovery or mission planning</span>. It represents a shift from siloed analysis to a holistic, data-driven approach for planetary science, illustrating how foundation models can accelerate our return to the Moon with better information and confidence.",
     authors: "G. Bardi*, J. Gawlikowski*, M. Girona-Mata*, S. Goski*, S.Kaczmarek, R. Ramos", 
-    venue: "Publication in progress",
-    links: [{t: "Link to website and technical presentation", u: "https://lunarlab.ai/"}],
+    venue: "ICLR 2026 Workshop on Foundation Models for Science (FM4Science) · Poster",
+    links: [{t: "ICLR 2026 workshop paper (OpenReview)", u: "https://openreview.net/forum?id=qL3urVXklF"},
+            {t: "Link to website and technical presentation", u: "https://lunarlab.ai/"}],
     img: "images/lunarlab2-1000.webp"
   },
   { 
