@@ -247,16 +247,16 @@
   // the consequence rather than reading a label.
   const TOOLBAR = [
     // Press the real buttons, so the visitor sees the actual consequence.
-    ['#btnPause',   'Pause — the planets stop',        () => press('#btnPause'), 1500],
-    ['#btnPause',   'Play — and they start again',     () => press('#btnPause'), 1500],
-    ['#btnSpeed',   'Speed — open the list of rates',  () => openSpeedMenu(),    1300],
+    ['#btnPause',   'Pause: the planets stop',        () => press('#btnPause'), 1500],
+    ['#btnPause',   'Play, and they start again',     () => press('#btnPause'), 1500],
+    ['#btnSpeed',   'Speed: open the list of rates',  () => openSpeedMenu(),    1300],
     ['[data-speed="0.25"]', 'Pick a slower rate and everything eases off',
       () => pickSpeed('0.25'), 1900],   // 0.9s cursor travel then the click
     ['#btnZoomIn',  'Zoom in closer',                  () => dolly(0.82), 1400],
     ['#btnZoomOut', 'Zoom back out',                   () => dolly(1.22), 1400],
-    ['#btnRotate',  'Orbit — then drag to swing around the system',
+    ['#btnRotate',  'Orbit, then drag to swing around the system',
       () => { press('#btnRotate'); setTimeout(() => canvasDrag(150, 40, 1500), 400); }, 2300 ],
-    ['#btnPan',     'Pan — drag to slide the view instead',
+    ['#btnPan',     'Pan: drag to slide the view instead',
       () => { press('#btnPan'); setTimeout(() => canvasDrag(-140, -50, 1500), 400); }, 2300 ],
     ['#btnReset',   'Reset puts everything back',      () => press('#btnReset'), 1600],
   ];
@@ -460,7 +460,7 @@
       } },
     { icon: 'ctrl', label: 'You are in control', ms: 3800, run() {
         const F = window.__framing;
-        caption.textContent = 'Drag, scroll, pause — explore however you like.';
+        caption.textContent = 'Drag, scroll, pause. Explore however you like.';
         caption.classList.add('on');
         haloBox('.controls');
         if (F) F.resume(true);
