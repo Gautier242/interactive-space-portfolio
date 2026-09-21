@@ -194,9 +194,10 @@ const PUBS = [
     body: "LRO",
     desc: "Developed a <span style=\"color: #9ec9ff; font-weight: 900;\">machine learning and signal processing pipeline</span> to automatically analyze and cluster over 100,000 of triggers from a new instrument sent to the <span style=\"color: #9ec9ff; font-weight: 900;\">International Space Station and identify</span> their probable causes. This instrument, based on custom-made piezoelectric fibers woven into the outer insulation layer, is designed to <span style=\"color: #9ec9ff; font-weight: 900;\">detect micrometeorite impacts</span> on the structure, improving eventually real-time structural health monitoring in orbit.",
     extendedDesc: "We used a wide array of lunar datasets from missions like GRAIL (gravity field), LRO/LOLA (topography), Clementine (multispectral imagery), and Mini-RF (radar) to train a <span style=\"color: #9ec9ff; font-weight: 700;\"> visual transformer to grasp a multimodal understanding of the Moon</span>. Rather than treating each dataset in isolation, the foundation model fuses them, learning the complex interdependencies (e.g. how surface mineral signals correlate with subsurface density or gravity anomalies) to answer complex tasks. Through <span style=\"color: #9ec9ff; font-weight: 700;\">multi masked autoencoder</span>, we obtained condensed informative <span style=\"color: #9ec9ff; font-weight: 700;\">embeddings that can be used for downstream tasks</span>, similarity search or to augment the vocabulary of an LLM. Users can interact with this model via <span style=\"color: #9ec9ff; font-weight: 700;\">high-level queries</span> for example, asking which regions have high titanium content or predict geologic features of a given location and receive informed answers with supporting maps. The system thus functions as an <span style=\"color: #9ec9ff; font-weight: 700;\">AI lunar agent</span>, capturing both measured data and learned predictions about unmeasured properties. By providing instant access to integrated lunar information, the <span style=\"color: #9ec9ff; font-weight: 700;\">Lunar Foundation Model aims at supporting scientific discovery or mission planning</span>. It represents a shift from siloed analysis to a holistic, data-driven approach for planetary science, illustrating how foundation models can accelerate our return to the Moon with better information and confidence.",
-    authors: "G. Bardi*, J. Gawlikowski*, M. Girona-Mata*, S. Goski*, S.Kaczmarek, R. Ramos", 
+    authors: "J. Gawlikowski, M. Girona-Mata, S. Goski, G. Bardi, A. Calzada-Diaz, S. Kaczmarek, R. Ramos-Pollán", 
     venue: "ICLR 2026 Workshop on Foundation Models for Science (FM4Science) · Poster",
     links: [{t: "ICLR 2026 workshop paper (OpenReview)", u: "https://openreview.net/forum?id=qL3urVXklF"},
+            {t: "LunarFM: A Shared Multimodal Representation of the Moon’s Surface (arXiv:2607.22408)", u: "https://arxiv.org/abs/2607.22408"},
             {t: "Link to website and technical presentation", u: "https://lunarlab.ai/"}],
     img: "images/lunarlab2-1000.webp"
   },
@@ -276,11 +277,10 @@ const PUBS = [
 const ABOUT_ME = {
   id: "about",
   title: " Gautier Bardi de Fourtou",
-  inst: "MIT · NASA JPL · ISU",
+  inst: "Massachusetts Institute of Technology · NASA Jet Propulsion Laboratory",
   desc: "Researcher at the intersection of AI and Space Technology, developing innovative solutions for space exploration and Earth observation.",
   extendedDesc: "I'm a PhD student at MIT AeroAstro, advised by Dr. Dava Newman and Dr. Daniel Varon. My interests sit at the intersection of artificial intelligence and space exploration, from remote sensing and Earth observation to autonomy for planetary exploration.<br><br>I've worked on projects spanning mineral classification from VNIR spectra at ESA European Astronaut Centre to physics-informed machine learning for lunar rover motion prediction at NASA JPL. Also at JPL I developed computer vision to detect internal waves in SWOT ocean imagery, work that earned a JPL Spotlight Technology Award. At Frontier Development Lab I contributed to Lunar-FM, the first AI foundation model for Moon exploration.<br><br>I'm an AI and Aerospace Engineer with an industry background in software and test engineering. I also hold a second Master's specialized in Artificial Intelligence from Mines Paris / PSL University. My research combines deep learning, computer vision, physics-informed machine learning and systems engineering to solve complex challenges in space science and exploration.",
   // authors: "<strong>PhD Candidate in AI for Space</strong>",
-  venue: "MIT AeroAstro · NASA Jet Propulsion Laboratory",
   subsections: [
     {
       title: "Selected Talks & Presentations",
