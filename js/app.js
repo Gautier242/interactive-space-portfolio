@@ -285,7 +285,7 @@ const ABOUT_ME = {
     {
       title: "Selected Talks & Presentations",
       items: [
-        "ICLR 2026 FM4Science workshop · LunarFM: a multimodal representation of the Moon’s surface · J. Gawlikowski, M. Girona-Mata, S. Goski, G. Bardi, A. Calzada-Diaz, S. Kaczmarek, R. Ramos-Pollán",
+        "ICLR 2026 · LunarFM: a multimodal representation of the Moon’s surface",
         "AGU 2024 · Oral: MEGS‑AI; From Space to Sea",
         "IAC 2024 · Interactive: Physics‑informed twins for lunar rovers",
         "Invited · Southwest Research Institute (SWRI): SWOT ML",
