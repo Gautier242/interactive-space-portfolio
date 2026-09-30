@@ -211,9 +211,12 @@
         '<li>Tap the <b>Moon</b> to land and drive a rover.</li>' +
         '<li><b>Tap a card</b> below to read a project.</li>' +
       '</ul>' +
-      '<button type="button" class="m-sheet-x">Got it</button>' +
+      '<button type="button" class="m-sheet-x m-sheet-close" aria-label="Close">&#215;</button>' +
+      '<button type="button" class="m-sheet-x">OK</button>' +
     '</div>';
-  document.body.appendChild(sheet);
+  // Over the map, not the page: the list under it stays readable and
+  // scrollable while the card is up.
+  left.appendChild(sheet);
 
   var MAP_HELP = sheet.querySelector('.m-sheet-card').innerHTML;
   var ROVER_HELP =
@@ -231,28 +234,49 @@
         '<li>Tap <b>End traverse</b> to return to the Moon overview.</li>' +
         '<li>From there, tap <b>Earth</b> in the sky to come back to the map.</li>' +
       '</ul>' +
-      '<button type="button" class="m-sheet-x">Got it</button>';
+      '<button type="button" class="m-sheet-x m-sheet-close" aria-label="Close">&#215;</button>' +
+      '<button type="button" class="m-sheet-x">OK</button>';
 
+  function bindClose() {
+    var xs = sheet.querySelectorAll('.m-sheet-x');
+    for (var i = 0; i < xs.length; i++) onTap(xs[i], function () { setSheet(false); });
+  }
   function setSheet(on) {
     if (on) {
       // The tour explains a mouse-driven solar system; while you are driving
       // on the Moon that is the wrong help entirely.
       sheet.querySelector('.m-sheet-card').innerHTML = isRover() ? ROVER_HELP : MAP_HELP;
-      onTap(sheet.querySelector('.m-sheet-x'), function () { setSheet(false); });
+      bindClose();
+      try { localStorage.setItem('helpSeen', '1'); } catch (_) {}
     }
     document.documentElement.classList.toggle('m-sheet-on', !!on);
   }
   onTap(help, function () { setSheet(true); });
-  onTap(sheet.querySelector('.m-sheet-x'), function () { setSheet(false); });
-  sheet.addEventListener('click', function (e) { if (e.target === sheet) setSheet(false); });
+  bindClose();
+  // Not modal. Scrolling the list leaves it up (a scroll is not a click);
+  // tapping anything else closes it AND still does what the tap was for,
+  // so a tapped card opens its project straight away.
+  var clicked = false;
+  document.addEventListener('click', function (e) {
+    clicked = true;
+    if (!document.documentElement.classList.contains('m-sheet-on')) return;
+    if (sheet.contains(e.target) || help.contains(e.target)) return;
+    setSheet(false);
+  }, true);
 
-  // First visit: open it, so nobody has to find the button first. Seen once,
-  // on this device, it waits for the button (same key as tour3.js on desktop).
+  // First visit: let the map play for a few seconds, blink the button three
+  // times so its place is learned, then open the card from it. Skipped if the
+  // visitor has already tapped something, since they are exploring by then.
   var helpSeen = false;
   try { helpSeen = !!localStorage.getItem('helpSeen'); } catch (_) {}
   if (!helpSeen) {
-    setSheet(true);
-    try { localStorage.setItem('helpSeen', '1'); } catch (_) {}
+    setTimeout(function () {
+      help.classList.add('m-blink');
+      setTimeout(function () {
+        help.classList.remove('m-blink');
+        if (!clicked) setSheet(true);
+      }, 1800);   // three 0.6 s blinks, mobile.css
+    }, 6000);
   }
 
   // Centring on the Sun is done in framing.js (it zeroes its thirds-line

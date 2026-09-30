@@ -295,23 +295,26 @@
 }
 .mobile-device.m-full body { overflow: hidden; }
 
-/* ---- 4b. the "how to explore" sheet ------------------------------------ */
+/* ---- 4b. the "how to explore" card ------------------------------------- */
+/* Sits over the top of the map, inside it, with no backdrop: the project list
+   below stays readable and scrollable while it is up. */
 .m-sheet {
-  position: fixed; inset: 0; z-index: 500;
-  display: none;
-  align-items: flex-end;
-  background: rgba(4, 9, 18, .62);
-  backdrop-filter: blur(3px);
+  position: absolute; left: 8px; right: 8px; top: 46px; bottom: 8px;
+  z-index: 35; display: none; align-items: flex-start;
+  pointer-events: none;
 }
 .mobile-device.m-sheet-on .m-sheet { display: flex; }
 .m-sheet-card {
+  position: relative;
   width: 100%;
-  max-height: 82vh;
+  max-height: 100%;
   overflow-y: auto;
-  background: #0c1728;
-  border-top: 1px solid rgba(158, 201, 255, .28);
-  border-radius: 16px 16px 0 0;
-  padding: 16px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+  pointer-events: auto;
+  background: rgba(12, 23, 40, .94);
+  border: 1px solid rgba(158, 201, 255, .4);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
+  padding: 12px 14px;
   color: var(--ink);
 }
 .m-sheet-h { font: 700 15px/1.2 Inter, system-ui, sans-serif; margin-bottom: 4px; }
@@ -321,10 +324,21 @@
   color: var(--accent); margin: 14px 0 6px;
 }
 .m-sheet-card ul { margin: 0; padding-left: 18px; }
-.m-sheet-card li { font-size: 13px; line-height: 1.5; margin-bottom: 5px; }
+.m-sheet-card li { font-size: 12.5px; line-height: 1.4; margin-bottom: 3px; }
+.m-sheet-x.m-sheet-close {
+  position: absolute; top: 4px; right: 4px; margin: 0;
+  width: 36px; min-height: 36px; padding: 0;
+  font-size: 20px; background: none; border: 0;
+}
+/* first visit: the button blinks three times before the card opens from it */
+.m-help.m-blink { animation: m-blink .6s ease-in-out 3; }
+@keyframes m-blink {
+  50% { background: rgba(255, 210, 127, .35); border-color: #ffd27f; color: #fff; }
+}
+@media (prefers-reduced-motion: reduce) { .m-help.m-blink { animation: none; } }
 .m-sheet-card b { color: #cfe2ff; }
 .m-sheet-x {
-  margin-top: 16px; width: 100%; min-height: 42px;
+  margin-top: 8px; width: 100%; min-height: 38px;
   background: rgba(158, 201, 255, .16);
   border: 1px solid rgba(158, 201, 255, .45);
   border-radius: 10px; color: #cfe2ff;
