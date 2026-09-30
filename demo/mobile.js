@@ -204,22 +204,12 @@
   sheet.innerHTML =
     '<div class="m-sheet-card">' +
       '<div class="m-sheet-h">How to explore</div>' +
-      '<div class="m-sheet-sec">The map</div>' +
       '<ul>' +
         '<li><b>Tap</b> an object in yellow brackets to open its project.</li>' +
-        '<li><b>Drag one finger</b> to turn the view around.</li>' +
-        '<li><b>Pinch</b> two fingers to zoom in and out.</li>' +
-        '<li><b>Double-tap</b> to zoom in a step.</li>' +
-        '<li>Play, pause, speed and reset are in the bar under the map.</li>' +
-        '<li>Tap <b>Full screen</b>, at the top right of the map, to fill the screen with it.</li>' +
-        '<li>Some objects open a world of their own \u2014 <b>land on the Moon</b> and drive a rover across it.</li>' +
-      '</ul>' +
-      '<div class="m-sheet-sec">The projects</div>' +
-      '<ul>' +
-        '<li><b>Scroll</b> the list under the map.</li>' +
-        '<li><b>Tap a card</b> for the full description and the figure.</li>' +
-        '<li>Opening one <b>moves the map</b> to the object it is about.</li>' +
-        '<li><b>Tap the figure</b> to see it full size.</li>' +
+        '<li><b>Drag</b> to turn the view, <b>pinch</b> to zoom.</li>' +
+        '<li>The <b>bar under the map</b> pauses, changes speed and resets.</li>' +
+        '<li>Tap the <b>Moon</b> to land and drive a rover.</li>' +
+        '<li><b>Tap a card</b> below to read a project.</li>' +
       '</ul>' +
       '<button type="button" class="m-sheet-x">Got it</button>' +
     '</div>';
@@ -255,6 +245,15 @@
   onTap(help, function () { setSheet(true); });
   onTap(sheet.querySelector('.m-sheet-x'), function () { setSheet(false); });
   sheet.addEventListener('click', function (e) { if (e.target === sheet) setSheet(false); });
+
+  // First visit: open it, so nobody has to find the button first. Seen once,
+  // on this device, it waits for the button (same key as tour3.js on desktop).
+  var helpSeen = false;
+  try { helpSeen = !!localStorage.getItem('helpSeen'); } catch (_) {}
+  if (!helpSeen) {
+    setSheet(true);
+    try { localStorage.setItem('helpSeen', '1'); } catch (_) {}
+  }
 
   // Centring on the Sun is done in framing.js (it zeroes its thirds-line
   // offset on mobile). Doing it here instead fought framing's idle drift,
