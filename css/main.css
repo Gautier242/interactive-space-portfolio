@@ -1465,3 +1465,14 @@ a:hover {
   transition: background 0.2s;
 }
 .header .links a.portfolio-cta:hover { background: rgba(110,163,255,.18); }
+/* Desktop: first in the row, left of Home, vertically centred in the banner,
+   and white so it stands out from the plain links. Kept last in the markup so
+   the phone's icon row (mobile.js) does not reorder. */
+html:not(.mobile-device) .header .links { align-items: center; }
+html:not(.mobile-device) .header .links a.portfolio-cta {
+  order: -1;
+  color: #fff;
+  border-color: rgba(255, 255, 255, .85);
+  background: rgba(255, 255, 255, .1);
+}
+html:not(.mobile-device) .header .links a.portfolio-cta:hover { background: rgba(255, 255, 255, .22); }

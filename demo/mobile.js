@@ -70,7 +70,7 @@
   var ICON_FOR = {
     'Home': 'home', 'About Me': 'about', 'Google Scholar': 'scholar',
     'ResearchGate': 'researchgate', 'GitHub': 'github',
-    'Classic Portfolio': 'portfolio'
+    'Go to classic portfolio': 'portfolio'
   };
   var anchors = document.querySelectorAll('.header .links a');
   for (var i = 0; i < anchors.length; i++) {
