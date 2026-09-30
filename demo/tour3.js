@@ -708,6 +708,40 @@
   void seen;
   replay.classList.add('show');
 
+  // ---- first-visit hint ---------------------------------------------------
+  // Measured before building this: "How to explore" and the control bar are
+  // BOTH already on screen, on desktop and on mobile. They are quiet, not
+  // missing, so making them blink treats the wrong problem. This names the
+  // gestures instead of pointing at a button.
+  //
+  // It is not the tour and cannot repeat its failure: no steps, no ghost
+  // cursor, the camera is never touched, and pointer-events stay off so it
+  // cannot swallow the very first drag. It leaves on the first gesture the
+  // visitor performs and never comes back.
+  const HINT_KEY = 'hintSeen';
+  let hintSeen = false;
+  try { hintSeen = !!localStorage.getItem(HINT_KEY); } catch (_) {}
+  if (!hintSeen) {
+    const coarse = matchMedia('(pointer: coarse)').matches ||
+                   document.documentElement.classList.contains('mobile-device');
+    const hint = document.createElement('div');
+    hint.className = 't3-hint';
+    hint.textContent = coarse
+      ? 'Drag to orbit · pinch to zoom · tap a yellow-marked object'
+      : 'Drag to orbit · scroll to zoom · click a yellow-marked object to open its project';
+    panel.appendChild(hint);
+    requestAnimationFrame(() => hint.classList.add('on'));
+
+    const GESTURES = ['pointerdown', 'wheel', 'touchstart', 'keydown'];
+    function dropHint() {
+      hint.classList.remove('on');
+      setTimeout(() => hint.remove(), 500);
+      try { localStorage.setItem(HINT_KEY, '1'); } catch (_) {}
+      GESTURES.forEach(t => removeEventListener(t, dropHint, true));
+    }
+    GESTURES.forEach(t => addEventListener(t, dropHint, true));
+  }
+
   window.restartTour = start;
   window.tourShowStep = i => { clearTimeout(timer); running = true;
     layer.classList.add('on'); layer.dataset.mode = MODE;
