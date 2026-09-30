@@ -578,3 +578,11 @@
      is the divider in this layout; the line is redundant either way. */
   .mobile-device .resizer { display: none !important; }
 }
+
+/* the Classic Portfolio pill is an icon here like every other header link */
+.mobile-device .header .links a.portfolio-cta {
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 400;
+}

@@ -1450,3 +1450,18 @@ a:hover {
 .mobile-device .intro-card p { font-size: 12.5px; line-height: 1.5; margin-bottom: 12px; }
 .mobile-device .intro-keys { font-size: 11px; margin-bottom: 14px; }
 .mobile-device #missionStart { padding: 13px 24px; font-size: 14px; }
+
+/* Way out to the traditional portfolio. The 3D map is not what someone used to
+   a normal CV page expects to land on, so this one header link is a pill
+   instead of plain text. Mobile turns it back into an icon (mobile.css). */
+.header .links a.portfolio-cta {
+  padding: 6px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.header .links a.portfolio-cta:hover { background: rgba(110,163,255,.18); }

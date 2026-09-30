@@ -52,6 +52,10 @@
     researchgate:                              // circled R, their own mark is
       '<circle cx="12" cy="12" r="9.5"/>' +    // trademarked artwork
       '<path d="M9.7 16.6V7.9h3a2.4 2.4 0 0 1 0 4.8h-3M13 12.7l3.2 3.9"/>',
+    portfolio:                                 // sheet of paper with text
+      '<path d="M6.5 3.2h7.6l4 4v13.6H6.5z"/>' +
+      '<path d="M14.1 3.2v4h4"/>' +
+      '<path d="M9.3 12.4h5.4M9.3 15.6h5.4"/>',
     github:
       '<path d="M12 1.8a10.2 10.2 0 0 0-3.2 19.9c.5.1.7-.2.7-.5v-1.9c-2.8.6-3.4-1.3-3.4-1.3-.5-1.2-1.1-1.5-1.1-1.5-.9-.6.1-.6.1-.6 1 .1 1.5 1 1.5 1 .9 1.5 2.4 1.1 3 .8.1-.7.4-1.1.6-1.4-2.2-.2-4.6-1.1-4.6-5 0-1.1.4-2 1-2.7-.1-.3-.4-1.3.1-2.7 0 0 .8-.3 2.7 1a9.4 9.4 0 0 1 5 0c1.9-1.3 2.7-1 2.7-1 .5 1.4.2 2.4.1 2.7.6.7 1 1.6 1 2.7 0 3.9-2.4 4.8-4.6 5 .4.3.7 1 .7 2v2.9c0 .3.2.6.7.5A10.2 10.2 0 0 0 12 1.8z" fill="currentColor" stroke="none"/>'
   };
@@ -60,18 +64,23 @@
            'stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" ' +
            'aria-hidden="true">' + d + '</svg>';
   }
-  var linkIcon = [
-    ['home', 'Home'], ['about', 'About Me'], ['scholar', 'Google Scholar'],
-    ['researchgate', 'ResearchGate'], ['github', 'GitHub']
-  ];
+  // Keyed on each link's own text rather than its position in the row. This
+  // was an index-matched array, so adding a header link silently shifted every
+  // icon along and left the last link an empty 32x40 box on a phone.
+  var ICON_FOR = {
+    'Home': 'home', 'About Me': 'about', 'Google Scholar': 'scholar',
+    'ResearchGate': 'researchgate', 'GitHub': 'github',
+    'Classic Portfolio': 'portfolio'
+  };
   var anchors = document.querySelectorAll('.header .links a');
   for (var i = 0; i < anchors.length; i++) {
-    var key = linkIcon[i];
-    if (!key) break;
+    var label = anchors[i].textContent.trim();
+    var key = ICON_FOR[label];
+    if (!key) continue;
     // keep the label reachable for screen readers and long-press
-    anchors[i].setAttribute('aria-label', key[1]);
-    anchors[i].setAttribute('title', key[1]);
-    anchors[i].innerHTML = svg(ICONS[key[0]]);
+    anchors[i].setAttribute('aria-label', label);
+    anchors[i].setAttribute('title', label);
+    anchors[i].innerHTML = svg(ICONS[key]);
   }
 
   // ---- 3. the readouts that do not earn their space ----------------------
