@@ -175,7 +175,10 @@
 
 /* ---- toolbar: yellow outline, and a few blinks on a first visit ---------
    Desktop only; the phone bar is its own dock (mobile.css). */
-html:not(.mobile-device) .controls { border-color: rgba(255, 210, 127, .75); }
+html:not(.mobile-device) .controls {
+  border-color: rgba(255, 210, 127, .75);
+  background: rgba(110, 163, 255, .16);   /* light blue tint, still see-through */
+}
 html:not(.mobile-device) .controls.first-look { animation: tb-blink .7s ease-in-out 4; }
 @keyframes tb-blink {
   50% { border-color: #ffd27f; box-shadow: 0 0 0 4px rgba(255, 210, 127, .25), 0 4px 20px rgba(0, 0, 0, .4); }
