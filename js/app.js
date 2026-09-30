@@ -556,6 +556,7 @@ function showDetail(item) {
     linksHTML = item.links.map(l => `<a href="${l.u}" target="_blank">${l.t}</a>`).join('');
   }
   detailLinks.innerHTML = linksHTML;
+  setProjectParam(item.id);
   
   // Shrink left panel to 30% when showing detail.
   // Desktop only. `flex: 0 0 30%` means 30% of the WIDTH in the desktop row
@@ -629,6 +630,7 @@ function changeTextSize(delta) {
 function hideDetail() {
   const detailView = document.getElementById('detailView');
   detailView.classList.remove('active');
+  setProjectParam(null);
   
   // Resume animation when closing detail
   if (pausedPlanets) {
@@ -3076,6 +3078,41 @@ document.addEventListener('keyup', e => {
 
 
 renderPublications();
+
+// ---- deep links: ?p=<id> -------------------------------------------------
+// Every entry already carries a stable id ("isu", "swot", "rover", ...), so a
+// URL can name one and a reviewer lands on that project instead of hunting it
+// among 24 clickable bodies. Opening a project also writes its id into the
+// address bar, so a shareable link is just whatever is on screen: no URL has
+// to be built by hand.
+function setProjectParam(id) {
+  try {
+    const u = new URL(location.href);
+    if (id) u.searchParams.set('p', id); else u.searchParams.delete('p');
+    history.replaceState(null, '', u.pathname + u.search + u.hash);
+  } catch (_) {}            // never let a URL edit break opening a project
+}
+
+function openProjectById(id) {
+  if (id === ABOUT_ME.id) { showAbout(); return true; }
+  const pub = PUBS.find(p => p.id === id);
+  if (!pub) return false;
+  showDetail(pub);
+  if (pub.body) {
+    highlightPublication(pub.body);
+    zoomToBody(pub.body);
+  }
+  return true;
+}
+
+// Deliberately on load, not here: camera.js and framing.js wrap zoomToBody and
+// place the opening view after app.js has run, so a flight started now would
+// be overwritten by the initial framing a moment later.
+addEventListener('load', () => {
+  const want = new URLSearchParams(location.search).get('p');
+  if (want) setTimeout(() => openProjectById(want), 700);
+});
+
 setTimeout(() => initMoonSurface(), 500);
 
 let globalFontScale = 1.1;
