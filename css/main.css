@@ -1476,3 +1476,24 @@ html:not(.mobile-device) .header .links a.portfolio-cta {
   background: rgba(255, 255, 255, .1);
 }
 html:not(.mobile-device) .header .links a.portfolio-cta:hover { background: rgba(255, 255, 255, .22); }
+
+/* "In the press" on the lunar base project. Two screenshots that were
+   rendering ~800 px wide, taller than the window. They sit side by side now,
+   sized off the viewport height so they stay a thumbnail on any screen, and
+   each opens full size in a new tab (same pattern as the figure, figure.js).
+   The caption is held to its image's width by the width:0/min-width trick. */
+.press-row { display: flex; flex-wrap: wrap; gap: 16px; margin: 10px 0 16px; }
+.press-fig { display: inline-flex; flex-direction: column; }
+.press-fig img {
+  display: block; width: auto; max-width: 100%; object-fit: contain;
+  height: clamp(150px, 30vh, 340px);
+  border-radius: 8px; cursor: zoom-in;
+  border: 1px solid rgba(158, 201, 255, .25);
+}
+.press-fig a:hover img { border-color: var(--accent); }
+.press-cap {
+  width: 0; min-width: 100%;
+  font-size: .85em; opacity: .72; margin-top: 6px; line-height: 1.4;
+  text-align: left;   /* the description is justified; at this width that leaves holes */
+}
+.mobile-device .press-fig img { height: clamp(140px, 34vh, 300px); }
