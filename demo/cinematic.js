@@ -75,7 +75,9 @@
   // in JS before the first frame, and a phone screen shows a fraction of the
   // sky a desktop does. Counts only - radius, size and brightness are
   // untouched, so the look is the same field at lower density.
-  const M = document.documentElement.classList.contains('mobile-device') ? 0.4 : 1;
+  // Desktop gets 30% more than the base counts below: the opening view still
+  // read as sparse on a laptop, while phones were judged dense enough.
+  const M = document.documentElement.classList.contains('mobile-device') ? 0.4 : 1.3;
   // Raised by about half (from 9000/4000/900) because the opening view read
   // as sparse. These shells are drawn at a fixed pixel size
   // (sizeAttenuation: false) and sit far outside the zoom range, so their
