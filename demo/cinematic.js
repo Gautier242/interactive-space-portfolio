@@ -76,10 +76,16 @@
   // sky a desktop does. Counts only - radius, size and brightness are
   // untouched, so the look is the same field at lower density.
   const M = document.documentElement.classList.contains('mobile-device') ? 0.4 : 1;
+  // Raised by about half (from 9000/4000/900) because the opening view read
+  // as sparse. These shells are drawn at a fixed pixel size
+  // (sizeAttenuation: false) and sit far outside the zoom range, so their
+  // density on screen is the same at every zoom: adding here cannot crowd a
+  // close-up. The stock field in app.js is the one that grows as you
+  // approach, so it is left alone.
   const SHELLS = [
-    { n: Math.round(9000 * M), r: 3600, size: 1.6, bright: 0.42 },
-    { n: Math.round(4000 * M), r: 2400, size: 2.6, bright: 0.62 },
-    { n: Math.round(900 * M),  r: 1500, size: 4.2, bright: 0.85 },
+    { n: Math.round(13000 * M), r: 3600, size: 1.6, bright: 0.42 },
+    { n: Math.round(6000 * M),  r: 2400, size: 2.6, bright: 0.62 },
+    { n: Math.round(1400 * M),  r: 1500, size: 4.2, bright: 0.85 },
   ];
   const starLayers = [];
   SHELLS.forEach(s => {
