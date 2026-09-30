@@ -62,6 +62,15 @@
   const mobile = document.documentElement.classList.contains('mobile-device');
   if (!seen && legend && !mobile) {
     legend.classList.add('active');
+    // and point at the toolbar, the other thing a newcomer has to find
+    const bar = panel.querySelector('.controls');
+    if (bar) {
+      bar.classList.add('first-look');
+      // its buttons' own animations bubble here too, so check the target
+      bar.addEventListener('animationend', e => {
+        if (e.target === bar) bar.classList.remove('first-look');
+      });
+    }
     const GESTURES = ['pointerdown', 'wheel', 'keydown'];
     const close = e => {
       GESTURES.forEach(t => removeEventListener(t, close, true));

@@ -156,8 +156,14 @@
 .help-toggle-btn { display: none !important; }
 .mobile-device #legendText { display: none !important; }
 #legendText {
-  top: 50px; left: 12px; right: auto; max-width: 330px;
+  top: 56px; left: 50%; right: auto; transform: translateX(-50%);
+  width: max-content; max-width: min(330px, calc(100% - 24px));
   padding: 12px 16px 10px; cursor: pointer;
+}
+/* The button takes the legend's own blue while it is open, so the two read
+   as one thing: this appeared because that was pressed. */
+.t3-replay[aria-expanded="true"] {
+  color: var(--ink); background: rgba(30, 60, 100, .8); border-color: var(--accent);
 }
 .legend-list { margin: 0; padding-left: 16px; }
 .legend-list li { margin: 0 0 3px; }
@@ -165,4 +171,15 @@
 .legend-close {
   margin-top: 6px; text-align: center;
   font-size: 11px; font-weight: 600; color: var(--accent);
+}
+
+/* ---- toolbar: yellow outline, and a few blinks on a first visit ---------
+   Desktop only; the phone bar is its own dock (mobile.css). */
+html:not(.mobile-device) .controls { border-color: rgba(255, 210, 127, .75); }
+html:not(.mobile-device) .controls.first-look { animation: tb-blink .7s ease-in-out 4; }
+@keyframes tb-blink {
+  50% { border-color: #ffd27f; box-shadow: 0 0 0 4px rgba(255, 210, 127, .25), 0 4px 20px rgba(0, 0, 0, .4); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not(.mobile-device) .controls.first-look { animation: none; }
 }
