@@ -1,4 +1,4 @@
-/* TUTORIAL — shared chrome for all four modes. */
+/* HOW TO EXPLORE button, plus the pill chrome the rover tour reuses. */
 
 .t3-layer {
   position: absolute; inset: 0; z-index: 60; pointer-events: none;
@@ -54,16 +54,13 @@
 }
 
 /* ---- ghost cursor / wheel / halo -------------------------------------- */
-.t3-ghost, .t3-wheel {
+.t3-ghost {
   position: absolute; left: 0; top: 0; opacity: 0;
   filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .6));
   transition: opacity .2s linear;
 }
-.t3-wheel.on { opacity: 1; }
 .t3-ghost.t3-press { animation: t3press .42s ease; }
 @keyframes t3press { 0%, 100% { scale: 1; } 40% { scale: .8; } }
-.t3-wheel-dot { animation: t3scroll 1.5s ease-in-out infinite; }
-@keyframes t3scroll { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(7px); } }
 
 .t3-halo {
   position: absolute; left: 0; top: 0;
@@ -82,62 +79,6 @@
   75%  { transform: scale(1.5); opacity: 0; }
   100% { transform: scale(1.5); opacity: 0; }
 }
-
-/* ---- cinematic caption ------------------------------------------------ */
-.t3-caption {
-  position: absolute; left: 50%; bottom: 122px; transform: translateX(-50%);
-  max-width: 78%; text-align: center;
-  font: 400 13px/1.5 Inter, system-ui, sans-serif; color: #cfe2ff;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, .8);
-  opacity: 0; transition: opacity .4s ease;
-}
-.t3-caption.on { opacity: 1; }
-
-/* ---- hotspots -------------------------------------------------------- */
-.t3-spots { position: absolute; inset: 0; opacity: 0; transition: opacity .3s; }
-.t3-spots.on { opacity: 1; }
-.t3-spot {
-  position: absolute; left: 0; top: 0;
-  display: flex; align-items: center; gap: 0;
-  transform: translate(-50%, -50%);
-  background: none; border: 0; padding: 0; cursor: pointer;
-  pointer-events: auto;
-}
-.t3-spot-n {
-  display: flex; align-items: center; justify-content: center;
-  width: 24px; height: 24px; border-radius: 50%; flex: 0 0 auto;
-  font: 700 12px/1 Inter, system-ui, sans-serif;
-  color: #14100a; background: #ffd27f;
-  box-shadow: 0 0 0 4px rgba(255, 210, 127, .2), 0 3px 10px rgba(0, 0, 0, .5);
-  animation: t3pulse 2s ease-out infinite;
-}
-@keyframes t3pulse {
-  0%, 100% { box-shadow: 0 0 0 4px rgba(255, 210, 127, .2), 0 3px 10px rgba(0,0,0,.5); }
-  50%      { box-shadow: 0 0 0 10px rgba(255, 210, 127, 0), 0 3px 10px rgba(0,0,0,.5); }
-}
-.t3-spot-tip {
-  max-width: 0; overflow: hidden; white-space: nowrap;
-  font: 500 12px/1.3 Inter, system-ui, sans-serif; color: #eaf2fd;
-  transition: max-width .3s ease, padding .3s ease, margin .3s ease;
-  padding: 7px 0; border-radius: 0 7px 7px 0;
-  background: rgba(9, 16, 30, .96);
-  border: 1px solid rgba(158, 201, 255, .28); border-left: 0;
-  opacity: 0;
-}
-.t3-spot:hover .t3-spot-tip, .t3-spot:focus-visible .t3-spot-tip {
-  max-width: 280px; padding: 7px 13px; margin-left: -4px; opacity: 1;
-}
-/* near the right edge the tip opens leftwards instead of off the panel */
-.t3-spot.flip { flex-direction: row-reverse; }
-.t3-spot.flip .t3-spot-tip {
-  border-radius: 7px 0 0 7px;
-  border-left: 1px solid rgba(158, 201, 255, .28); border-right: 0;
-  text-align: right;
-}
-.t3-spot.flip:hover .t3-spot-tip, .t3-spot.flip:focus-visible .t3-spot-tip {
-  margin-left: 0; margin-right: -4px;
-}
-.t3-spot:focus-visible .t3-spot-n { outline: 2px solid #9ec9ff; outline-offset: 3px; }
 
 /* ---- help affordance: labelled, so it reads as help ------------------- */
 .t3-replay {
@@ -158,19 +99,6 @@
   color: #fff; border-color: #9ec9ff; background: rgba(158, 201, 255, .18);
 }
 .t3-replay:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
-
-/* hotspots mode has no sequence, so hide the step affordances */
-.t3-layer[data-mode="hotspots"] .t3-dots,
-.t3-layer[data-mode="hotspots"] .t3-next { display: none; }
-
-/* The original help banner and its legend panel are retired. Hiding them
-   from JS raced with app.js, which re-opens the legend on load — so it
-   flashed up on every visit. CSS cannot lose that race. */
-.help-toggle-btn, #legendText { display: none !important; }
-
-/* While the demo drives its own cursor, hide the real one — two pointers on
-   screen is confusing. Restored the instant the visitor moves the mouse. */
-body.t3-hide-cursor, body.t3-hide-cursor * { cursor: none !important; }
 
 /* Tour controls must stay clickable over the moon canvas. */
 .t3-pill, .t3-next, .t3-skip { pointer-events: auto; }
@@ -203,16 +131,6 @@ body.t3-hide-cursor, body.t3-hide-cursor * { cursor: none !important; }
   font: 500 11.5px/1 Inter, system-ui, sans-serif; color: #b6c8e2;
 }
 
-/* Second cursor, at document level: the in-panel ghost cannot reach the
-   publication's close button in the right-hand panel. */
-.t3-ghost-fixed {
-  position: fixed; left: 0; top: 0; z-index: 6000;
-  pointer-events: none; opacity: 0;
-  filter: drop-shadow(0 3px 7px rgba(0, 0, 0, .6));
-  transition: opacity .2s linear;
-}
-.t3-ghost-fixed.t3-press { animation: t3press .38s ease; }
-
 /* ---- toolbar tooltip -------------------------------------------------- */
 .tb-tip {
   position: absolute; left: 0; top: 0; z-index: 70;
@@ -227,24 +145,24 @@ body.t3-hide-cursor, body.t3-hide-cursor * { cursor: none !important; }
 .tb-tip.on { opacity: 1; }
 
 @media (prefers-reduced-motion: reduce) {
-  .t3-halo.on, .t3-wheel-dot, .t3-ghost.t3-press, .t3-spot-n { animation: none; }
+  .t3-halo.on, .t3-ghost.t3-press { animation: none; }
   .tb-tip { transition: none; }
 }
 
-/* ---- first-visit hint: names the gestures, then gets out of the way ------
-   Same bottom offset as .t3-pill, which already clears the control bar.
-   pointer-events stay off so it can never eat the first drag. */
-.t3-hint {
-  position: absolute; left: 50%; bottom: 74px; transform: translateX(-50%);
-  z-index: 59; max-width: min(86%, 560px);
-  padding: 8px 14px; border-radius: 999px;
-  font: 500 12px/1.45 Inter, system-ui, sans-serif; text-align: center;
-  color: #dbe7ff; background: rgba(9, 16, 30, .9);
-  border: 1px solid rgba(158, 201, 255, .26);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, .5);
-  backdrop-filter: blur(8px);
-  pointer-events: none;
-  opacity: 0; transition: opacity .45s ease;
+/* ---- the legend "How to explore" opens -------------------------------
+   The old tour hid #legendText outright. It is the help now, so it only
+   stays hidden on phones, where mobile.js shows its own sheet instead.
+   The old centred banner button stays retired: .t3-replay replaces it. */
+.help-toggle-btn { display: none !important; }
+.mobile-device #legendText { display: none !important; }
+#legendText {
+  top: 50px; left: 12px; right: auto; max-width: 330px;
+  padding: 12px 16px 10px; cursor: pointer;
 }
-.t3-hint.on { opacity: 1; }
-.mobile-device .t3-hint { bottom: 46px; font-size: 11px; padding: 7px 11px; }
+.legend-list { margin: 0; padding-left: 16px; }
+.legend-list li { margin: 0 0 3px; }
+.legend-list b { color: #ffd27f; font-weight: 600; }
+.legend-close {
+  margin-top: 6px; text-align: center;
+  font-size: 11px; font-weight: 600; color: var(--accent);
+}

@@ -85,16 +85,14 @@
       <span>ⓘ</span> HOW TO EXPLORE
     </button>
 
-    <div class="legend active visible" id="legendText" onclick="toggleHelp()">
-  <div style="text-align:justify; line-height:1.6;">
-    <div style="font-size:13px; font-weight:700; color:#cfe2ff; margin-bottom:25px; text-align:center;">  </div>
-    <div style="margin-bottom:1px;">• Objects with yellow reticles are linked to projects. Click them to view details.</div>
-    <div style="margin-bottom:1px;">• Use the bottom bar to pause, play, change speed or reset the animation.</div>
-    <div style="margin-bottom:1px;">• Drag to pan the view. Select ↻ in the bottom bar to rotate instead. Scroll to zoom.</div>
-    <div style="margin-bottom:1px;">• Drag the vertical divider to resize your view.</div>
-    <div style="margin-bottom:7px;">• Some objects open a world of their own: land on the Moon and drive a rover across it.</div>
-    <div style="text-align:center; color:var(--accent); font-size:11px; font-weight:bold;">(Click anywhere on this panel to close)</div>
-  </div>
+    <div class="legend" id="legendText" onclick="toggleHelp()">
+  <ul class="legend-list">
+    <li><b>Click</b> an object in yellow brackets to open its project.</li>
+    <li><b>Drag</b> to move the view, <b>scroll</b> to zoom.</li>
+    <li>The <b>bar below</b> pauses, changes speed, rotates and resets.</li>
+    <li>Click the <b>Moon</b> to land and drive a rover.</li>
+  </ul>
+  <div class="legend-close">Click to close</div>
 </div>
   </section>
   <div class="resizer" id="resizer"></div>
