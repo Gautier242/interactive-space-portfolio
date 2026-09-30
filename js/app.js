@@ -1798,8 +1798,12 @@ let starshipVerticalPos = 0;
 let starshipDirection = 1; // 1 for up, -1 for down
 
 let lastFrameT = 0;
+// Desktop hover only; a touch screen has no cursor to leave anything lit.
+let refreshHover = () => {};
+
 function animate() {
   requestAnimationFrame(animate);
+  refreshHover();
   const tNow = performance.now() * 0.001;
   const rawDt = tNow - lastFrameT;
   const dtFrame = (lastFrameT && rawDt > 0.001) ? Math.min(0.05, rawDt) : 0.016;
@@ -2518,7 +2522,31 @@ canvas.addEventListener('click', e => {
 
 // Disable hover detection on mobile (too thin for touch)
 if (!isMobileDevice) {
-  canvas.addEventListener('mousemove', e => {
+  // Hovering was only ever re-evaluated on mousemove, which left objects lit
+  // in two situations the visitor hits constantly:
+  //
+  //   1. The cursor leaves the canvas. mouseleave below only reset dragging,
+  //      so nothing was ever unlit - and moving off the map to read the text
+  //      on the right is exactly what you do once a publication is open.
+  //   2. The scene moves under a still cursor: the flight that opening a
+  //      publication starts, or simply planets travelling along their orbits.
+  //      No mousemove fires, so whatever was under the pointer stays lit even
+  //      though the pointer is no longer on it.
+  //
+  // The same evaluation is now replayed whenever the camera has moved, and
+  // leaving the canvas clears everything.
+  let lastHoverEvent = null;
+
+  function clearHover() {
+    Object.keys(bodies).forEach(name => unhighlightBody(name));
+    unhighlightBody('Sun');
+    canvas.style.cursor = 'default';
+    const hh = document.getElementById('hoverHint');
+    if (hh) hh.classList.remove('active');
+    document.querySelectorAll('.pub-card').forEach(c => c.classList.remove('highlighted'));
+  }
+
+  function updateHover(e) {
     if (dragging) return;
     if (moonSurfaceActive) return; 
     
@@ -2575,7 +2603,25 @@ if (!isMobileDevice) {
         card.classList.remove('highlighted');
       });
     }
-  });
+  }
+
+  canvas.addEventListener('mousemove', e => { lastHoverEvent = e; updateHover(e); });
+  canvas.addEventListener('mouseleave', () => { lastHoverEvent = null; clearHover(); });
+
+  // Replayed from the render loop, but only when the camera has actually
+  // moved, and at most ~16 times a second: the raycast walks the real GLB
+  // models, so it is not something to run every frame for nothing.
+  const _hoverCam = new THREE.Vector3(1e9, 1e9, 1e9);
+  let _hoverAt = 0;
+  refreshHover = function () {
+    if (!lastHoverEvent || dragging || moonSurfaceActive) return;
+    if (camera.position.distanceToSquared(_hoverCam) < 1e-6) return;
+    const now = performance.now();
+    if (now - _hoverAt < 60) return;
+    _hoverAt = now;
+    _hoverCam.copy(camera.position);
+    updateHover(lastHoverEvent);
+  };
 }
 
 
