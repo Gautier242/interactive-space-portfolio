@@ -169,11 +169,10 @@
 .legend-list li { margin: 0 0 3px; }
 .legend-list b { color: #ffd27f; font-weight: 600; }
 .legend-ret {
-  display: inline-block; width: 20px; height: 20px; vertical-align: -5px;
-  margin: 0 1px; color: #f4e23a;
-  animation: ret-pulse 1.05s ease-in-out infinite;   /* in step with the map */
+  display: inline-block; width: 46px; height: 46px; vertical-align: middle;
+  margin: 2px 3px; border-radius: 8px;
+  border: 1px solid rgba(255, 210, 127, .5);
 }
-@keyframes ret-pulse { 50% { transform: scale(1.18); color: #fff7b0; } }
 .legend-bar-row {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   margin: 6px 0 4px;
@@ -202,7 +201,7 @@ html:not(.mobile-device) .controls {
    matched at a glance. */
 html:not(.mobile-device) .left:has(#legendText.active) .controls {
   background: var(--selected);
-  animation: tb-blink 1s ease-in-out infinite;
+  animation: tb-blink 2s ease-in-out infinite;
 }
 @keyframes tb-blink {
   0%, 100% { border-color: rgba(255, 210, 127, .75); box-shadow: 0 0 0 0 rgba(255, 210, 127, 0), 0 4px 20px rgba(0, 0, 0, .4); }
@@ -212,7 +211,7 @@ html:not(.mobile-device) .left:has(#legendText.active) .controls {
 /* Object info is the other control the legend names; ring it while open. */
 html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle {
   border-color: #ffd27f;
-  animation: info-glow 1s ease-in-out infinite;
+  animation: info-glow 2s ease-in-out infinite;
 }
 @keyframes info-glow {
   50% { box-shadow: 0 0 0 4px rgba(255, 210, 127, .4), 0 0 22px 4px rgba(255, 210, 127, .55); }
@@ -220,5 +219,5 @@ html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle {
 @media (prefers-reduced-motion: reduce) {
   html:not(.mobile-device) .left:has(#legendText.active) .controls,
   html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle,
-  .legend-arrow, .legend-ret { animation: none; }
+  .legend-arrow { animation: none; }
 }

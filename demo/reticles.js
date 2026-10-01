@@ -71,6 +71,33 @@
   const YELLOW = new THREE.Color(0xffff00), WHITE = new THREE.Color(0xffffff);
   let pulsing = false;
   const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // WebGL draws every line one pixel wide whatever linewidth says, so the
+  // brackets cannot be made thicker as lines. While the legend is open each
+  // corner is filled instead: a solid triangle under the outline, built from
+  // the reticle's own size and parented to it, so it follows its lookAt and
+  // its pulse for free.
+  function fillFor(ret) {
+    if (ret.userData.fill) return ret.userData.fill;
+    const p = ret.geometry.attributes.position.array;
+    let s = 0;
+    for (let i = 0; i < p.length; i += 3) s = Math.max(s, Math.abs(p[i]));
+    const l = s * 0.3;
+    const tri = [];
+    for (const [x, y] of [[-1, 1], [1, 1], [-1, -1], [1, -1]]) {
+      tri.push(x * s, y * s, 0,  x * (s - l), y * s, 0,  x * s, y * (s - l), 0);
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(tri, 3));
+    const m = new THREE.Mesh(g, new THREE.MeshBasicMaterial({
+      color: 0xffff00, transparent: true, opacity: 0.9,
+      side: THREE.DoubleSide, depthWrite: false,
+      toneMapped: false,     // ACES greyed pure yellow to olive
+    }));
+    m.visible = false;
+    ret.add(m);
+    return (ret.userData.fill = m);
+  }
+
   function pulse(on) {
     // ~1 Hz; held at a steady highlight if the visitor asked for less motion
     const t = !on ? 0 : STILL ? 0.6 : (Math.sin(performance.now() * 0.006) + 1) / 2;
@@ -83,6 +110,9 @@
       if (u.baseScale === undefined) u.baseScale = it.ret.scale.x;
       it.ret.scale.setScalar(u.baseScale * (1 + 0.28 * t));
       if (it.ret.material.color) it.ret.material.color.copy(YELLOW).lerp(WHITE, 0.55 * t);
+      const fill = fillFor(it.ret);
+      fill.visible = on;
+      if (on) fill.material.color.copy(it.ret.material.color);
     }
   }
 
