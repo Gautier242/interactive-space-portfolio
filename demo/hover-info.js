@@ -61,8 +61,9 @@
   const EPOCH0 = Date.UTC(2026, 0, 1);
 
   // ---- info toggle ------------------------------------------------------
+  // Always ON when the page loads. It used to restore a stored 'off', so
+  // anyone who had switched it off once landed on a map with no labels.
   let infoOn = true;
-  try { infoOn = localStorage.getItem('objInfo') !== 'off'; } catch (_) {}
 
   const toggle = document.createElement('button');
   toggle.className = 'obj-toggle';
