@@ -314,13 +314,22 @@
     return null;
   }
 
+  // Lift over the blocker before swinging round it. Swinging up to 180° about
+  // the vertical cleared the sight line but walked the camera round to the
+  // night side: measured at 63° from the Sun for the ISS and 88° for LRO,
+  // against ~33° for an unblocked body. Raising the camera keeps it on the
+  // Sun's side, and the swings that remain stop at 45°, so the subject stays
+  // mostly lit whatever is in the way.
   function unblocked(target, dir, dist, selfMesh) {
     const up = V().set(0, 1, 0);
-    let best = target.clone().addScaledVector(dir, dist);
+    const best = target.clone().addScaledVector(dir, dist);
     if (!occluder(best, target, selfMesh)) return best;
-    const tries = [30, -30, 60, -60, 90, -90, 130, -130, 180];
-    for (const deg of tries) {
-      const d2 = dir.clone().applyAxisAngle(up, deg * Math.PI / 180).normalize();
+    const side = V().crossVectors(up, dir).normalize();
+    const tries = [[0, 25], [0, 45], [25, 25], [-25, 25], [45, 35], [-45, 35], [0, 65]];
+    for (const [yaw, lift] of tries) {
+      const d2 = dir.clone()
+        .applyAxisAngle(side, -lift * Math.PI / 180)
+        .applyAxisAngle(up, yaw * Math.PI / 180).normalize();
       const pos = target.clone().addScaledVector(d2, dist);
       if (!occluder(pos, target, selfMesh)) return pos;
     }
