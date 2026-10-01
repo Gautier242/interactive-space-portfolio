@@ -57,6 +57,14 @@
   const bar = panel.querySelector('.controls');
   if (bar && !document.documentElement.classList.contains('mobile-device')) {
     bar.style.transformOrigin = '50% 100%';
+    // main.css centres the bar with transform: translateX(-50%). The scale
+    // property is applied AFTER transform, around the box's own centre, so
+    // it shrank that -50% shift too and walked the bar off-centre by
+    // 184 * (1 - k) px: 48 px with a publication open, 73 px on a narrow
+    // map. The translate property is applied BEFORE scale, so the same
+    // centring expressed there stays exact at any scale.
+    bar.style.transform = 'none';
+    bar.style.translate = '-50% 0';
     const fit = () => {
       const w = bar.offsetWidth;            // layout width, unaffected by scale
       if (!w) return;
