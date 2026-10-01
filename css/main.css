@@ -1486,7 +1486,7 @@ html:not(.mobile-device) .header .links a.portfolio-cta:hover { background: rgba
 .press-fig { display: inline-flex; flex-direction: column; }
 .press-fig img {
   display: block; width: auto; max-width: 100%; object-fit: contain;
-  height: clamp(150px, 30vh, 340px);
+  height: clamp(220px, 52vh, 560px);
   border-radius: 8px; cursor: zoom-in;
   border: 1px solid rgba(158, 201, 255, .25);
 }
