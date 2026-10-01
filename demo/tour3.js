@@ -33,12 +33,42 @@
     return typeof roverPOVMode !== 'undefined' && roverPOVMode &&
            typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive;
   }
+  // shiftScene's state; declared before syncHelp, whose first call is immediate
+  let shift = 0, lastKey = '';
   (function syncHelp() {
     requestAnimationFrame(syncHelp);
     const want = inRover() ? 'How to drive' : 'How to explore';
     if (replayLabel.textContent !== want) replayLabel.textContent = want;
     if (legend) replay.setAttribute('aria-expanded', legend.classList.contains('active'));
+    shiftScene();
   })();
+
+  // While the legend is open it covers the top of the map, and with it the
+  // top of the Sun's neighbourhood. Slide the rendered picture down so the
+  // middle of the scene sits in the middle of the space left between the
+  // legend's bottom edge and the bottom of the map. This is the camera's view
+  // offset, a pure screen-space shift: the camera does not move, so follow,
+  // zoom and framing are untouched, and picking stays right because the
+  // offset is part of the projection the raycaster reads. Eased in and out.
+  // Desktop only (phones never show this legend); not on the Moon view,
+  // which renders with its own camera.
+  function shiftScene() {
+    if (typeof camera === 'undefined' || !legend) return;
+    const onMoon = typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive;
+    const w = panel.clientWidth, h = panel.clientHeight;
+    let want = 0;
+    if (legend.classList.contains('active') && !onMoon && h) {
+      const below = legend.getBoundingClientRect().bottom - panel.getBoundingClientRect().top;
+      want = Math.max(0, Math.min(h * 0.3, below / 2));
+    }
+    shift += (want - shift) * 0.12;
+    if (Math.abs(want - shift) < 0.3) shift = want;
+    const key = shift ? `${w}x${h}@${shift.toFixed(1)}` : '';
+    if (key === lastKey) return;
+    lastKey = key;
+    if (shift && w && h) camera.setViewOffset(w, h, 0, -shift, w, h);
+    else camera.clearViewOffset();
+  }
 
   replay.addEventListener('click', e => {
     e.stopPropagation();
