@@ -177,7 +177,19 @@
   }
   sizeComposer();
   window.addEventListener('resize', sizeComposer);
-  new ResizeObserver(sizeComposer).observe(document.getElementById('leftPanel'));
+  // Every frame of a divider drag used to land here: the composer's two
+  // targets plus five bloom mip pairs reallocated per frame, ~17 render
+  // targets a frame. The bloom chain is a blur, so a buffer a frame or two
+  // behind the panel is invisible; resize it once the panel settles, on the
+  // same 150 ms as the renderer (app.js panelResized). Phones change size in
+  // discrete stops and keep the immediate resize.
+  const mobile = document.documentElement.classList.contains('mobile-device');
+  let idle = 0;
+  new ResizeObserver(() => {
+    if (mobile) { sizeComposer(); return; }
+    clearTimeout(idle);
+    idle = setTimeout(sizeComposer, 150);
+  }).observe(document.getElementById('leftPanel'));
 
   // ---- 5. take over the draw call -------------------------------------
   // app.js calls renderer.render(scene, camera) inside its own rAF. We

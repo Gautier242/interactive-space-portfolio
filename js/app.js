@@ -789,16 +789,22 @@ if (!isMobileDevice && resizer) {
   let liveDrag = false;
   let dragRaf = 0;
   let dragPct = 0;
+  // Every pointer type now takes the live path. The mouse used to keep the
+  // original one (flex transition on, a full onWindowResize per move event),
+  // and that is what lagged on a laptop: each move restarted the 0.3 s ease,
+  // so the panel kept resizing for 300 ms after the hand stopped, and every
+  // one of those frames reallocated the GPU buffers. The canvas itself is no
+  // longer resized here: the ResizeObserver's panelResized() fits the camera
+  // each frame and reallocates once the drag settles.
   const dragFrame = () => {
     dragRaf = 0;
     updateImageSizes(100 - dragPct);
-    onWindowResize();
   };
 
   resizer.addEventListener('pointerdown', e => {
     isResizing = true;
-    liveDrag = e.pointerType !== 'mouse';
-    if (liveDrag) leftPanel.style.transition = 'none';
+    liveDrag = true;
+    leftPanel.style.transition = 'none';
     document.body.style.cursor = 'col-resize';
     // capture keeps the drag alive if the finger slides off the 12px strip.
     // It throws if the pointer is already gone, which must not abort the drag.
@@ -812,13 +818,8 @@ if (!isMobileDevice && resizer) {
     const newWidth = (e.clientX / window.innerWidth) * 100;
     if (newWidth > 15 && newWidth < 75) {
       leftPanel.style.flex = `0 0 ${newWidth}%`;
-      if (liveDrag) {
-        dragPct = newWidth;
-        if (!dragRaf) dragRaf = requestAnimationFrame(dragFrame);
-      } else {
-        updateImageSizes(100 - newWidth);
-        onWindowResize();
-      }
+      dragPct = newWidth;
+      if (!dragRaf) dragRaf = requestAnimationFrame(dragFrame);
     }
   });
 
@@ -834,14 +835,10 @@ if (!isMobileDevice && resizer) {
         liveDrag = false;
       }
       document.body.style.cursor = '';
-      
-      // Force canvas update by triggering multiple resize calls to eliminate black bar
-      requestAnimationFrame(() => {
-        onWindowResize();
-        setTimeout(() => onWindowResize(), 10);
-        setTimeout(() => onWindowResize(), 50);
-        setTimeout(() => onWindowResize(), 100);
-      });
+      // land the buffers on the final width at once rather than after the
+      // 150 ms settle (the four staggered calls that were here are not needed
+      // now that the canvas is CSS-sized and the observer follows the panel)
+      onWindowResize();
     }
   });
 }
@@ -2952,32 +2949,70 @@ document.getElementById('btnPan').addEventListener('click', e => {
 });
 
 
-function onWindowResize() {
+// Cheap half of a resize: the projection only. Safe every frame.
+function fitCameras() {
   const width = leftPanel.clientWidth;
   const height = leftPanel.clientHeight;
   // A hidden panel measures 0, and 0 height makes aspect Infinity, which puts
   // NaN through updateProjectionMatrix and leaves the scene blank FOREVER -
   // including after the panel comes back. Keep the last good matrix instead.
-  if (!width || !height) return;
+  if (!width || !height) return null;
   camera.aspect = width / height;
   camera.updateProjectionMatrix();
-  renderer.setSize(width, height);
-  
   if (moonRenderer) {
     moonCamera.aspect = width / height;
     moonCamera.updateProjectionMatrix();
-    moonRenderer.setSize(width, height);
+  }
+  return [width, height];
+}
+
+function onWindowResize() {
+  const size = fitCameras();
+  if (!size) return;
+  const [width, height] = size;
+  // Desktop: both canvases are width/height 100% in CSS, so the drawing
+  // buffer is resized without writing pixel sizes onto them (the false). The
+  // CSS keeps each canvas exactly on the panel even while the buffer lags a
+  // resize, which is what lets panelResized() below defer it. Phones keep
+  // the inline sizes: their column layout reads the canvas height as content
+  // size (see showDetail).
+  if (isMobileDevice) {
+    renderer.setSize(width, height);
+    if (moonRenderer) moonRenderer.setSize(width, height);
+  } else {
+    renderer.domElement.style.width = renderer.domElement.style.height = '';
+    renderer.setSize(width, height, false);
+    if (moonRenderer) {
+      moonRenderer.domElement.style.width = moonRenderer.domElement.style.height = '';
+      moonRenderer.setSize(width, height, false);
+    }
   }
 }
 
 window.addEventListener('resize', onWindowResize);
-// The map changes size without the window doing so: the divider drag, the
-// 0.3 s flex transition when a publication opens, the phone's split stops.
-// Those relied on scattered setTimeout(onWindowResize, 50..350) calls, so the
-// canvas trailed the panel and the scene sat off-centre under a toolbar that
-// was centred on the panel. Follow the panel itself; ResizeObserver fires
-// after layout and before paint, so canvas and panel change in the same frame.
-new ResizeObserver(() => onWindowResize()).observe(leftPanel);
+
+// The map also changes size without the window doing so: the divider drag,
+// the 0.3 s flex transition when a publication opens, the phone's split
+// stops. Following the panel keeps the scene centred under the toolbar.
+//
+// But a full resize every frame of a drag is what made the divider lag:
+// renderer.setSize reallocates the drawing buffer, and cinematic.js
+// reallocates the composer and its bloom mips in turn. Measured over a
+// 60-move mouse drag: 245 renderer.setSize calls and 4344 render-target
+// reallocations, about 17 per frame. So while the panel is moving only the
+// projection follows it, each frame, and the CSS stretches the existing
+// buffer to the new size, which keeps the proportions right because the
+// aspect already matches. The buffers are reallocated once, 150 ms after
+// the last change. Phones resize in discrete stops and keep the immediate
+// path.
+let resizeIdle = 0;
+function panelResized() {
+  if (isMobileDevice) { onWindowResize(); return; }
+  fitCameras();
+  clearTimeout(resizeIdle);
+  resizeIdle = setTimeout(onWindowResize, 150);
+}
+new ResizeObserver(panelResized).observe(leftPanel);
 
 
 
