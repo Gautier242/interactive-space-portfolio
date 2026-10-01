@@ -168,6 +168,12 @@
 .legend-list { margin: 0; padding-left: 16px; }
 .legend-list li { margin: 0 0 3px; }
 .legend-list b { color: #ffd27f; font-weight: 600; }
+.legend-ret {
+  display: inline-block; width: 20px; height: 20px; vertical-align: -5px;
+  margin: 0 1px; color: #f4e23a;
+  animation: ret-pulse 1.05s ease-in-out infinite;   /* in step with the map */
+}
+@keyframes ret-pulse { 50% { transform: scale(1.18); color: #fff7b0; } }
 .legend-bar-row {
   display: flex; align-items: center; justify-content: center; gap: 8px;
   margin: 6px 0 4px;
@@ -214,5 +220,5 @@ html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle {
 @media (prefers-reduced-motion: reduce) {
   html:not(.mobile-device) .left:has(#legendText.active) .controls,
   html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle,
-  .legend-arrow { animation: none; }
+  .legend-arrow, .legend-ret { animation: none; }
 }

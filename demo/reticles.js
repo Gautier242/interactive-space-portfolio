@@ -61,8 +61,36 @@
   collect();
   setTimeout(collect, 3000);      // spacecraft models arrive on idle
 
+  // While "How to explore" is open, the brackets it describes pulse on the
+  // three planets-and-star only: the spacecraft brackets crowd round Earth,
+  // and pulsing those too turned the map into a Christmas tree. app.js
+  // rewrites every reticle's OPACITY each frame, before this loop runs, so
+  // the pulse uses scale and colour, which nothing else touches.
+  const legend = document.getElementById('legendText');
+  const PULSE = new Set(['Sun', 'Earth', 'Mars']);
+  const YELLOW = new THREE.Color(0xffff00), WHITE = new THREE.Color(0xffffff);
+  let pulsing = false;
+  const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function pulse(on) {
+    // ~1 Hz; held at a steady highlight if the visitor asked for less motion
+    const t = !on ? 0 : STILL ? 0.6 : (Math.sin(performance.now() * 0.006) + 1) / 2;
+    for (const it of items) {
+      const name = it.mesh === sun ? 'Sun' : it.mesh.userData && it.mesh.userData.name;
+      if (!PULSE.has(name)) continue;
+      // kept on the reticle, not the item: collect() rebuilds the items at 3 s,
+      // and a base re-read mid-pulse would ratchet the brackets bigger
+      const u = it.ret.userData;
+      if (u.baseScale === undefined) u.baseScale = it.ret.scale.x;
+      it.ret.scale.setScalar(u.baseScale * (1 + 0.28 * t));
+      if (it.ret.material.color) it.ret.material.color.copy(YELLOW).lerp(WHITE, 0.55 * t);
+    }
+  }
+
   (function tick() {
     requestAnimationFrame(tick);
+    const want = !!legend && legend.classList.contains('active');
+    if (want || pulsing) pulse(want);
+    pulsing = want;
     if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) return;
     const h = panel.clientHeight;
     if (!h || !items.length) return;
