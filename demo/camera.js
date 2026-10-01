@@ -213,6 +213,20 @@
         follow.offset.subVectors(camera.position, _a);
       }
     }
+    // Press play and the body runs along its orbit while a fixed world offset
+    // stays put, so the Sun swings round behind it: a quarter orbit later the
+    // view is the terminator, half an orbit later the night side. Turn the
+    // offset with the body's angle round the Sun instead, so the face we were
+    // shown stays the lit one. Whatever the visitor did to the offset (zoom,
+    // +/-) is kept, only carried round. Not for the Sun itself, nor for the
+    // face-framed bodies, whose offset lives in their own frame.
+    if (!follow.localOffset && !flying && _a.x * _a.x + _a.z * _a.z > 1) {
+      const az = Math.atan2(_a.z, _a.x);
+      if (follow.az !== undefined && az !== follow.az) {
+        follow.offset.applyAxisAngle(UPV, follow.az - az);
+      }
+      follow.az = az;
+    }
     if (follow.localOffset) {
       // These bodies spin on their own axis, so a fixed WORLD offset slides
       // around the object as it rotates — HWO ended up 66° off its aperture
