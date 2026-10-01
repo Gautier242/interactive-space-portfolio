@@ -375,10 +375,55 @@
     }).observe(detailEl, { attributes: true, attributeFilter: ['class'] });
   }
 
+  // ---- something for metal to reflect ------------------------------------
+  // HWO opened nearly black with the key light on. Not an angle problem: its
+  // parts are MeshStandardMaterial at metalness 0.6-0.95 and the scene has no
+  // environment map, and a metal's colour IS what it reflects. With nothing
+  // to reflect it renders black under any amount of light, bar a specular
+  // glint. Give metallic parts a soft studio-like environment: bright above,
+  // warm on one side, dark below. Built once; applied to the body being
+  // opened, so the cost is paid only for what is looked at, and the GLB
+  // models that load late are covered by the time anyone opens them.
+  let envTex = null;
+  function studioEnv() {
+    if (envTex) return envTex;
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 128;
+    const g = c.getContext('2d');
+    const sky = g.createLinearGradient(0, 0, 0, 128);
+    sky.addColorStop(0, '#dfe9ff');
+    sky.addColorStop(0.5, '#6f7f9c');
+    sky.addColorStop(1, '#0d1220');
+    g.fillStyle = sky; g.fillRect(0, 0, 256, 128);
+    const sunSpot = g.createRadialGradient(64, 46, 0, 64, 46, 60);
+    sunSpot.addColorStop(0, 'rgba(255,240,215,1)');
+    sunSpot.addColorStop(1, 'rgba(255,240,215,0)');
+    g.fillStyle = sunSpot; g.fillRect(0, 0, 256, 128);
+    const tex = new THREE.CanvasTexture(c);
+    tex.mapping = THREE.EquirectangularReflectionMapping;
+    tex.encoding = THREE.sRGBEncoding;
+    const pm = new THREE.PMREMGenerator(renderer);
+    envTex = pm.fromEquirectangular(tex).texture;
+    pm.dispose(); tex.dispose();
+    return envTex;
+  }
+  function litMetal(mesh) {
+    mesh.traverse(o => {
+      const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+      ms.forEach(m => {
+        if (!m.isMeshStandardMaterial || m.envMap || !(m.metalness >= 0.5)) return;
+        m.envMap = studioEnv();
+        m.envMapIntensity = 0.7;   // 0.9 blew out Starship's steel hull
+        m.needsUpdate = true;
+      });
+    });
+  }
+
   let flying = null;
   function flyTo(name, opts) {
     const mesh = meshFor(name);
     if (!mesh) return false;
+    if (name !== 'Sun') { try { litMetal(mesh); } catch (_) {} }
     const { target, pos } = heroPose(mesh, name);
     const from = camera.position.clone();
     const t0 = performance.now();
