@@ -70,6 +70,8 @@
   const PULSE = new Set(['Sun', 'Earth', 'Mars']);
   const YELLOW = new THREE.Color(0xffff00), WHITE = new THREE.Color(0xffffff);
   let pulsing = false;
+  let openedAt = 0;
+  const PERIOD = 2000;
   const STILL = matchMedia('(prefers-reduced-motion: reduce)').matches;
   // WebGL draws every line one pixel wide whatever linewidth says, so the
   // brackets cannot be made thicker as lines. While the legend is open each
@@ -99,8 +101,11 @@
   }
 
   function pulse(on) {
-    // ~1 Hz; held at a steady highlight if the visitor asked for less motion
-    const t = !on ? 0 : STILL ? 0.6 : (Math.sin(performance.now() * 0.006) + 1) / 2;
+    // Same 2 s cycle as the toolbar and Object info glows (tour3.css), and
+    // started when the legend opened, like those CSS animations, so all three
+    // breathe together. Held at a steady highlight under reduced motion.
+    const ph = (performance.now() - openedAt) / PERIOD;
+    const t = !on ? 0 : STILL ? 0.5 : (1 - Math.cos(2 * Math.PI * ph)) / 2;
     for (const it of items) {
       const name = it.mesh === sun ? 'Sun' : it.mesh.userData && it.mesh.userData.name;
       if (!PULSE.has(name)) continue;
@@ -108,8 +113,8 @@
       // and a base re-read mid-pulse would ratchet the brackets bigger
       const u = it.ret.userData;
       if (u.baseScale === undefined) u.baseScale = it.ret.scale.x;
-      it.ret.scale.setScalar(u.baseScale * (1 + 0.28 * t));
-      if (it.ret.material.color) it.ret.material.color.copy(YELLOW).lerp(WHITE, 0.55 * t);
+      it.ret.scale.setScalar(u.baseScale * (1 + 0.12 * t));
+      if (it.ret.material.color) it.ret.material.color.copy(YELLOW).lerp(WHITE, 0.3 * t);
       const fill = fillFor(it.ret);
       fill.visible = on;
       if (on) fill.material.color.copy(it.ret.material.color);
@@ -119,6 +124,7 @@
   (function tick() {
     requestAnimationFrame(tick);
     const want = !!legend && legend.classList.contains('active');
+    if (want && !pulsing) openedAt = performance.now();
     if (want || pulsing) pulse(want);
     pulsing = want;
     if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive) return;
