@@ -157,7 +157,7 @@
 .mobile-device #legendText { display: none !important; }
 #legendText {
   top: 56px; left: 50%; right: auto; transform: translateX(-50%);
-  width: max-content; max-width: min(330px, calc(100% - 24px));
+  width: max-content; max-width: min(400px, calc(100% - 24px));
   padding: 12px 16px 10px; cursor: pointer;
 }
 /* The button takes the legend's own blue while it is open, so the two read
@@ -168,21 +168,29 @@
 .legend-list { margin: 0; padding-left: 16px; }
 .legend-list li { margin: 0 0 3px; }
 .legend-list b { color: #ffd27f; font-weight: 600; }
+.legend-bar { display: block; width: 100%; height: auto; margin: 6px 0 4px; }
 .legend-close {
   margin-top: 6px; text-align: center;
   font-size: 11px; font-weight: 600; color: var(--accent);
 }
 
-/* ---- toolbar: yellow outline, and a few blinks on a first visit ---------
+/* ---- toolbar: yellow outline, and lit while the legend is open ----------
    Desktop only; the phone bar is its own dock (mobile.css). */
 html:not(.mobile-device) .controls {
   border-color: rgba(255, 210, 127, .75);
   background: rgba(110, 163, 255, .16);   /* light blue tint, still see-through */
 }
-html:not(.mobile-device) .controls.first-look { animation: tb-blink .7s ease-in-out 4; }
+/* While "How to explore" is open the bar it talks about lights up: the same
+   blue as a selected button (var(--selected), the Pan button at the far
+   right) and a slow glow, so the picture in the legend and the real bar are
+   matched at a glance. */
+html:not(.mobile-device) .left:has(#legendText.active) .controls {
+  background: var(--selected);
+  animation: tb-blink 1.4s ease-in-out infinite;
+}
 @keyframes tb-blink {
-  50% { border-color: #ffd27f; box-shadow: 0 0 0 4px rgba(255, 210, 127, .25), 0 4px 20px rgba(0, 0, 0, .4); }
+  50% { border-color: #ffd27f; box-shadow: 0 0 0 4px rgba(255, 210, 127, .25), 0 0 22px rgba(110, 163, 255, .55); }
 }
 @media (prefers-reduced-motion: reduce) {
-  html:not(.mobile-device) .controls.first-look { animation: none; }
+  html:not(.mobile-device) .left:has(#legendText.active) .controls { animation: none; }
 }

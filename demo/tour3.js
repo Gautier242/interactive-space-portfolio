@@ -40,41 +40,27 @@
     if (legend) replay.setAttribute('aria-expanded', legend.classList.contains('active'));
   })();
 
-  const KEY = 'helpSeen';
-  function remember() { try { localStorage.setItem(KEY, '1'); } catch (_) {} }
-
   replay.addEventListener('click', e => {
     e.stopPropagation();
-    remember();
     if (inRover()) {
       if (typeof window.restartRoverTour === 'function') window.restartRoverTour();
       return;
     }
     if (typeof toggleHelp === 'function') toggleHelp();
   });
-  if (legend) legend.addEventListener('click', remember);
 
-  // First visit: open the legend so nobody has to discover the button first.
-  // It closes on the visitor's first gesture anywhere else, so it never sits
-  // over the map once they have started exploring. Phones use mobile.js.
-  let seen = false;
-  try { seen = !!localStorage.getItem(KEY); } catch (_) {}
+  // Every load opens the legend, so nobody has to discover the button first;
+  // the toolbar lights up with it (tour3.css). It closes on the visitor's
+  // first gesture anywhere else, so it never sits over the map once they have
+  // started exploring. Not on a ?p= deep link, which was shared to show one
+  // project, nor on phones, which use mobile.js.
   const mobile = document.documentElement.classList.contains('mobile-device');
-  if (!seen && legend && !mobile) {
+  const deepLink = new URLSearchParams(location.search).has('p');
+  if (legend && !mobile && !deepLink) {
     legend.classList.add('active');
-    // and point at the toolbar, the other thing a newcomer has to find
-    const bar = panel.querySelector('.controls');
-    if (bar) {
-      bar.classList.add('first-look');
-      // its buttons' own animations bubble here too, so check the target
-      bar.addEventListener('animationend', e => {
-        if (e.target === bar) bar.classList.remove('first-look');
-      });
-    }
     const GESTURES = ['pointerdown', 'wheel', 'keydown'];
     const close = e => {
       GESTURES.forEach(t => removeEventListener(t, close, true));
-      remember();
       // the button and the legend already toggle it themselves
       if (e.target && e.target.closest && e.target.closest('.t3-replay, #legendText')) return;
       legend.classList.remove('active');
