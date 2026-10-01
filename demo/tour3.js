@@ -49,6 +49,24 @@
     if (typeof toggleHelp === 'function') toggleHelp();
   });
 
+  // The toolbar scales with the map, as its picture in the legend does. At
+  // the default split (504 px map on a 1440 px screen) it is 368 px wide,
+  // 73% of the map; keep that share as the divider or the window moves,
+  // within 0.6x-1.3x so it never gets unreadable or oversized. Desktop only:
+  // the phone bar is its own dock.
+  const bar = panel.querySelector('.controls');
+  if (bar && !document.documentElement.classList.contains('mobile-device')) {
+    bar.style.transformOrigin = '50% 100%';
+    const fit = () => {
+      const w = bar.offsetWidth;            // layout width, unaffected by scale
+      if (!w) return;
+      const k = Math.min(1.3, Math.max(0.6, panel.clientWidth * 0.73 / w));
+      bar.style.scale = k.toFixed(3);
+    };
+    new ResizeObserver(fit).observe(panel);
+    fit();
+  }
+
   // Every load opens the legend, so nobody has to discover the button first;
   // the toolbar lights up with it (tour3.css). It closes on the visitor's
   // first gesture anywhere else, so it never sits over the map once they have
