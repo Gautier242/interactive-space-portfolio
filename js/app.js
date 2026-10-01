@@ -2971,6 +2971,13 @@ function onWindowResize() {
 }
 
 window.addEventListener('resize', onWindowResize);
+// The map changes size without the window doing so: the divider drag, the
+// 0.3 s flex transition when a publication opens, the phone's split stops.
+// Those relied on scattered setTimeout(onWindowResize, 50..350) calls, so the
+// canvas trailed the panel and the scene sat off-centre under a toolbar that
+// was centred on the panel. Follow the panel itself; ResizeObserver fires
+// after layout and before paint, so canvas and panel change in the same frame.
+new ResizeObserver(() => onWindowResize()).observe(leftPanel);
 
 
 
