@@ -39,7 +39,7 @@
   const back = document.createElement('div');
   back.className = 'wel-backdrop';
   back.innerHTML = `
-    <div class="wel-card" role="dialog" aria-modal="true" aria-labelledby="welTitle">
+    <div class="wel-card" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="welTitle">
       <button type="button" class="wel-x" aria-label="Close">&#215;</button>
       <div class="wel-head">
         <img class="wel-photo" src="images/headshot.jpg" width="84" height="84" alt="Gautier Bardi de Fourtou">
@@ -51,7 +51,11 @@
       <p>I work where artificial intelligence meets space exploration, from
          Earth observation to autonomy for planetary exploration. Along the
          way I've worked on projects at NASA JPL, ESA's European Astronaut
-         Centre and Frontier Development Lab.</p>
+         Centre and Frontier Development Lab. At MIT, I'm fortunate to be
+         advised by
+         <a href="https://aeroastro.mit.edu/people/dava-j-newman/" target="_blank" rel="noopener">Dr. Dava Newman</a>
+         and
+         <a href="https://aeroastro.mit.edu/people/daniel-varon/" target="_blank" rel="noopener">Dr. Daniel Varon</a>.</p>
       <p>This little solar system is my portfolio. Every planet or spacecraft
          framed by yellow corners <span class="ret" aria-hidden="true"></span>,
          like the Sun, Earth, the ISS or Mars, holds one of my projects: click
@@ -61,7 +65,7 @@
       <div class="wel-actions">
         <button type="button" class="wel-go">Start exploring</button>
         <button type="button" data-act="about">About me</button>
-        <button type="button" class="wel-help" data-act="help">How to explore</button>
+        <button type="button" data-act="help">How to explore</button>
         <a href="https://gautier242.github.io/portfolio/" target="_blank" rel="noopener">Classic portfolio</a>
       </div>
     </div>`;
@@ -69,7 +73,7 @@
   const card = back.querySelector('.wel-card');
   requestAnimationFrame(() => back.classList.add('on'));
   const go = back.querySelector('.wel-go');
-  try { go.focus({ preventScroll: true }); } catch (_) {}
+  try { card.focus({ preventScroll: true }); } catch (_) {}
 
   let done = false;
   function close(then) {
@@ -94,5 +98,5 @@
     const b = helpBtn();
     if (b) b.click();
   }));
-  back.querySelector('a').addEventListener('click', () => close());
+  back.querySelector('.wel-actions a').addEventListener('click', () => close());
 })();

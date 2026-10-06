@@ -125,6 +125,9 @@ html:not(.mobile-device) .pub-desc {
 }
 .wel-sub { margin-top: 3px; font-size: 13px; color: #8fa6c8; letter-spacing: .02em; }
 .wel-tease { color: #ffd88f; font-style: italic; }
+.wel-card:focus { outline: none; }
+.wel-card p a { color: #9ec9ff; text-decoration: underline; text-underline-offset: 2px; }
+.wel-card p a:hover { color: #fff; }
 .wel-card p { margin: 0 0 10px; text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
 /* the map's yellow corner brackets, drawn in CSS so they stay crisp at any size */
 .ret {
@@ -156,8 +159,6 @@ html:not(.mobile-device) .pub-desc {
 .wel-actions button:hover, .wel-actions a:hover { background: rgba(158, 201, 255, .14); }
 .wel-actions .wel-go { background: var(--selected); border-color: var(--selected); color: #fff; }
 .wel-actions .wel-go:hover { background: #82b1ff; }
-.wel-actions .wel-help { background: #cfe2ff; border-color: #cfe2ff; color: #0c1728; }
-.wel-actions .wel-help:hover { background: #e4eeff; }
 .wel-actions :focus-visible, .wel-x:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
 .mobile-device .wel-card { padding: 22px 18px 18px; font-size: 14px; }
 .mobile-device .wel-card h2 { font-size: 19px; }
