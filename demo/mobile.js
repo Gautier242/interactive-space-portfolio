@@ -205,7 +205,7 @@
     '<div class="m-sheet-card">' +
       '<div class="m-sheet-h">How to explore</div>' +
       '<ul>' +
-        '<li><b>Tap</b> an object in yellow brackets to open its project.</li>' +
+        '<li><b>Tap</b> an object in yellow corners <span class="ret" aria-hidden="true"></span>, like the Sun, Earth, the ISS or Mars, to open its project.</li>' +
         '<li><b>Drag</b> to turn the view, <b>pinch</b> to zoom.</li>' +
         '<li>The <b>bar under the map</b> pauses, changes speed and resets.</li>' +
         '<li>Tap the <b>Moon</b> to land and drive a rover.</li>' +

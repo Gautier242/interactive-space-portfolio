@@ -105,7 +105,7 @@ html:not(.mobile-device) .pub-desc {
 }
 .wel-backdrop.on { opacity: 1; }
 .wel-card {
-  position: relative; max-width: 600px; width: 100%;   /* four buttons on one row */
+  position: relative; max-width: clamp(600px, 52vw, 760px); width: 100%;   /* grows on wide screens */
   padding: 26px 28px 22px;
   background: rgba(12, 23, 40, .97);
   border: 1px solid rgba(158, 201, 255, .45);
@@ -125,8 +125,22 @@ html:not(.mobile-device) .pub-desc {
 }
 .wel-sub { margin-top: 3px; font-size: 13px; color: #8fa6c8; letter-spacing: .02em; }
 .wel-tease { color: #ffd88f; font-style: italic; }
-.wel-card p { margin: 0 0 10px; }
-.wel-ret { vertical-align: -4px; }
+.wel-card p { margin: 0 0 10px; text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+/* the map's yellow corner brackets, drawn in CSS so they stay crisp at any size */
+.ret {
+  --c: #ffff00; --l: 32%; --w: 2px;
+  display: inline-block; width: 22px; height: 22px; vertical-align: -5px; margin: 0 2px;
+  background:
+    linear-gradient(var(--c) 0 0) top    left  / var(--l) var(--w),
+    linear-gradient(var(--c) 0 0) top    left  / var(--w) var(--l),
+    linear-gradient(var(--c) 0 0) top    right / var(--l) var(--w),
+    linear-gradient(var(--c) 0 0) top    right / var(--w) var(--l),
+    linear-gradient(var(--c) 0 0) bottom left  / var(--l) var(--w),
+    linear-gradient(var(--c) 0 0) bottom left  / var(--w) var(--l),
+    linear-gradient(var(--c) 0 0) bottom right / var(--l) var(--w),
+    linear-gradient(var(--c) 0 0) bottom right / var(--w) var(--l);
+  background-repeat: no-repeat;
+}
 .wel-x {
   position: absolute; top: 8px; right: 10px; width: 34px; height: 34px;
   background: none; border: 0; color: #8fa6c8; font-size: 22px; cursor: pointer;
@@ -142,6 +156,8 @@ html:not(.mobile-device) .pub-desc {
 .wel-actions button:hover, .wel-actions a:hover { background: rgba(158, 201, 255, .14); }
 .wel-actions .wel-go { background: var(--selected); border-color: var(--selected); color: #fff; }
 .wel-actions .wel-go:hover { background: #82b1ff; }
+.wel-actions .wel-help { background: #cfe2ff; border-color: #cfe2ff; color: #0c1728; }
+.wel-actions .wel-help:hover { background: #e4eeff; }
 .wel-actions :focus-visible, .wel-x:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
 .mobile-device .wel-card { padding: 22px 18px 18px; font-size: 14px; }
 .mobile-device .wel-card h2 { font-size: 19px; }
