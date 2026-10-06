@@ -196,7 +196,8 @@ html:not(.mobile-device) .controls {
    blue as a selected button (var(--selected), the Pan button at the far
    right) and a pulsing yellow glow, so the picture in the legend and the bar are
    matched at a glance. */
-html:not(.mobile-device) .left:has(#legendText.active) .controls {
+html:not(.mobile-device) .left:has(#legendText.active) .controls,
+html:not(.mobile-device) .controls.attn {   /* first visit, until a tool is used */
   background: var(--selected);
   animation: tb-blink 2s ease-in-out infinite;
 }
@@ -215,5 +216,6 @@ html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle {
 }
 @media (prefers-reduced-motion: reduce) {
   html:not(.mobile-device) .left:has(#legendText.active) .controls,
+  html:not(.mobile-device) .controls.attn,
   html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle { animation: none; }
 }

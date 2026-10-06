@@ -24,6 +24,15 @@
     b.classList.add('attn');
     const stop = () => b.classList.remove('attn');
     b.addEventListener('click', stop, { once: true });
+    // the desktop toolbar blinks too, until "How to explore" or one of its
+    // tools is clicked (a click on the bar's background does not count)
+    const bar = !mobile && document.querySelector('.controls');
+    if (bar) {
+      bar.classList.add('attn');
+      const quiet = () => bar.classList.remove('attn');
+      b.addEventListener('click', quiet, { once: true });
+      bar.addEventListener('click', e => { if (e.target.closest('button')) quiet(); });
+    }
     b.addEventListener('touchend', stop, { once: true, passive: true });
     if (detail) {
       new MutationObserver((_, obs) => {
