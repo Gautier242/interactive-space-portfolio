@@ -25,27 +25,37 @@
   // desktop's help button is tour3.js's, the phone's is mobile.js's
   const helpBtn = () => document.querySelector(mobile ? '.m-help' : '.t3-replay');
 
-  // ---- the pulse on the help button ---------------------------------------
+  // ---- the pulse on the help button and the toolbar ------------------------
+  // Both blink from the moment the card closes, and both stop together as
+  // soon as the visitor shows they have found their way: a click on "How to
+  // explore", a click on one of the toolbar's buttons (not its background),
+  // or opening a project. That is remembered, so a returning visitor is not
+  // blinked at again. Removing .attn hands both back their usual look.
+  const KNOWN = 'exploreKnown';
   function attention() {
     const b = helpBtn();
-    if (!b || (detail && detail.classList.contains('active'))) return;
-    b.classList.add('attn');
-    const stop = () => b.classList.remove('attn');
-    b.addEventListener('click', stop, { once: true });
-    // the desktop toolbar blinks too, until "How to explore" or one of its
-    // tools is clicked (a click on the bar's background does not count)
-    const bar = !mobile && document.querySelector('.controls');
-    if (bar) {
-      bar.classList.add('attn');
-      const quiet = () => bar.classList.remove('attn');
-      b.addEventListener('click', quiet, { once: true });
-      bar.addEventListener('click', e => { if (e.target.closest('button')) quiet(); });
+    let known = false;
+    try { known = !!localStorage.getItem(KNOWN); } catch (_) {}
+    if (!b || known || (detail && detail.classList.contains('active'))) return;
+    const bar = document.querySelector('.controls');
+    const blinking = [b].concat(!mobile && bar ? [bar] : []);   // the phone dock does not blink
+    blinking.forEach(el => el.classList.add('attn'));
+    let obs = null;
+    function stop() {
+      blinking.forEach(el => el.classList.remove('attn'));
+      b.removeEventListener('click', stop);
+      b.removeEventListener('touchend', stop);
+      if (bar) bar.removeEventListener('click', onBar);
+      if (obs) obs.disconnect();
+      try { localStorage.setItem(KNOWN, '1'); } catch (_) {}
     }
-    b.addEventListener('touchend', stop, { once: true, passive: true });
+    function onBar(e) { if (e.target.closest('button')) stop(); }
+    b.addEventListener('click', stop);
+    b.addEventListener('touchend', stop, { passive: true });
+    if (bar) bar.addEventListener('click', onBar);
     if (detail) {
-      new MutationObserver((_, obs) => {
-        if (detail.classList.contains('active')) { stop(); obs.disconnect(); }
-      }).observe(detail, { attributes: true, attributeFilter: ['class'] });
+      obs = new MutationObserver(() => { if (detail.classList.contains('active')) stop(); });
+      obs.observe(detail, { attributes: true, attributeFilter: ['class'] });
     }
   }
 

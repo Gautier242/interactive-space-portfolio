@@ -192,12 +192,10 @@ html:not(.mobile-device) .controls {
   border-color: rgba(255, 210, 127, .75);
   background: rgba(110, 163, 255, .16);   /* light blue tint, still see-through */
 }
-/* While "How to explore" is open the bar it talks about lights up: the same
-   blue as a selected button (var(--selected), the Pan button at the far
-   right) and a pulsing yellow glow, so the picture in the legend and the bar are
-   matched at a glance. */
-html:not(.mobile-device) .left:has(#legendText.active) .controls,
-html:not(.mobile-device) .controls.attn {   /* first visit, until a tool is used */
+/* First visit: the bar is the selected-button blue with a pulsing yellow
+   glow until the visitor uses a tool, opens "How to explore" or opens a
+   project (welcome.js removes .attn); then it is back to the tint above. */
+html:not(.mobile-device) .controls.attn {
   background: var(--selected);
   animation: tb-blink 2s ease-in-out infinite;
 }
@@ -215,7 +213,6 @@ html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle {
   50% { box-shadow: 0 0 0 4px rgba(255, 210, 127, .4), 0 0 22px 4px rgba(255, 210, 127, .55); }
 }
 @media (prefers-reduced-motion: reduce) {
-  html:not(.mobile-device) .left:has(#legendText.active) .controls,
   html:not(.mobile-device) .controls.attn,
   html:not(.mobile-device) .left:has(#legendText.active) .obj-toggle { animation: none; }
 }
