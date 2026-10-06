@@ -101,7 +101,7 @@ html:not(.mobile-device) .pub-desc {
 }
 .wel-backdrop.on { opacity: 1; }
 .wel-card {
-  position: relative; max-width: 560px; width: 100%;   /* four buttons on one row */
+  position: relative; max-width: 600px; width: 100%;   /* four buttons on one row */
   padding: 26px 28px 22px;
   background: rgba(12, 23, 40, .97);
   border: 1px solid rgba(158, 201, 255, .45);
@@ -112,7 +112,15 @@ html:not(.mobile-device) .pub-desc {
   transform: translateY(-22px); transition: transform .35s ease;
 }
 .wel-backdrop.on .wel-card { transform: none; }
-.wel-card h2 { margin: 0 0 10px; font-size: 22px; color: #fff; }
+.wel-card h2 { margin: 0; font-size: 22px; color: #fff; }
+.wel-head { display: flex; align-items: center; gap: 16px; margin-bottom: 14px; }
+.wel-photo {
+  width: 84px; height: 84px; border-radius: 50%; object-fit: cover; flex: 0 0 auto;
+  border: 2px solid rgba(158, 201, 255, .55);
+  box-shadow: 0 0 0 5px rgba(110, 163, 255, .12);
+}
+.wel-sub { margin-top: 3px; font-size: 13px; color: #8fa6c8; letter-spacing: .02em; }
+.wel-tease { color: #ffd88f; font-style: italic; }
 .wel-card p { margin: 0 0 10px; }
 .wel-ret { vertical-align: -4px; }
 .wel-x {
@@ -135,10 +143,18 @@ html:not(.mobile-device) .pub-desc {
 .mobile-device .wel-card h2 { font-size: 19px; }
 
 /* the help button pulses, same 2 s rhythm as the toolbar's glow, until used */
-.t3-replay.attn, .m-help.attn { animation: help-attn 2s ease-in-out infinite; }
+/* Until first used it is light blue, the selected-button blue, and pulses
+   a yellow ring; the first click drops the class and it goes back to the
+   quiet dark pill. */
+.t3-replay.attn, .m-help.attn {
+  background: var(--selected); border-color: #cfe2ff; color: #fff;
+  animation: help-attn 2s ease-in-out infinite;
+}
+.t3-replay.attn svg, .m-help.attn svg { color: #fff; }
 @keyframes help-attn {
-  50% { border-color: #ffd27f; color: #fff;
-        box-shadow: 0 0 0 4px rgba(255, 210, 127, .35), 0 0 18px 4px rgba(255, 210, 127, .45); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 210, 127, 0), 0 4px 14px rgba(0, 0, 0, .4); }
+  50% { border-color: #ffd27f;
+        box-shadow: 0 0 0 5px rgba(255, 210, 127, .45), 0 0 24px 6px rgba(110, 163, 255, .7); }
 }
 @media (prefers-reduced-motion: reduce) {
   .wel-backdrop, .wel-card { transition: none; }

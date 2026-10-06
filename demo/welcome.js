@@ -41,12 +41,24 @@
   back.innerHTML = `
     <div class="wel-card" role="dialog" aria-modal="true" aria-labelledby="welTitle">
       <button type="button" class="wel-x" aria-label="Close">&#215;</button>
-      <h2 id="welTitle">Hi, I'm Gautier.</h2>
-      <p>I'm a PhD student at MIT AeroAstro, building AI for space exploration,
-         from Earth observation to autonomy for planetary exploration.</p>
-      <p>My projects live in this solar system. Every object framed in yellow
+      <div class="wel-head">
+        <img class="wel-photo" src="images/headshot.jpg" width="84" height="84" alt="Gautier Bardi de Fourtou">
+        <div>
+          <h2 id="welTitle">Hi, I'm Gautier. Welcome!</h2>
+          <div class="wel-sub">PhD student · MIT AeroAstro</div>
+        </div>
+      </div>
+      <p>I work where artificial intelligence meets space exploration, from
+         Earth observation to autonomy for planetary exploration. Along the
+         way I've worked on projects at NASA JPL, ESA's European Astronaut
+         Centre and Frontier Development Lab.</p>
+      <p>This little solar system is my portfolio. Every planet or spacecraft
+         framed in yellow
          <img class="wel-ret" src="images/brackets-legend.webp" width="20" height="20" alt="">
-         opens one; click it, or scroll the list ${where}.</p>
+         holds one of my projects: click it to fly there and read the story,
+         or browse the list ${where}.</p>
+      <p class="wel-tease">Take your time. Land on the Moon, and you might even
+         get to drive a rover.</p>
       <div class="wel-actions">
         <button type="button" class="wel-go">Start exploring</button>
         <button type="button" data-act="about">About me</button>
