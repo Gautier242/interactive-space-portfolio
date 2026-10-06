@@ -9,17 +9,18 @@
 
 /* ---- 1. the project list: thumbnail, title, where, summary, chips -------- */
 html:not(.mobile-device) .pub-card {
-  display: flex; gap: 14px; align-items: flex-start;
-  padding: 12px 14px; margin-bottom: 10px;
+  display: flex; gap: 18px; align-items: flex-start;
+  padding: 16px; margin-bottom: 14px;
 }
 html:not(.mobile-device) .pub-card::after { content: none; }
+/* The figure keeps the original portfolio's place and size (250 px, scaled
+   by updateImageSizes with the panel, 150-350) and is shown whole: these are
+   scientific figures. Only the text beside it got shorter. */
 html:not(.mobile-device) .pub-image {
-  float: none; margin: 0; width: 150px; max-width: 30%;
-  /* a 4:3 thumbnail; updateImageSizes() writes an inline min-height sized
-     for the old figures, which made every thumbnail a square crop */
+  float: none; margin: 0; width: 250px; max-width: 45%;
   aspect-ratio: 4 / 3; height: auto; min-height: 0 !important;
 }
-html:not(.mobile-device) .pub-image img { object-fit: cover; }
+html:not(.mobile-device) .pub-image img { object-fit: contain; }
 html:not(.mobile-device) .pub-content { flex: 1; min-width: 0; }
 html:not(.mobile-device) .pub-header { margin-bottom: 4px; }
 html:not(.mobile-device) .pub-title { color: #fff; }
@@ -83,7 +84,10 @@ html:not(.mobile-device) .pub-desc {
 }
 .detail-links.pub-chips a:hover { transform: none; background: rgba(158, 201, 255, .14); }
 .detail-main .detail-desc {
-  text-align: left; line-height: 1.75; color: #c9d6ec; max-width: 70ch;
+  /* justified, as asked; hyphenation (the page is lang="en") keeps the
+     word spacing even instead of opening gaps on short lines */
+  text-align: justify; hyphens: auto; -webkit-hyphens: auto;
+  line-height: 1.75; color: #c9d6ec; max-width: 70ch;
 }
 .detail-main .detail-desc strong { color: #fff; font-weight: 600; }
 .detail-main .detail-subsection h4 { color: #fff; }

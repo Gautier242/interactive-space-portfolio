@@ -908,10 +908,10 @@ function updateImageSizes(rightPanelPercent) {
   // Prevent this function from setting fixed heights on mobile
   if (isMobileDevice) return; 
 
-  // thumbnails, not figures: the full figure lives in the detail view
-  const baseWidth = 150;
-  const minWidth = 110;
-  const maxWidth = 190;
+  // the figure is the card's draw: the original portfolio's sizes
+  const baseWidth = 250;
+  const minWidth = 150;
+  const maxWidth = 350;
   
   let newWidth = baseWidth * (rightPanelPercent / 67);
   newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));
