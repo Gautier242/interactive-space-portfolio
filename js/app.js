@@ -353,9 +353,10 @@ function renderPublications() {
       
       let linksHTML = '';
       if (pub.links && pub.links.length > 0) {
-        linksHTML = '<div class="pub-links">' + 
-          pub.links.map(l => `<a href="${l.u}" target="_blank" onclick="event.stopPropagation()">${l.t}</a>`).join('') + '</div>';
+        linksHTML = '<div class="pub-links pub-chips">' +
+          pub.links.map(l => `<a href="${l.u}" target="_blank" rel="noopener" title="${l.t}" onclick="event.stopPropagation()">${linkLabel(l)}</a>`).join('') + '</div>';
       }
+      const where = whereLine(pub);
       
       card.innerHTML = `
         <div class="pub-image">
@@ -365,13 +366,9 @@ function renderPublications() {
           <div class="pub-header">
             <div class="pub-title">${pub.title}</div>
             <div class="pub-inst">${pub.inst}</div>
-            ${pub.subInst ? `<div class="pub-subinst">${pub.subInst}</div>` : ''}
+            ${where ? `<div class="pub-subinst pub-where">${where}</div>` : ''}
           </div>
-          <div class="pub-desc">${pub.desc}</div>
-          <div class="pub-meta">
-            ${pub.authors ? `<div>${pub.authors}</div>` : ''}
-            ${pub.venue ? `<div style="margin-top:4px">${pub.venue}</div>` : ''}
-          </div>
+          <div class="pub-desc">${pub.summary || pub.desc}</div>
           ${linksHTML}
         </div>
       `;
@@ -852,13 +849,37 @@ if (!isMobileDevice && resizer) {
   });
 }
 
+// One "where · what" line for a card, built only from the project's own
+// subInst: its first two segments that are not a person (people are listed
+// in the detail view's fact sheet). No new wording is introduced.
+function whereLine(pub) {
+  if (!pub.subInst) return '';
+  return pub.subInst.split(' · ')
+    .filter(seg => !/^Dr\.?\s/.test(seg.trim()))
+    .slice(0, 2).join(' · ');
+}
+
+// Short chip label for a link; the full original text stays as its tooltip.
+function linkLabel(l) {
+  const u = l.u || '';
+  if (/agu\.confex\.com/.test(u)) return 'Abstract';
+  if (/openreview\.net/.test(u)) return 'Paper';
+  if (/arxiv\.org/.test(u)) return 'arXiv';
+  if (/researchgate\.net/.test(u)) return 'ResearchGate';
+  if (/full paper/i.test(l.t)) return 'Full paper';
+  if (/lab page/i.test(l.t)) return 'Lab page';
+  if (/website/i.test(l.t)) return 'Website';
+  return l.t;
+}
+
 function updateImageSizes(rightPanelPercent) {
   // Prevent this function from setting fixed heights on mobile
   if (isMobileDevice) return; 
 
-  const baseWidth = 250;
-  const minWidth = 150;
-  const maxWidth = 350;
+  // thumbnails, not figures: the full figure lives in the detail view
+  const baseWidth = 150;
+  const minWidth = 110;
+  const maxWidth = 190;
   
   let newWidth = baseWidth * (rightPanelPercent / 67);
   newWidth = Math.max(minWidth, Math.min(maxWidth, newWidth));

@@ -1,0 +1,50 @@
+/* READING — the redesign for legibility (branch redesign/reading).
+ *
+ * The list and the detail view were set as justified, dense blocks with
+ * blue bold phrases through them. This sheet restyles both for reading:
+ * left-aligned text, shorter lines, quieter colour, facts set apart.
+ * Desktop rules are scoped to html:not(.mobile-device); phones keep the
+ * layout mobile.css gives them unless a rule says otherwise.
+ */
+
+/* ---- 1. the project list: thumbnail, title, where, summary, chips -------- */
+html:not(.mobile-device) .pub-card {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 12px 14px; margin-bottom: 10px;
+}
+html:not(.mobile-device) .pub-card::after { content: none; }
+html:not(.mobile-device) .pub-image {
+  float: none; margin: 0; width: 150px; max-width: 30%;
+  /* a 4:3 thumbnail; updateImageSizes() writes an inline min-height sized
+     for the old figures, which made every thumbnail a square crop */
+  aspect-ratio: 4 / 3; height: auto; min-height: 0 !important;
+}
+html:not(.mobile-device) .pub-image img { object-fit: cover; }
+html:not(.mobile-device) .pub-content { flex: 1; min-width: 0; }
+html:not(.mobile-device) .pub-header { margin-bottom: 4px; }
+html:not(.mobile-device) .pub-title { color: #fff; }
+/* the group heading above already names the institution */
+html:not(.mobile-device) .pub-card .pub-inst { display: none; }
+.pub-where {
+  font-style: normal !important;
+  color: #8fa6c8 !important;
+  margin-top: 2px;
+}
+html:not(.mobile-device) .pub-desc {
+  text-align: left;
+  line-height: 1.5;
+  color: #c9d6ec;
+  margin: 4px 0 0;
+}
+.pub-chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  border-top: 0 !important; padding-top: 0 !important; margin-top: 8px !important;
+}
+.pub-chips a {
+  margin: 0 !important;
+  padding: 3px 10px; border-radius: 999px;
+  border: 1px solid rgba(158, 201, 255, .35);
+  color: #cfe2ff; text-decoration: none;
+  transition: background .15s, border-color .15s;
+}
+.pub-chips a:hover { background: rgba(158, 201, 255, .14); border-color: var(--accent); }
