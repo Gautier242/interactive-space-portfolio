@@ -45,8 +45,8 @@
 
   // While the legend is open it covers the top of the map, and with it the
   // top of the Sun's neighbourhood. Slide the rendered picture down so the
-  // middle of the scene sits in the middle of the space left between the
-  // legend's bottom edge and the bottom of the map. This is the camera's view
+  // middle of the scene moves a third of the way towards the middle of the
+  // space left between the legend's bottom edge and the bottom of the map. This is the camera's view
   // offset, a pure screen-space shift: the camera does not move, so follow,
   // zoom and framing are untouched, and picking stays right because the
   // offset is part of the projection the raycaster reads. Eased in and out.
@@ -59,7 +59,9 @@
     let want = 0;
     if (legend.classList.contains('active') && !onMoon && h) {
       const below = legend.getBoundingClientRect().bottom - panel.getBoundingClientRect().top;
-      want = Math.max(0, Math.min(h * 0.3, below / 2));
+      // a third of the way to centring the scene in the free space: enough
+      // to clear the Sun from under the legend, while the map stays put
+      want = Math.max(0, Math.min(h * 0.3, below / 2)) / 3;
     }
     shift += (want - shift) * 0.12;
     if (Math.abs(want - shift) < 0.3) shift = want;
@@ -105,22 +107,6 @@
     fit();
   }
 
-  // Every load opens the legend, so nobody has to discover the button first;
-  // the toolbar lights up with it (tour3.css). It closes on the visitor's
-  // first gesture anywhere else, so it never sits over the map once they have
-  // started exploring. Not on a ?p= deep link, which was shared to show one
-  // project, nor on phones, which use mobile.js.
-  const mobile = document.documentElement.classList.contains('mobile-device');
-  const deepLink = new URLSearchParams(location.search).has('p');
-  if (legend && !mobile && !deepLink) {
-    legend.classList.add('active');
-    const GESTURES = ['pointerdown', 'wheel', 'keydown'];
-    const close = e => {
-      GESTURES.forEach(t => removeEventListener(t, close, true));
-      // the button and the legend already toggle it themselves
-      if (e.target && e.target.closest && e.target.closest('.t3-replay, #legendText')) return;
-      legend.classList.remove('active');
-    };
-    GESTURES.forEach(t => addEventListener(t, close, { capture: true, passive: true }));
-  }
+  // The legend no longer opens by itself: the welcome card (welcome.js)
+  // greets the visitor, then makes this button pulse until it is used.
 })();

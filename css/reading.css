@@ -91,3 +91,56 @@ html:not(.mobile-device) .pub-desc {
 .mobile-device .detail-content { padding: 14px 12px 22px; }
 .mobile-device .detail-grid { grid-template-columns: 1fr; gap: 14px; }
 .mobile-device .detail-facts { position: static; }
+
+/* ---- 3. the welcome card and the help button's pulse ------------------- */
+.wel-backdrop {
+  position: fixed; inset: 0; z-index: 7000;
+  display: flex; align-items: center; justify-content: center; padding: 16px;
+  background: rgba(2, 5, 12, .62);
+  opacity: 0; transition: opacity .3s ease;
+}
+.wel-backdrop.on { opacity: 1; }
+.wel-card {
+  position: relative; max-width: 560px; width: 100%;   /* four buttons on one row */
+  padding: 26px 28px 22px;
+  background: rgba(12, 23, 40, .97);
+  border: 1px solid rgba(158, 201, 255, .45);
+  border-radius: 14px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .6);
+  color: #dbe7ff; font: 400 15px/1.6 Inter, system-ui, sans-serif;
+  /* comes down from above, as a banner would */
+  transform: translateY(-22px); transition: transform .35s ease;
+}
+.wel-backdrop.on .wel-card { transform: none; }
+.wel-card h2 { margin: 0 0 10px; font-size: 22px; color: #fff; }
+.wel-card p { margin: 0 0 10px; }
+.wel-ret { vertical-align: -4px; }
+.wel-x {
+  position: absolute; top: 8px; right: 10px; width: 34px; height: 34px;
+  background: none; border: 0; color: #8fa6c8; font-size: 22px; cursor: pointer;
+}
+.wel-x:hover { color: #fff; }
+.wel-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.wel-actions button, .wel-actions a {
+  font: 600 13px/1 Inter, system-ui, sans-serif;
+  padding: 9px 14px; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(158, 201, 255, .4); background: none;
+  color: #cfe2ff; text-decoration: none;
+}
+.wel-actions button:hover, .wel-actions a:hover { background: rgba(158, 201, 255, .14); }
+.wel-actions .wel-go { background: var(--selected); border-color: var(--selected); color: #fff; }
+.wel-actions .wel-go:hover { background: #82b1ff; }
+.wel-actions :focus-visible, .wel-x:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
+.mobile-device .wel-card { padding: 22px 18px 18px; font-size: 14px; }
+.mobile-device .wel-card h2 { font-size: 19px; }
+
+/* the help button pulses, same 2 s rhythm as the toolbar's glow, until used */
+.t3-replay.attn, .m-help.attn { animation: help-attn 2s ease-in-out infinite; }
+@keyframes help-attn {
+  50% { border-color: #ffd27f; color: #fff;
+        box-shadow: 0 0 0 4px rgba(255, 210, 127, .35), 0 0 18px 4px rgba(255, 210, 127, .45); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wel-backdrop, .wel-card { transition: none; }
+  .t3-replay.attn, .m-help.attn { animation: none; border-color: #ffd27f; }
+}

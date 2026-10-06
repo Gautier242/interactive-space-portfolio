@@ -256,28 +256,14 @@
   // Not modal. Scrolling the list leaves it up (a scroll is not a click);
   // tapping anything else closes it AND still does what the tap was for,
   // so a tapped card opens its project straight away.
-  var clicked = false;
   document.addEventListener('click', function (e) {
-    clicked = true;
     if (!document.documentElement.classList.contains('m-sheet-on')) return;
     if (sheet.contains(e.target) || help.contains(e.target)) return;
     setSheet(false);
   }, true);
 
-  // First visit: let the map play for a few seconds, blink the button three
-  // times so its place is learned, then open the card from it. Skipped if the
-  // visitor has already tapped something, since they are exploring by then.
-  var helpSeen = false;
-  try { helpSeen = !!localStorage.getItem('helpSeen'); } catch (_) {}
-  if (!helpSeen) {
-    setTimeout(function () {
-      help.classList.add('m-blink');
-      setTimeout(function () {
-        help.classList.remove('m-blink');
-        if (!clicked) setSheet(true);
-      }, 1800);   // three 0.6 s blinks, mobile.css
-    }, 6000);
-  }
+  // Nothing opens by itself any more: the welcome card (welcome.js) greets
+  // the visitor on every load, then makes this button pulse until used.
 
   // Centring on the Sun is done in framing.js (it zeroes its thirds-line
   // offset on mobile). Doing it here instead fought framing's idle drift,
