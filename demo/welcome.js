@@ -9,11 +9,19 @@
  * their way by then).
  *
  * Not shown on a ?p= deep link: that link was shared to show one project.
+ *
+ * Loaded BEFORE the 3D scripts, so the card is on screen within a few
+ * hundred ms and the scene (textures, shaders, models: ~3-4 s of work)
+ * loads behind it while the visitor reads. Anything a button needs from
+ * those later scripts waits for the window load event.
  */
 (function () {
   const mobile = document.documentElement.classList.contains('mobile-device');
   const deepLink = new URLSearchParams(location.search).has('p');
   const detail = document.getElementById('detailView');
+  // run now if every script has loaded, else as soon as they have
+  const whenLoaded = fn => document.readyState === 'complete'
+    ? fn() : addEventListener('load', () => fn(), { once: true });
   // desktop's help button is tour3.js's, the phone's is mobile.js's
   const helpBtn = () => document.querySelector(mobile ? '.m-help' : '.t3-replay');
 
@@ -41,7 +49,7 @@
     }
   }
 
-  if (deepLink) { attention(); return; }
+  if (deepLink) { whenLoaded(attention); return; }
 
   // ---- the card -------------------------------------------------------------
   const where = mobile ? 'below' : 'on the right';
@@ -92,7 +100,7 @@
     back.classList.remove('on');
     removeEventListener('keydown', onKey, true);
     setTimeout(() => back.remove(), 350);
-    if (then) then(); else attention();
+    whenLoaded(then || attention);
   }
   function onKey(e) { if (e.key === 'Escape') close(); }
   addEventListener('keydown', onKey, true);
