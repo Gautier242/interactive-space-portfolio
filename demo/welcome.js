@@ -60,8 +60,9 @@
          framed by yellow corners <span class="ret" aria-hidden="true"></span>,
          like the Sun, Earth, the ISS or Mars, holds one of my projects: click
          it to fly there and read the story, or browse the list ${where}.</p>
-      <p class="wel-tease">Take your time. Land on the Moon, and you might even
-         get to drive a rover.</p>
+      <p class="wel-tease">Take your time to explore and discover different
+         worlds. Maybe land on the Moon and figure out how to drive a rover to
+         collect Moon rock samples.</p>
       <div class="wel-actions">
         <button type="button" class="wel-go">Start exploring</button>
         <button type="button" data-act="about">About me</button>
