@@ -125,25 +125,28 @@
         </div>
         </div>
       <div class="detail-content">
-        <div class="detail-top">
-          <div class="detail-image" id="detailImageContainer">
-            <img id="detailImg" src="" alt=""/>
-          </div>
-          <div class="detail-info">
-            <h3 class="detail-title" id="detailTitle"></h3>
-            <div class="detail-inst" id="detailInst"></div>
-            <div class="detail-subinst" id="detailSubInst"></div>
-            <p class="detail-desc" id="detailDesc"></p>
+        <!-- Fiche layout: summary first, then the facts a reviewer looks for
+             (where, venue, team, links) beside the text, not under it. -->
+        <h3 class="detail-title" id="detailTitle"></h3>
+        <p class="detail-lead" id="detailLead"></p>
+        <div class="detail-grid">
+          <aside class="detail-facts">
+            <div class="detail-image" id="detailImageContainer">
+              <img id="detailImg" src="" alt=""/>
+            </div>
+            <dl class="facts" id="detailFacts"></dl>
+            <div class="detail-links" id="detailLinks"></div>
+          </aside>
+          <div class="detail-main">
+            <div class="detail-desc" id="detailDesc"></div>
+            <div id="detailSubsections"></div>
           </div>
         </div>
-        <div class="detail-extended">
-          <div id="detailExtendedDesc" class="detail-extended-desc"></div>
-          <div class="detail-meta">
-            <div id="detailAuthors"></div>
-            <div id="detailVenue"></div>
-          </div>
-          <div id="detailSubsections"></div>
-          <div class="detail-links" id="detailLinks"></div>
+        <!-- superseded by the fact sheet; kept so nothing that sets them breaks -->
+        <div hidden>
+          <div id="detailInst"></div><div id="detailSubInst"></div>
+          <div id="detailExtendedDesc"></div>
+          <div id="detailAuthors"></div><div id="detailVenue"></div>
         </div>
       </div>
     </div>

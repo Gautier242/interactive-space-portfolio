@@ -521,8 +521,14 @@ function showDetail(item) {
   // Show extended description if available, otherwise fallback to short description.
   const detailExtendedDesc = document.getElementById('detailExtendedDesc');
   
-  // Set the main description block to the best available text
-  detailDesc.innerHTML = item.extendedDesc || item.desc;
+  // Lead: the short summary (the classic portfolio's, or the card text).
+  // Body: the long text when there is one. Without a long text the summary
+  // already says it all, so the body stays empty rather than repeating it.
+  const lead = item.summary || item.desc || '';
+  document.getElementById('detailLead').innerHTML = lead;
+  detailDesc.innerHTML = item.extendedDesc || (item.summary ? item.desc : '') || '';
+  document.getElementById('detailFacts').innerHTML = factsFor(item)
+    .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
   
   // Ensure the secondary "extended" block is hidden/empty to prevent duplication
   if (detailExtendedDesc) {
@@ -559,9 +565,10 @@ function showDetail(item) {
   
   let linksHTML = '';
   if (item.links && item.links.length > 0) {
-    linksHTML = item.links.map(l => `<a href="${l.u}" target="_blank">${l.t}</a>`).join('');
+    linksHTML = item.links.map(l => `<a href="${l.u}" target="_blank" rel="noopener" title="${l.t}">${linkLabel(l)}</a>`).join('');
   }
   detailLinks.innerHTML = linksHTML;
+  detailLinks.classList.add('pub-chips');
   setProjectParam(item.id);
   
   // Shrink left panel to 30% when showing detail.
@@ -857,6 +864,31 @@ function whereLine(pub) {
   return pub.subInst.split(' · ')
     .filter(seg => !/^Dr\.?\s/.test(seg.trim()))
     .slice(0, 2).join(' · ');
+}
+
+// The fact sheet beside a project's text, built only from its own fields:
+// subInst's first segment is where, its "Dr." segments are the people it
+// was done with, and the rest are details (format, status). Nothing is
+// worded anew; a row with nothing to say is left out.
+function factsFor(item) {
+  const segs = (item.subInst || '').split(' · ').map(x => x.trim()).filter(Boolean);
+  const people = segs.filter(x => /^Dr\.?\s/.test(x));
+  const rest = segs.filter(x => !/^Dr\.?\s/.test(x));
+  const where = rest[0] || item.inst;
+  // drop a detail that only restates the venue ("ICLR 2026 Workshop
+  // FM4Science" beside "ICLR 2026 Workshop on Foundation Models…"): same
+  // first two words
+  const lead2 = x => x.toLowerCase().replace(/[^a-z0-9 ]/g, ' ').split(/\s+/).filter(Boolean).slice(0, 2).join(' ');
+  const details = rest.slice(1)
+    .filter(x => !item.venue || lead2(x) !== lead2(item.venue))
+    .join(' · ');
+  return [
+    ['Where', where],
+    ['Venue', item.venue],
+    ['Details', details],
+    ['Team', item.authors],
+    ['With', people.join(', ')],
+  ].filter(([, v]) => v);
 }
 
 // Short chip label for a link; the full original text stays as its tooltip.

@@ -48,3 +48,46 @@ html:not(.mobile-device) .pub-desc {
   transition: background .15s, border-color .15s;
 }
 .pub-chips a:hover { background: rgba(158, 201, 255, .14); border-color: var(--accent); }
+
+/* ---- 2. the detail view: summary first, facts beside the text ---------- */
+.detail-content { padding: 22px 26px 30px; }
+.detail-title { color: #fff; margin-bottom: 8px; }
+.detail-lead {
+  font-size: calc(16.5px * var(--list-font-scale));
+  line-height: 1.6; color: #eef3fc;
+  max-width: 72ch; margin: 0 0 22px;
+}
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(200px, 32%) minmax(0, 1fr);
+  gap: 30px; align-items: start;
+}
+.detail-facts { position: sticky; top: 12px; }
+/* main.css floats this figure left of the text; here it heads the fact column */
+.detail-image {
+  float: none; max-width: 100%; margin: 0 0 14px;
+}
+.detail-image.about-image { max-width: 140px; }
+.facts { margin: 0 0 14px; font-size: calc(13px * var(--list-font-scale)); }
+.facts dt {
+  font-size: 10.5px; letter-spacing: .09em; text-transform: uppercase;
+  color: #8fa6c8; font-weight: 700; margin-top: 12px;
+}
+.facts dt:first-child { margin-top: 0; }
+.facts dd { margin: 3px 0 0; color: #e6eefb; line-height: 1.45; }
+.detail-links { border-top: 0; padding-top: 0; }
+.detail-links.pub-chips a {
+  display: inline-block; padding: 4px 11px; background: none;
+  border: 1px solid rgba(158, 201, 255, .4); border-radius: 999px;
+  color: #cfe2ff; font-size: calc(12.5px * var(--list-font-scale)) !important;
+}
+.detail-links.pub-chips a:hover { transform: none; background: rgba(158, 201, 255, .14); }
+.detail-main .detail-desc {
+  text-align: left; line-height: 1.75; color: #c9d6ec; max-width: 70ch;
+}
+.detail-main .detail-desc strong { color: #fff; font-weight: 600; }
+.detail-main .detail-subsection h4 { color: #fff; }
+
+.mobile-device .detail-content { padding: 14px 12px 22px; }
+.mobile-device .detail-grid { grid-template-columns: 1fr; gap: 14px; }
+.mobile-device .detail-facts { position: static; }
