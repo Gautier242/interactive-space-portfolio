@@ -379,9 +379,44 @@
   }
   function release() { hoverLocked = false; }
 
+  // the panel rectangle (px) a named object covers, in whichever world is
+  // showing (layout.js puts its card beside it). A body that is a mesh itself
+  // (planets, the Sun's core) is its bounding sphere: the Sun's glow children
+  // made it ~4x the disc. A spacecraft group is the box of all its meshes.
+  const _c = new THREE.Vector3(), _sph = new THREE.Sphere();
+  function where(name) {
+    const mesh = meshFor(name);
+    if (!mesh) return null;
+    const cam = view(), w = panel.clientWidth, h = panel.clientHeight;
+    const px = v => [(v.x * 0.5 + 0.5) * w, (-v.y * 0.5 + 0.5) * h];
+    if (mesh.isMesh && mesh.geometry) {
+      if (!mesh.geometry.boundingSphere) mesh.geometry.computeBoundingSphere();
+      _sph.copy(mesh.geometry.boundingSphere).applyMatrix4(mesh.matrixWorld);
+      const d = cam.position.distanceTo(_sph.center);
+      _c.copy(_sph.center).project(cam);
+      if (_c.z > 1) return null;
+      const [x, y] = px(_c);
+      const r = _sph.radius / Math.max(d, 0.001) * (h / 2) / Math.tan((cam.fov * Math.PI / 180) / 2);
+      return { x0: x - r, y0: y - r, x1: x + r, y1: y + r };
+    }
+    _b.makeEmpty();
+    const tmp = new THREE.Box3();
+    mesh.traverse(o => { if (o.isMesh && o.geometry && o.visible) _b.union(tmp.setFromObject(o)); });
+    if (_b.isEmpty()) return null;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (let i = 0; i < 8; i++) {
+      _c.set(i & 1 ? _b.max.x : _b.min.x, i & 2 ? _b.max.y : _b.min.y, i & 4 ? _b.max.z : _b.min.z).project(cam);
+      if (_c.z > 1) return null;
+      const [x, y] = px(_c);
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    }
+    return { x0, y0, x1, y1 };
+  }
+
   window.__objReadout = {
     close, setInfo, show, release,
     pick: hit,   // body name under a point in normalised device coords (layout.js)
+    where,
     get on() { return infoOn; },
     get subject() { return locked && locked.name; },
   };

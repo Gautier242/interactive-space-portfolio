@@ -98,35 +98,97 @@
   left.appendChild(card);
   let shown = null;   // the publication on the card
 
-  function showCard(name, x, y) {
-    const list = pubsFor(name);
-    if (!list.length) return hideCard();
-    const pub = list[0];
-    if (!shown || shown.id !== pub.id) {
-      shown = pub;
-      card.innerHTML =
-        '<img src="' + pub.img + '" srcset="' + (window.imgSrcset ? window.imgSrcset(pub.img) : '') + '" sizes="132px" alt="">' +
-        '<span class="fs-txt"><b>' + pub.title + '</b><span>' + short(pub.summary || pub.desc) + '</span>' +
-        '<em>' + (list.length > 1 ? list.length + ' projects here · ' : '') + 'Click to read the project →</em></span>';
-    }
-    card.hidden = false;
-    // beside the pointer, flipped so it never leaves the screen
-    const w = card.offsetWidth, h = card.offsetHeight;
-    const px = x + 22 + w > innerWidth ? x - 22 - w : x + 22;
-    const py = Math.min(Math.max(12, y - h / 2), innerHeight - h - 12);
-    card.style.transform = 'translate(' + px + 'px,' + py + 'px)';
+  // Hover intent. The card opens beside the OBJECT after a short dwell, never
+  // under the pointer, so a click on the object stays a click on the object.
+  // It stays while the pointer is on the object, on the card, or on its way
+  // between them, and goes GRACE ms after it is on neither. Resting on the
+  // object IGNORED ms without going to the card reads as "not for me": the
+  // card fades and stays away until the pointer leaves the object and
+  // comes back.
+  const DWELL = 150, GRACE = 350, IGNORED = 3000;
+  let over;             // object with a project under the pointer (null: none)
+  let snoozed = null;   // object whose card was ignored
+  let onCard = false, tDwell = 0, tHide = 0, tIgnore = 0, tFade = 0;
+  const ptr = [0, 0];   // pointer, panel px
+
+  function fillCard(name) {
+    const list = pubsFor(name), pub = list[0];
+    shown = pub;
+    card.innerHTML =
+      '<img src="' + pub.img + '" srcset="' + (window.imgSrcset ? window.imgSrcset(pub.img) : '') + '" sizes="132px" alt="">' +
+      '<span class="fs-txt"><b>' + pub.title + '</b><span>' + short(pub.summary || pub.desc) + '</span>' +
+      '<em>' + (list.length > 1 ? list.length + ' projects here · ' : '') + 'Click to read the project →</em></span>';
   }
-  function hideCard() { card.hidden = true; shown = null; }
+
+  // Beside the object, on the side with room; beside the pointer when the
+  // object is too big for that; never under the pointer. Placed once: a card
+  // that rode with Starship's hops slid away from the pointer on its way.
+  function place() {
+    const at = window.__objReadout.where(shown.body);
+    if (!at) return;
+    const w = card.offsetWidth, h = card.offsetHeight, W = left.clientWidth, H = left.clientHeight;
+    let x = at.x1 + 18;
+    if (x + w > W - 12) x = at.x0 - 18 - w;
+    if (x < 12) x = ptr[0] + 28 + w > W - 12 ? ptr[0] - 28 - w : ptr[0] + 28;
+    x = Math.min(Math.max(12, x), W - w - 12);
+    let y = Math.min(Math.max(12, (at.y0 + at.y1) / 2 - h / 2), H - h - 12);
+    if (ptr[0] >= x - 8 && ptr[0] <= x + w + 8 && ptr[1] >= y - 8 && ptr[1] <= y + h + 8) {
+      y = ptr[1] + 28 + h > H - 12 ? ptr[1] - 28 - h : ptr[1] + 28;
+    }
+    card.style.transform = 'translate(' + Math.round(x) + 'px,' + Math.round(y) + 'px)';
+  }
+
+  function showCard(name) {
+    clearTimeout(tFade);
+    card.classList.remove('fs-fade');
+    card.hidden = false;
+    if (!shown || shown.body !== name) { fillCard(name); place(); }
+    armIgnore();
+  }
+  function hideCard() {
+    [tDwell, tHide, tIgnore, tFade].forEach(clearTimeout);
+    card.hidden = true; card.classList.remove('fs-fade');
+    shown = null; onCard = false;
+  }
+  function hideSoon() { clearTimeout(tHide); tHide = setTimeout(hideCard, GRACE); }
+  function armIgnore() {
+    clearTimeout(tIgnore);
+    tIgnore = setTimeout(() => {
+      if (onCard || !shown || over !== shown.body) return;
+      snoozed = over;
+      card.classList.add('fs-fade');
+      tFade = setTimeout(hideCard, 300);
+    }, IGNORED);
+  }
 
   left.addEventListener('pointermove', e => {
     if (!isFull() || !window.__objReadout || !window.__objReadout.pick) return;
-    if (card.contains(e.target)) return;          // moving onto the card keeps it
+    if (card.contains(e.target)) return;
     const r = left.getBoundingClientRect();
-    const name = window.__objReadout.pick(((e.clientX - r.left) / r.width) * 2 - 1,
-                                          -((e.clientY - r.top) / r.height) * 2 + 1);
-    if (name) showCard(name, e.clientX, e.clientY); else hideCard();
+    ptr[0] = e.clientX - r.left; ptr[1] = e.clientY - r.top;
+    let n = window.__objReadout.pick((ptr[0] / r.width) * 2 - 1, -(ptr[1] / r.height) * 2 + 1);
+    if (n && !pubsFor(n).length) n = null;
+    if (n === over) return;
+    if (over && over === snoozed) snoozed = null;    // left it: it may come back
+    over = n;
+    clearTimeout(tDwell); clearTimeout(tIgnore);
+    if (!n || n === snoozed) { if (shown) hideSoon(); return; }
+    if (shown && shown.body === n) { clearTimeout(tHide); armIgnore(); return; }
+    tDwell = setTimeout(() => { if (over === n) { clearTimeout(tHide); showCard(n); } }, DWELL);
   });
+  card.addEventListener('pointerenter', () => {
+    onCard = true; over = undefined;                  // re-read on the way out
+    clearTimeout(tHide); clearTimeout(tIgnore); clearTimeout(tFade);
+    card.classList.remove('fs-fade');
+  });
+  card.addEventListener('pointerleave', () => { onCard = false; hideSoon(); });
   left.addEventListener('pointerleave', hideCard);
+  // a click on the map flies the camera: the card would be left pointing at
+  // where the object was. Close it; the dwell starts again from here.
+  left.addEventListener('pointerdown', e => {
+    if (card.contains(e.target)) return;
+    hideCard(); over = undefined;
+  });
 
   // open the project the way a list click does (detail view + flight). On the
   // Moon a list click would leave the Moon world (app.js), so there it opens
