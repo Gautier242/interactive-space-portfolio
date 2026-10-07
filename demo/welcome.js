@@ -96,6 +96,8 @@
         <button type="button" data-act="help">How to explore</button>
         <a href="https://gautier242.github.io/portfolio/" target="_blank" rel="noopener">Classic portfolio</a>
       </div>
+      <p class="wel-note">Not to scale: sizes and distances on this map are not
+         meant to be even remotely realistic.</p>
     </div>`;
   document.body.appendChild(back);
   const card = back.querySelector('.wel-card');

@@ -126,6 +126,7 @@ html:not(.mobile-device) .pub-desc {
 .wel-sub { margin-top: 3px; font-size: 13px; color: #8fa6c8; letter-spacing: .02em; }
 .wel-tease { color: #ffd88f; font-style: italic; }
 .wel-card:focus { outline: none; }
+.wel-card p.wel-note { margin: 14px 0 0; font-size: 11px; line-height: 1.4; color: #6d84a6; text-align: left; }
 .wel-card p a { color: #9ec9ff; text-decoration: underline; text-underline-offset: 2px; }
 .wel-card p a:hover { color: #fff; }
 .wel-card p { margin: 0 0 10px; text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
