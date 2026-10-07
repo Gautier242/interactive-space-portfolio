@@ -80,8 +80,8 @@
          and
          <a href="https://aeroastro.mit.edu/people/daniel-varon/" target="_blank" rel="noopener">Dr. Daniel Varon</a>.
          My research focuses on where artificial intelligence meets space
-         exploration, from Earth observation to autonomy for planetary
-         exploration. Along the way I've worked on projects at NASA JPL, ESA's
+         exploration, from Earth observation and remote sensing to autonomy for
+         planetary exploration. Along the way I've worked on projects at NASA JPL, ESA's
          European Astronaut Centre and Frontier Development Lab.</p>
       <p>This little solar system is my portfolio. Every planet or spacecraft
          framed by yellow corners <span class="ret" aria-hidden="true"></span>,
