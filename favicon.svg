@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="s" cx="40%" cy="38%" r="68%">
+      <stop offset="0" stop-color="#fff6c2"/>
+      <stop offset=".4" stop-color="#ffc53d"/>
+      <stop offset=".8" stop-color="#f7841c"/>
+      <stop offset="1" stop-color="#d9480f"/>
+    </radialGradient>
+  </defs>
+  <g fill="#ffb020">
+    <path id="r" d="M32 1 L36 13 L28 13 Z"/>
+    <use href="#r" transform="rotate(45 32 32)"/>
+    <use href="#r" transform="rotate(90 32 32)"/>
+    <use href="#r" transform="rotate(135 32 32)"/>
+    <use href="#r" transform="rotate(180 32 32)"/>
+    <use href="#r" transform="rotate(225 32 32)"/>
+    <use href="#r" transform="rotate(270 32 32)"/>
+    <use href="#r" transform="rotate(315 32 32)"/>
+  </g>
+  <circle cx="32" cy="32" r="18" fill="url(#s)"/>
+</svg>
