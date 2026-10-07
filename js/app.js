@@ -331,6 +331,7 @@ function groupPublications() {
 }
 
 function renderPublications() {
+  let firstTwo = 0;   // the two figures in view on arrival load at once, the rest in stage 3
   const pubsList = document.getElementById('pubsList');
   const grouped = groupPublications();
   
@@ -360,7 +361,9 @@ function renderPublications() {
       
       card.innerHTML = `
         <div class="pub-image">
-          <img src="${pub.img}" srcset="${window.imgSrcset(pub.img)}" sizes="auto, (max-width: 900px) 100vw, (max-width: 1200px) 200px, 250px" alt="${pub.title}" loading="lazy" onerror="this.onerror=null;this.srcset='';this.src=window.PLACEHOLDER_IMG"/>
+          <img ${firstTwo++ < 2
+              ? `src="${pub.img}" srcset="${window.imgSrcset(pub.img)}" fetchpriority="high"`
+              : `data-src="${pub.img}" data-srcset="${window.imgSrcset(pub.img)}"`} sizes="(max-width: 900px) 100vw, (max-width: 1200px) 200px, 250px" alt="${pub.title}" onerror="this.onerror=null;this.srcset='';this.src=window.PLACEHOLDER_IMG"/>
         </div>
         <div class="pub-content">
           <div class="pub-header">
@@ -3228,6 +3231,31 @@ document.addEventListener('keyup', e => {
 
 
 renderPublications();
+
+// Load stage 3 (order in planets-real.js): the figures further down the list
+// load once the coarse solar system is in, or as soon as the list is
+// scrolled, whichever comes first; then the 2k planet maps may start.
+(function releaseFigures() {
+  const list = document.getElementById('pubsList');
+  let released = false;
+  function release() {
+    if (released) return;
+    released = true;
+    const imgs = [...list.querySelectorAll('img[data-src]')];
+    let left = imgs.length;
+    if (!left) return PlanetsReal.stage('pubs');
+    imgs.forEach(img => {
+      let counted = false;   // the placeholder fallback fires a second event
+      const done = () => { if (!counted) { counted = true; if (--left === 0) PlanetsReal.stage('pubs'); } };
+      img.addEventListener('load', done);
+      img.addEventListener('error', done);
+      img.srcset = img.dataset.srcset;
+      img.src = img.dataset.src;
+    });
+  }
+  PlanetsReal.onStage('coarse', release, 8000);
+  list.addEventListener('scroll', release, { once: true, passive: true });
+})();
 
 // ---- deep links: ?p=<id> -------------------------------------------------
 // Every entry already carries a stable id ("isu", "swot", "rover", ...), so a

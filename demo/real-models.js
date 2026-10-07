@@ -190,8 +190,8 @@
     }, 500);
   }
 
-  if ('requestIdleCallback' in window) requestIdleCallback(ready, { timeout: 4000 });
-  else setTimeout(ready, 1500);
+  // Last load stage (order in planets-real.js): after the 2k planet maps.
+  PlanetsReal.onStage('hires', ready, 20000);
 
   // ---- LOD tick ---------------------------------------------------------
   const camPos = new THREE.Vector3(), objPos = new THREE.Vector3();

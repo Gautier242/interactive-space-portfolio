@@ -15,25 +15,41 @@
   var reducedMotion = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var loader = new THREE.TextureLoader();
   var timeUniforms = [];
   var cloudLayers = [];
 
-  // ---- mobile: half-resolution copies where nothing depends on the pixels --
-  // Twelve textures at 2048x1024 are 25.2M pixels, which Three.js decodes and
-  // uploads as RGBA8 with mipmaps: about 134 MB of texture memory built during
-  // startup. On a phone that costs far more than the download does.
-  //
-  // Only Moon, Mercury and Mars may not be touched: BUMP below gives them a
-  // relief term, and the shader derives it from texture luminance at a fixed
-  // UV offset, so their apparent surface changes with resolution. Every other
-  // body has uBump 0 and the 'if (uBump > 0.0)' branch never runs, so its
-  // texture is sampled for colour alone.
-  //
-  // The nine listed here ship a 1024x512 copy for phones: 1564K -> 340K to
-  // download, and 18.9M -> 4.7M pixels to decode and upload. A planet spans
-  // 50-300 px on a phone screen, so 1024 is still well past what it can show.
-  // Desktop is untouched and keeps every 2k file.
+  // ---- load order ------------------------------------------------------------
+  // The page loads in stages so what a visitor sees first is complete first:
+  //   1. the welcome card (welcome.js, before any 3D script)
+  //   2. the two publication figures at the top of the list (app.js) and a
+  //      coarse solar system: every planet map at 1024x512, ~0.7 MB instead
+  //      of 3.2 MB, the Sun's first and at high priority   -> 'coarse'
+  //   3. the publication figures further down the list (app.js) -> 'pubs'
+  //   4. every planet map at 2048x1024, swapped into the same Texture object,
+  //      so close-ups are full resolution                    -> 'hires'
+  //   5. the 3D spacecraft models (real-models.js)
+  // Each stage also starts on its own after a timeout, so a failed or slow
+  // file can delay the next one but never block it.
+  var stages = {};
+  function stage(name) {
+    if (stages[name]) return;
+    stages[name] = true;
+    document.dispatchEvent(new Event('load:' + name));
+  }
+  // fn runs once `name` is reached, or after fallbackMs, whichever is first
+  function onStage(name, fn, fallbackMs) {
+    var done = false;
+    function go() { if (!done) { done = true; fn(); } }
+    if (stages[name]) return go();
+    document.addEventListener('load:' + name, go, { once: true });
+    if (fallbackMs) setTimeout(go, fallbackMs);
+  }
+
+  // 1024x512 copies. Twelve maps at 2048x1024 are 25.2M pixels (about 134 MB
+  // of texture memory with mipmaps); the copies are a quarter of that.
+  // Phones stay on them for good, except Moon, Mercury and Mars (BUMPY):
+  // BUMP below derives their crater relief from texture luminance at a UV
+  // offset tuned for 2048 px, so they always end on the 2k map.
   var HALF = {
     '2k_earth_clouds.webp':     '1k_earth_clouds.webp',
     '2k_earth_daymap.webp':     '1k_earth_daymap.webp',
@@ -43,23 +59,54 @@
     '2k_saturn.webp':           '1k_saturn.webp',
     '2k_venus_atmosphere.webp': '1k_venus_atmosphere.webp',
     '2k_uranus.webp':           '1k_uranus.webp',
-    '2k_neptune.webp':          '1k_neptune.webp'
+    '2k_neptune.webp':          '1k_neptune.webp',
+    '2k_moon.webp':             '1k_moon.webp',
+    '2k_mercury.webp':          '1k_mercury.webp',
+    '2k_mars.webp':             '1k_mars.webp'
   };
+  var BUMPY = { '2k_moon.webp': 1, '2k_mercury.webp': 1, '2k_mars.webp': 1 };
   var HALF_RES = document.documentElement.classList.contains('mobile-device');
 
-  // Shared so anything else loading these files picks the same variant.
-  // sun-activity.js builds the photosphere with its own TextureLoader and was
-  // the one path that bypassed this, which is why the Sun stayed at 2k after
-  // the rest had halved.
-  function texUrl(file) {
-    return 'assets/textures/' + ((HALF_RES && HALF[file]) ? HALF[file] : file);
+  function loadImg(url, priority, cb) {
+    var img = new Image();
+    img.fetchPriority = priority;
+    img.decoding = 'async';
+    img.onload = function () { cb(img); };
+    img.onerror = function () { cb(null); };
+    img.src = url;
   }
 
-  function tex(file) {
-    var t = loader.load(texUrl(file));
+  var pending = 0, upgrades = [];
+  // Every planet map goes through here (sun-activity.js too). onLoad fires
+  // when the first image is on the texture.
+  function tex(file, onLoad) {
+    var t = new THREE.Texture();
     t.anisotropy = 4;
+    if (/\.jpe?g$/.test(file)) t.format = THREE.RGBFormat;   // as TextureLoader did
+    var small = HALF[file];
+    if (small && (!HALF_RES || BUMPY[file])) upgrades.push({ t: t, file: file });
+    pending++;
+    loadImg('assets/textures/' + (small || file), file === '2k_sun.webp' ? 'high' : 'auto', function (img) {
+      if (img) { t.image = img; t.needsUpdate = true; }
+      if (onLoad) onLoad(t);
+      if (--pending === 0) stage('coarse');
+    });
     return t;
   }
+
+  // Stage 4. All tex() calls happen while app.js builds the scene, before any
+  // image can finish, so 'coarse' cannot fire early.
+  onStage('pubs', function () {
+    var left = upgrades.length;
+    if (!left) return stage('hires');
+    upgrades.forEach(function (u) {
+      loadImg('assets/textures/' + u.file, 'low', function (img) {
+        if (img) { u.t.image = img; u.t.needsUpdate = true; }
+        if (--left === 0) stage('hires');
+      });
+    });
+  }, 15000);
+
 
   // ---- real axial tilts (degrees) -----------------------------------------
   var TILT = {
@@ -514,7 +561,9 @@
   }
 
   window.PlanetsReal = {
-    texUrl: texUrl,
+    tex: tex,
+    onStage: onStage,
+    stage: stage,
     createPlanet: createPlanet,
     addRing: addRing,
     applySunTexture: applySunTexture,

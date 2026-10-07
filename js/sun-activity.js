@@ -13,7 +13,6 @@
   var reducedMotion = window.matchMedia &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  var loader = new THREE.TextureLoader();
   var SUN_R = 18;               // matches the sun sphere radius in app.js
   var clock = 0;                // internal seconds, advanced by update(dt)
 
@@ -39,13 +38,10 @@
   // --------------------------------------------------------------------------
   // Photosphere: base texture + granulation + differential rotation + limb dark
   // --------------------------------------------------------------------------
-  function makePhotosphere() {
-    // planets-real.js owns which variant of a texture this device gets; on a
-    // phone that is the 1024x512 copy. Going straight to the 2k file here kept
-    // the Sun at full resolution after every other body had halved.
-    var tx = loader.load(window.PlanetsReal && window.PlanetsReal.texUrl
-      ? window.PlanetsReal.texUrl('2k_sun.webp')
-      : 'assets/textures/2k_sun.webp');
+  function makePhotosphere(onReady) {
+    // planets-real.js owns which variant of a texture this device gets and
+    // when (1k first at high priority, 2k once the scene is up).
+    var tx = PlanetsReal.tex('2k_sun.webp', onReady);
     tx.wrapS = THREE.RepeatWrapping;
     photosphereMat = new THREE.ShaderMaterial({
       uniforms: { uTime: { value: 0 }, uMap: { value: tx }, uHighlight: { value: 0 } },
@@ -251,7 +247,11 @@
 
   function init(sun) {
     sun.material.dispose();
-    sun.material = makePhotosphere();
+    // Hidden until its surface texture is on: otherwise the corona and glow
+    // showed round a black disc, then the bloom, then the surface arrived,
+    // and the Sun visibly assembled itself in three or four steps.
+    sun.visible = false;
+    sun.material = makePhotosphere(function () { sun.visible = true; });
     sun.userData.spinSlow = false; // app.js spins it at the mapped real rate
     var chromo = makeChromosphere();
     chromoMats.push(chromo.material);
