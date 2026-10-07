@@ -42,6 +42,7 @@
   var enlarged = false;
 
   function apply(flex) {
+    if (window.__layout && window.__layout.pinned) return;   // the visitor's split (layout.js)
     left.style.flex = flex;
     var f = window.onWindowResize;
     if (typeof f !== 'function') return;
@@ -67,7 +68,7 @@
   // swaps between reading the text and studying the map.
   left.addEventListener('click', function (e) {
     if (!isOpen()) return;
-    if (e.target.closest('.controls, .obj-tag, .obj-toggle, .t3-layer, .t3-replay, .m-btn, .instructions-toggle')) return;
+    if (e.target.closest('.controls, .obj-tag, .obj-toggle, .map-layout, .t3-layer, .t3-replay, .m-btn, .instructions-toggle')) return;
     // a click that selected something is handled by app.js; only bare
     // background clicks rebalance the panels
     if (window.__objReadout && window.__objReadout.subject) return;

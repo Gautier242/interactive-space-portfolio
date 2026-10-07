@@ -149,7 +149,7 @@
   panel.addEventListener('pointerleave', () => { ptr = null; });
 
   panel.addEventListener('pointerdown', e => {
-    if (e.target.closest('.obj-tag, .obj-toggle, .controls, .t3-pill, .t3-replay, .t3-spot')) return;
+    if (e.target.closest('.obj-tag, .obj-toggle, .map-layout, .controls, .t3-pill, .t3-replay, .t3-spot')) return;
     const r = panel.getBoundingClientRect();
     const n = hit(((e.clientX - r.left) / r.width) * 2 - 1,
                  -((e.clientY - r.top) / r.height) * 2 + 1);

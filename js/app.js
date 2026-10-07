@@ -582,7 +582,8 @@ function showDetail(item) {
   // the canvas. After a full-screen map that is 100vh, so opening a
   // publication left the map filling the screen with no way back.
   const leftPanel = document.getElementById('leftPanel');
-  if (leftPanel && !isMobileDevice) {
+  // not once the visitor has set the split by dragging the divider (layout.js)
+  if (leftPanel && !isMobileDevice && !window.__layout.pinned) {
     leftPanel.style.flex = '0 0 30%';
     updateImageSizes(70);
     // Call resize multiple times during transition to prevent black band
@@ -678,7 +679,7 @@ function hideDetail() {
   } else {
     // Desktop: Restore left panel to 45% when closing detail
     const leftPanel = document.getElementById('leftPanel');
-    if (leftPanel && !isMobileDevice) {
+    if (leftPanel && !isMobileDevice && !window.__layout.pinned) {
       leftPanel.style.flex = '0 0 35%';
       updateImageSizes(55);
       // Call resize multiple times during transition to prevent black band
@@ -835,6 +836,7 @@ if (!isMobileDevice && resizer) {
     if (newWidth > 15 && newWidth < 75) {
       leftPanel.style.flex = `0 0 ${newWidth}%`;
       dragPct = newWidth;
+      window.__layout.pin();   // the split is the visitor's from now on
       if (!dragRaf) dragRaf = requestAnimationFrame(dragFrame);
     }
   });
