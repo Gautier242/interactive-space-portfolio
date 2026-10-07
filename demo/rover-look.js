@@ -96,79 +96,23 @@
     moonCamera.lookAt(aim);
   }
 
-  // Every time VIPER is selected: point it toward Earth, turned away only as
-  // far as needed, and place the chase camera (orbit angle, distance,
-  // height) closest to the rover that keeps Earth, Starship, LRO and the
-  // rover in frame, with the same fit test as moon-view.js's opening view.
-  // LRO orbits and is sometimes ~90 degrees from Earth as seen from the
-  // rover, beyond any portrait frame; then it is left out rather than
-  // pushing Earth or Starship out (moon-view.js treats it as a bonus too).
-  const probe = new THREE.PerspectiveCamera();
+  // Every time VIPER is selected: point it toward Earth and start from the
+  // close chase pose, behind and a little above the rover. The visitor
+  // orbits and zooms from there. A search for the closest pose holding
+  // Earth, Starship and LRO too ended 44-60 units out in the narrow map
+  // panel, the rover a speck: they sit ~60 degrees apart round the rover.
   function startView() {
     yaw = 0; pitch = DEF.el; dist = DEF.dist;
     if (typeof moonEarth === 'undefined' || !moonEarth) return;
     const e = moonEarth.getWorldPosition(new THREE.Vector3());
     const p = moonViper.position;
-    const toEarth = Math.atan2(-(e.x - p.x), -(e.z - p.z));   // rotation.y that drives at Earth
-    const must = [e, p.clone().add(new THREE.Vector3(0, 1, 0))];
-    // Starship hops between its landing spot and 15 units up, over and over
-    // (app.js starshipVerticalPos): keep its whole travel in frame, from the
-    // landed base to the nose at the top of a hop
-    if (typeof moonStarship !== 'undefined' && moonStarship) {
-      const sp = moonStarship.getWorldPosition(new THREE.Vector3());
-      const base = moonStarship.userData.baseY !== undefined ? moonStarship.userData.baseY : sp.y;
-      must.push(new THREE.Vector3(sp.x, base + 1, sp.z), new THREE.Vector3(sp.x, base + 12, sp.z));
-    }
-    const lro = (typeof moonLRO !== 'undefined' && moonLRO) ? [moonLRO.getWorldPosition(new THREE.Vector3())] : [];
-    // the panel's real shape: on the first frame of the drive the moon
-    // camera can still carry the aspect it had before the canvas showed
-    probe.copy(moonCamera);
-    const panel = document.getElementById('leftPanel');
-    if (panel && panel.clientHeight) {
-      probe.aspect = panel.clientWidth / panel.clientHeight;
-      probe.updateProjectionMatrix();
-    }
-    function fits(targets) {
-      applyLook();
-      probe.position.copy(moonCamera.position);
-      probe.quaternion.copy(moonCamera.quaternion);
-      probe.updateMatrixWorld(true);
-      for (const t of targets) {
-        const q = t.clone().project(probe);
-        if (q.z > 1 || Math.abs(q.x) > 0.9 || Math.abs(q.y) > 0.9) return false;
-      }
-      return true;
-    }
-    // closest camera first (a far camera shrinks the rover to a speck),
-    // then the smallest turn away from Earth, at most ~35 degrees
-    function search(targets) {
-      for (dist = 8; dist <= D_MAX; dist += 4) {
-        for (let off = 0; off <= 0.61; off += 0.1) {
-          for (const sgn of off ? [1, -1] : [1]) {
-            moonViper.rotation.y = toEarth + sgn * off; moonViper.updateMatrixWorld(true);
-            for (let y = 0; y <= 1.21; y += 0.2) {
-              for (const ys of y ? [1, -1] : [1]) {
-                yaw = y * ys;
-                for (pitch = 0.1; pitch <= 0.51; pitch += 0.1) {
-                  if (fits(targets)) return true;
-                }
-              }
-            }
-          }
-        }
-      }
-      return false;
-    }
-    if (search(must.concat(lro)) || search(must)) return true;
-    moonViper.rotation.y = toEarth; moonViper.updateMatrixWorld(true);
-    yaw = 0; pitch = DEF.el; dist = DEF.dist;
-    return false;
+    moonViper.rotation.y = Math.atan2(-(e.x - p.x), -(e.z - p.z));   // drives at Earth
+    moonViper.updateMatrixWorld(true);
   }
 
   // moonRenderer is built lazily, when the Moon view first opens, so watch for
   // it rather than assuming it exists at load.
   let wrapped = false;
-  let retries = 0;
   (function waitForRenderer() {
     if (typeof moonRenderer !== 'undefined' && moonRenderer) {
       wrapped = true;
@@ -177,13 +121,8 @@
         const on = active();
         if (on !== was) {
           was = on;
-          if (!on) { dragging = false; dragId = null; retries = 0; }
-          // the scene or the panel can still be settling on the first frame
-          // of a drive: retry for ~0.5 s, until the visitor drives or looks
-          else retries = startView() ? 0 : 30;
-        } else if (on && retries > 0) {
-          if (dragging || (typeof roverState !== 'undefined' && (roverState.forward || roverState.backward || roverState.left || roverState.right))) retries = 0;
-          else retries = startView() ? 0 : retries - 1;
+          if (!on) { dragging = false; dragId = null; }
+          else startView();
         }
         if (on && cam === moonCamera) applyLook();
         return raw(sc, cam);
