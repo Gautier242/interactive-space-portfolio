@@ -97,13 +97,37 @@
   // few pixels of it, so a simulated pointer kept landing on a neighbour.
   let hoverLocked = false;
 
+  // On the Moon the solar system is still in the scene graph but hidden
+  // behind the Moon canvas: picking it there offered HWO, the Sun, Jupiter...
+  // Pick and place against the Moon scene's own camera and objects instead,
+  // the ones moon-view.js restrict() leaves selectable.
+  const onMoon = () => typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive &&
+                       typeof moonCamera !== 'undefined' && !!moonCamera;
+  const moonObjs = () => ({ Starship: moonStarship, VIPER: moonViper, LRO: moonLRO, Earth: moonEarth });
+  const view = () => onMoon() ? moonCamera : camera;
+  function candidates() {
+    if (onMoon()) return Object.entries(moonObjs()).filter(e => e[1]);
+    const c = Object.keys(bodies).map(n => [n, bodies[n].mesh]);
+    if (typeof sun !== 'undefined') c.push(['Sun', sun]);
+    return c;
+  }
+
   function meshFor(name) {
+    if (onMoon()) return moonObjs()[name] || null;
     if (bodies[name]) return bodies[name].mesh;
     if (name === 'Sun' && typeof sun !== 'undefined') return sun;
     return null;
   }
   function nameOf(obj) {
     let o = obj, guard = 0;
+    if (onMoon()) {
+      const objs = moonObjs();
+      for (; o && guard++ < 14; o = o.parent) {
+        const n = Object.keys(objs).find(k => objs[k] === o);
+        if (n) return n;
+      }
+      return null;
+    }
     while (o && guard++ < 14) {
       const n = Object.keys(bodies).find(k => bodies[k].mesh === o);
       if (n) return n;
@@ -116,10 +140,9 @@
   const HOVER_TOLERANCE_PX = 16;
   function hit(nx, ny) {
     ndc.set(nx, ny);
-    ray.setFromCamera(ndc, camera);
-    const targets = Object.keys(bodies).map(n => bodies[n].mesh);
-    if (typeof sun !== 'undefined') targets.push(sun);
-    for (const h of ray.intersectObjects(targets, true)) {
+    const cam = view(), list = candidates();
+    ray.setFromCamera(ndc, cam);
+    for (const h of ray.intersectObjects(list.map(c => c[1]), true)) {
       const n = nameOf(h.object);
       if (n) return n;
     }
@@ -129,11 +152,10 @@
     const px = (nx * 0.5 + 0.5) * w, py = (-ny * 0.5 + 0.5) * h;
     let best = null, bestD = HOVER_TOLERANCE_PX;
     const probe = new THREE.Vector3();
-    for (const n of Object.keys(bodies).concat(typeof sun !== 'undefined' ? ['Sun'] : [])) {
-      const mesh = n === 'Sun' ? sun : bodies[n].mesh;
+    for (const [n, mesh] of list) {
       if (!mesh) continue;
       mesh.getWorldPosition(probe);
-      probe.project(camera);
+      probe.project(cam);
       if (probe.z > 1) continue;
       const d = Math.hypot((probe.x * 0.5 + 0.5) * w - px, (-probe.y * 0.5 + 0.5) * h - py);
       if (d < bestD) { bestD = d; best = n; }
@@ -171,6 +193,7 @@
   // selection the way a drawn overlay did.
   let litName = null;
   function light(name) {
+    if (onMoon()) name = null;   // app.js lights the Moon objects on hover itself
     if (litName === name) return;
     if (litName && typeof unhighlightBody === 'function') {
       try { unhighlightBody(litName); } catch (_) {}
@@ -240,11 +263,13 @@
     return r;
   }
 
-  let frame = 0;
+  let frame = 0, wasMoon = false;
   (function tick() {
     requestAnimationFrame(tick);
     const w = panel.clientWidth, h = panel.clientHeight;
     if (!w || !h) return;
+    // a tag held from the other world points at nothing here
+    if (onMoon() !== wasMoon) { wasMoon = !wasMoon; close(); }
 
     if (bodies.Earth) {
       let d = bodies.Earth.angle - lastAngle;
@@ -271,9 +296,10 @@
     }
 
     if (!locked) return;
+    const cam = view();
     locked.mesh.getWorldPosition(v);
-    const dCam = camera.position.distanceTo(v);
-    v.project(camera);
+    const dCam = cam.position.distanceTo(v);
+    v.project(cam);
     // Use a class, not an inline opacity: an inline value outranks the
     // stylesheet and silently forced the tag back to full strength.
     if (v.z > 1) { tag.classList.add('off-screen'); return; }
@@ -283,7 +309,7 @@
     // nothing. Hide it rather than let it lie about where the object is.
     if (x < -8 || x > w + 8 || y < -8 || y > h + 8) { tag.classList.add('off-screen'); return; }
     const rPx = (radiusOf(locked.mesh) / Math.max(dCam, 0.001)) * (h / 2) /
-                Math.tan((camera.fov * Math.PI / 180) / 2);
+                Math.tan((cam.fov * Math.PI / 180) / 2);
 
     // Anchor at the object's lower-right, clear of its disc, and ride along.
     const off = Math.min(rPx, 90) * 0.72 + 8;
