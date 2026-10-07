@@ -2177,7 +2177,11 @@ if (!viperManualControl && !roverPOVMode) {
   renderer.render(scene, camera);
 }
 
-animate();
+// First frame only once every script has run: cinematic.js (bloom, tone
+// mapping, the Sun's dimming) loads after this file, and frames drawn before
+// it showed the scene, the Sun above all, changing look in steps.
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', animate, { once: true });
+else animate();
 
 // Initialize raycaster and mouse BEFORE event listeners
 let dragging = false, prevX = 0, prevY = 0;

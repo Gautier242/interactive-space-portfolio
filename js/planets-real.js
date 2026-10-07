@@ -71,9 +71,12 @@
     var img = new Image();
     img.fetchPriority = priority;
     img.decoding = 'async';
+    img.src = url;
+    // Already in memory (the Sun's map is preloaded by index.html): use it
+    // now, so it is on the very first frame instead of one task later.
+    if (img.complete && img.naturalWidth) return cb(img);
     img.onload = function () { cb(img); };
     img.onerror = function () { cb(null); };
-    img.src = url;
   }
 
   var pending = 0, upgrades = [];
