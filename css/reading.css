@@ -183,11 +183,18 @@ html:not(.mobile-device) .pub-desc {
 }
 
 /* ---- 4. map buttons: full screen, reset layout (demo/layout.js) ---------- */
-/* Under Object info, in the same pill style (hover-info.css .obj-toggle). */
+/* Top row, left of Object info (hover-info.css .obj-toggle, top 12 right 12,
+   113 px wide), in the same pill style: one fixed place in every mode, above
+   the VIPER mission readout (#missionHud, top 64). Reset panel sizes hangs
+   under it. */
 .map-layout {
-  position: absolute; top: 48px; right: 12px; z-index: 62;
+  position: absolute; top: 12px; right: 133px; z-index: 62;
   display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
 }
+/* a narrow panel (a project open at 26%) keeps the icon only, clear of
+   How to explore on the left (layout.js sets .narrow) */
+.map-layout.narrow .map-full span { display: none; }
+.map-layout.narrow .map-full { padding: 0 8px; }
 .map-btn {
   display: flex; align-items: center; gap: 7px;
   height: 28px; padding: 0 11px 0 9px; border-radius: 999px;
@@ -205,9 +212,9 @@ html:not(.mobile-device) .pub-desc {
 /* Reset panel sizes only shows once the divider has been moved: make it obvious */
 .map-reset { color: #ffd27f; border-color: rgba(255, 210, 127, .55); }
 .map-reset:hover { color: #fff; border-color: #ffd27f; background: rgba(255, 210, 127, .16); }
-/* while driving VIPER the mission readout fills the top right and Earth
-   hangs below it: move to the left, under "How to drive" and its hint */
-.left:has(#missionHud.visible) .map-layout { top: 100px; right: auto; left: 12px; align-items: flex-start; }
+/* while driving, Reset panel sizes drops below the mission readout
+   (64 + 143 px tall) instead of covering it; Full screen stays put */
+.left:has(#missionHud.visible) .map-reset { margin-top: 179px; }
 
 /* ---- 5. full screen: project card on hover, signature (layout.js) -------- */
 .fs-card, .fs-sign { display: none; }

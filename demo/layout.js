@@ -58,6 +58,7 @@
     const on = document.fullscreenElement === left;
     full.innerHTML = (on ? ICON_EXIT : ICON_FULL) + '<span>' + (on ? 'Exit full screen' : 'Full screen') + '</span>';
     full.title = on ? 'Back to the map and the reading panel (Esc)' : 'Show the solar system on the whole screen';
+    full.setAttribute('aria-label', on ? 'Exit full screen' : 'Full screen');   // the label hides when narrow
   }
   syncFull();
   full.addEventListener('click', () => {
@@ -70,6 +71,8 @@
   });
   // no Fullscreen API (older Safari on a desktop): no button
   if (!left.requestFullscreen) full.hidden = true;
+  // too narrow for the label beside How to explore: icon only (reading.css)
+  new ResizeObserver(() => box.classList.toggle('narrow', !isFull() && left.clientWidth < 420)).observe(left);
 
   // ---- full screen keeps the portfolio in view ------------------------------
   // With the reading panel gone, hovering a body that holds a project shows
