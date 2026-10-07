@@ -137,6 +137,9 @@
   (function dimSun() {
     const K = 0.62;
     sun.traverse(o => {
+      // not the yellow corners: dimmed to olive they all but vanished, while
+      // every other body's corners stay full yellow
+      if (o === sun.userData.reticle) return;
       const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
       mats.forEach(m => {
         if (m.color) m.color.multiplyScalar(K);

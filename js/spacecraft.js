@@ -428,6 +428,15 @@
       g.add(arm);
     });
 
+    // Built with its front (mast cameras, headlights) on +z, but the rover
+    // drives along -z (moon-mission.js stepRover), so it drove backwards and
+    // the chase camera looked at its face. Turn the whole body round; the
+    // wheel spin then also matches the direction of travel.
+    var body180 = new THREE.Group();
+    while (g.children.length) body180.add(g.children[0]);
+    body180.rotation.y = Math.PI;
+    g.add(body180);
+
     g.scale.set(0.36, 0.36, 0.36);
     return g;
   }

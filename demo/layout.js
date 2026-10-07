@@ -5,7 +5,7 @@
  * (app.js) and a click on the map background (figure.js). Once the visitor
  * drags the divider, that split is theirs: __layout.pinned stops all three,
  * and the right panel lays out at whatever width it was given. A "Reset
- * layout" button appears at the same moment and hands control back.
+ * panel sizes" button appears at the same moment and hands control back.
  *
  * Desktop only: the phone stacks the panels and has its own split stops.
  */
@@ -25,8 +25,8 @@
   box.className = 'map-layout';
   box.innerHTML =
     '<button type="button" class="map-btn map-full"></button>' +
-    '<button type="button" class="map-btn map-reset" hidden title="Put the map and the reading panel back to their default widths">' +
-    ICON_RESET + '<span>Reset layout</span></button>';
+    '<button type="button" class="map-btn map-reset" hidden title="Put the 3D map and the publications panel back to their default widths">' +
+    ICON_RESET + '<span>Reset panel sizes</span></button>';
   left.appendChild(box);
   const full = box.querySelector('.map-full');
   const reset = box.querySelector('.map-reset');

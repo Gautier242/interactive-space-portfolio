@@ -2916,6 +2916,8 @@ let zoomInterval = null;
 let isZooming = false;
 
 function performZoom(direction) {
+  // driving VIPER: + / - move the chase camera in and out (rover-look.js)
+  if (roverPOVMode && window.__roverLook) { window.__roverLook.zoom(direction); return; }
   if (moonSurfaceActive) {
     const dir = new THREE.Vector3(0, 0, 0).sub(moonCamera.position).normalize();
     moonCamera.position.add(dir.multiplyScalar(direction * 3));

@@ -202,6 +202,9 @@ html:not(.mobile-device) .pub-desc {
 .map-btn:hover { color: #fff; border-color: #9ec9ff; background: rgba(158, 201, 255, .18); }
 .map-btn:focus-visible { outline: 2px solid #9ec9ff; outline-offset: 2px; }
 .map-btn[hidden] { display: none; }
-/* Reset layout only shows once the divider has been moved: make it obvious */
+/* Reset panel sizes only shows once the divider has been moved: make it obvious */
 .map-reset { color: #ffd27f; border-color: rgba(255, 210, 127, .55); }
 .map-reset:hover { color: #fff; border-color: #ffd27f; background: rgba(255, 210, 127, .16); }
+/* while driving VIPER the mission readout fills the top right and Earth
+   hangs below it: move to the left, under "How to drive" and its hint */
+.left:has(#missionHud.visible) .map-layout { top: 100px; right: auto; left: 12px; align-items: flex-start; }
