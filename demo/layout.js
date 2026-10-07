@@ -205,11 +205,27 @@
       else if (typeof showDetail === 'function') showDetail(pub);
     };
     if (isFull()) {
+      viaCard = true;
       document.addEventListener('fullscreenchange', () => setTimeout(go, 60), { once: true });
       document.exitFullscreen();
     } else go();
   }
   card.addEventListener('click', e => { e.stopPropagation(); if (shown) openPub(shown); });
 
-  document.addEventListener('fullscreenchange', () => { if (!isFull()) hideCard(); });
+  // Leaving full screen on the Moon by any other way than a card shows the
+  // Moon's own paper (ESA, body Moon), the one entering the Moon selects:
+  // clicks on Starship or LRO in full screen may have opened theirs behind.
+  // The Moon itself is never offered as a card there: it is the ground.
+  let viaCard = false;
+  document.addEventListener('fullscreenchange', () => {
+    if (isFull()) return;
+    hideCard();
+    const moonPub = typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive && !viaCard &&
+                    pubsFor('Moon')[0];
+    viaCard = false;
+    if (moonPub && typeof showDetail === 'function') {
+      showDetail(moonPub);
+      if (typeof highlightPublication === 'function') highlightPublication('Moon');
+    }
+  });
 })();
