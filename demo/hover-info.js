@@ -46,7 +46,7 @@
       <button class="obj-badge" id="objBadge" type="button"></button>
     </div>
     <div class="obj-corner">
-      <span id="objEpoch">—</span><span class="obj-sep"></span><span id="objScale">—</span>
+      <span id="objEpoch">—</span><span class="obj-sep"></span><span id="objScale">NOT TO SCALE</span>
     </div>`;
   panel.appendChild(layer);
 
@@ -55,7 +55,6 @@
   const elSub = layer.querySelector('#objSub');
   const elBadge = layer.querySelector('#objBadge');
   const elEpoch = layer.querySelector('#objEpoch');
-  const elScale = layer.querySelector('#objScale');
 
   let simDays = 0, lastAngle = bodies.Earth ? bodies.Earth.angle : 0;
   const EPOCH0 = Date.UTC(2026, 0, 1);
@@ -278,9 +277,6 @@
       simDays += (d / (Math.PI * 2)) * 365.26;
       elEpoch.textContent = new Date(EPOCH0 + simDays * 86400000).toISOString().slice(0, 10);
     }
-    const dist = camera.position.length();
-    const worldPerPx = (2 * Math.tan((camera.fov * Math.PI / 180) / 2) * dist) / h;
-    elScale.textContent = (worldPerPx).toFixed(2) + ' AU';
 
     if (infoOn && !hoverLocked && (frame++ & 3) === 0 && ptr) {
       const n = hit(ptr[0], ptr[1]);

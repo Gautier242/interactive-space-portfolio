@@ -210,6 +210,7 @@
         '<li>The <b>bar under the map</b> pauses, changes speed and resets.</li>' +
         '<li>Tap the <b>Moon</b> to land and drive a rover.</li>' +
         '<li><b>Tap a card</b> below to read a project.</li>' +
+        '<li>Sizes and distances are <b>not to scale</b>, and are not meant to be: the map is an illustration.</li>' +
       '</ul>' +
       '<button type="button" class="m-sheet-x m-sheet-close" aria-label="Close">&#215;</button>' +
       '<button type="button" class="m-sheet-x">OK</button>' +
