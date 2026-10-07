@@ -355,6 +355,7 @@
 
   window.__objReadout = {
     close, setInfo, show, release,
+    pick: hit,   // body name under a point in normalised device coords (layout.js)
     get on() { return infoOn; },
     get subject() { return locked && locked.name; },
   };

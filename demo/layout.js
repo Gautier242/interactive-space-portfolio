@@ -70,4 +70,80 @@
   });
   // no Fullscreen API (older Safari on a desktop): no button
   if (!left.requestFullscreen) full.hidden = true;
+
+  // ---- full screen keeps the portfolio in view ------------------------------
+  // With the reading panel gone, hovering a body that holds a project shows
+  // a small card beside the pointer: its figure, title and one line. A click
+  // on the card, or on the body itself, leaves full screen and opens the
+  // project. A quiet signature sits bottom left, like a video's credit.
+  const isFull = () => document.fullscreenElement === left;
+  const pubsFor = name => (typeof PUBS !== 'undefined' ? PUBS : []).filter(p => p.body === name);
+  const short = t => {
+    const s = String(t || '').replace(/<[^>]+>/g, '');
+    return s.length <= 120 ? s : s.slice(0, s.lastIndexOf(' ', 117)) + '…';
+  };
+
+  const sig = document.createElement('div');
+  sig.className = 'fs-sign';
+  sig.innerHTML = '<b>Gautier Bardi de Fourtou</b> · AI for space exploration · ' +
+    (typeof PUBS !== 'undefined' ? PUBS.length : '') + ' projects on this map';
+  left.appendChild(sig);
+
+  const card = document.createElement('button');
+  card.type = 'button';
+  card.className = 'fs-card';
+  card.hidden = true;
+  left.appendChild(card);
+  let shown = null;   // the publication on the card
+
+  function showCard(name, x, y) {
+    const list = pubsFor(name);
+    if (!list.length) return hideCard();
+    const pub = list[0];
+    if (!shown || shown.id !== pub.id) {
+      shown = pub;
+      card.innerHTML =
+        '<img src="' + pub.img + '" srcset="' + (window.imgSrcset ? window.imgSrcset(pub.img) : '') + '" sizes="132px" alt="">' +
+        '<span class="fs-txt"><b>' + pub.title + '</b><span>' + short(pub.summary || pub.desc) + '</span>' +
+        '<em>' + (list.length > 1 ? list.length + ' projects here · ' : '') + 'Click to read the project →</em></span>';
+    }
+    card.hidden = false;
+    // beside the pointer, flipped so it never leaves the screen
+    const w = card.offsetWidth, h = card.offsetHeight;
+    const px = x + 22 + w > innerWidth ? x - 22 - w : x + 22;
+    const py = Math.min(Math.max(12, y - h / 2), innerHeight - h - 12);
+    card.style.transform = 'translate(' + px + 'px,' + py + 'px)';
+  }
+  function hideCard() { card.hidden = true; shown = null; }
+
+  left.addEventListener('pointermove', e => {
+    if (!isFull() || !window.__objReadout || !window.__objReadout.pick) return;
+    if (card.contains(e.target)) return;          // moving onto the card keeps it
+    const r = left.getBoundingClientRect();
+    const name = window.__objReadout.pick(((e.clientX - r.left) / r.width) * 2 - 1,
+                                          -((e.clientY - r.top) / r.height) * 2 + 1);
+    if (name) showCard(name, e.clientX, e.clientY); else hideCard();
+  });
+  left.addEventListener('pointerleave', hideCard);
+
+  // open the project the way a list click does (detail view + flight)
+  function openPub(pub) {
+    const go = () => {
+      const el = document.querySelector('.pub-card[data-id="' + pub.id + '"]');
+      if (el) el.click();
+      else if (typeof showDetail === 'function') showDetail(pub);
+    };
+    if (isFull()) {
+      document.addEventListener('fullscreenchange', () => setTimeout(go, 60), { once: true });
+      document.exitFullscreen();
+    } else go();
+  }
+  card.addEventListener('click', e => { e.stopPropagation(); if (shown) openPub(shown); });
+
+  // a click on a body in full screen opens its project behind the map;
+  // leave full screen so it can be seen
+  if (detail) new MutationObserver(() => {
+    if (isFull() && detail.classList.contains('active')) document.exitFullscreen();
+  }).observe(detail, { attributes: true, attributeFilter: ['class'] });
+  document.addEventListener('fullscreenchange', () => { if (!isFull()) hideCard(); });
 })();
