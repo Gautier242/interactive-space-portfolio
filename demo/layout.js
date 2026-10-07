@@ -73,9 +73,11 @@
 
   // ---- full screen keeps the portfolio in view ------------------------------
   // With the reading panel gone, hovering a body that holds a project shows
-  // a small card beside the pointer: its figure, title and one line. A click
-  // on the card, or on the body itself, leaves full screen and opens the
-  // project. A quiet signature sits bottom left, like a video's credit.
+  // a small card beside the pointer: its figure, title and one line. Only a
+  // click on the card leaves full screen and opens the project; a click on
+  // the body itself selects it and flies there as usual, in full screen, with
+  // its project opened unseen behind. A quiet signature sits bottom left,
+  // like a video's credit.
   const isFull = () => document.fullscreenElement === left;
   const pubsFor = name => (typeof PUBS !== 'undefined' ? PUBS : []).filter(p => p.body === name);
   const short = t => {
@@ -126,9 +128,16 @@
   });
   left.addEventListener('pointerleave', hideCard);
 
-  // open the project the way a list click does (detail view + flight)
+  // open the project the way a list click does (detail view + flight). On the
+  // Moon a list click would leave the Moon world (app.js), so there it opens
+  // the project the way a click on the Moon object does, staying put.
   function openPub(pub) {
     const go = () => {
+      if (typeof moonSurfaceActive !== 'undefined' && moonSurfaceActive && typeof showDetail === 'function') {
+        showDetail(pub);
+        if (typeof highlightPublication === 'function') highlightPublication(pub.body);
+        return;
+      }
       const el = document.querySelector('.pub-card[data-id="' + pub.id + '"]');
       if (el) el.click();
       else if (typeof showDetail === 'function') showDetail(pub);
@@ -140,10 +149,5 @@
   }
   card.addEventListener('click', e => { e.stopPropagation(); if (shown) openPub(shown); });
 
-  // a click on a body in full screen opens its project behind the map;
-  // leave full screen so it can be seen
-  if (detail) new MutationObserver(() => {
-    if (isFull() && detail.classList.contains('active')) document.exitFullscreen();
-  }).observe(detail, { attributes: true, attributeFilter: ['class'] });
   document.addEventListener('fullscreenchange', () => { if (!isFull()) hideCard(); });
 })();
